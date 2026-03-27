@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovAura Themes & Fonts Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;900&family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800&family=Caveat:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700;900&family=Cinzel+Decorative:wght@400;700;900&family=Quicksand:wght@300;400;500;600;700&family=Comfortaa:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      overflow: hidden;
+      background: #0a0a0f;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .ui-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 30px;
+    }
+    
+    .header {
+      text-align: center;
+    }
+    
+    .theme-title {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 30px currentColor;
+      transition: all 0.5s ease;
+    }
+    
+    .theme-subtitle {
+      font-size: 16px;
+      opacity: 0.8;
+      letter-spacing: 0.2em;
+    }
+    
+    .preview-text {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .preview-text h2 {
+      font-size: 28px;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    
+    .preview-text p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    
+    .controls {
+      pointer-events: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    
+    .control-group {
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      padding: 15px 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .control-group h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+      opacity: 0.7;
+    }
+    
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: inherit;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    button:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+    
+    button.active {
+      background: rgba(255,255,255,0.3);
+      border-color: currentColor;
+      box-shadow: 0 0 15px currentColor;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(255,215,0,0.2);
+      border: 1px solid rgba(255,215,0,0.5);
+      color: #ffd700;
+      font-size: 10px;
+      border-radius: 20px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    
+    /* Theme-specific color classes */
+    .theme-cosmic { color: #00d9ff; }
+    .theme-blue-night { color: #60a5fa; }
+    .theme-light { color: #5a8a6e; }
+    .theme-matrix { color: #00ff00; }
+    .theme-stormy { color: #94a3b8; }
+    .theme-aurora { color: #22d3ee; }
+    .theme-meshwater { color: #0ea5e9; }
+    .theme-blaze { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  
+  <div class="ui-layer">
+    <div class="header">
+      <h1 class="theme-title" id="themeTitle">COSMIC</h1>
+      <p class="theme-subtitle" id="themeSubtitle">Default Theme</p>
+    </div>
+    
+    <div class="preview-text" id="previewText">
+      <h2>The quick brown fox</h2>
+      <p>Experience the future of computing with NovAura OS. Every theme is crafted to provide a unique atmosphere while maintaining peak performance.</p>
+      <p>Themes will be available as premium customization options in the future.</p>
+    </div>
+    
+    <div class="controls">
+      <div class="control-group">
+        <h3>Themes</h3>
+        <div class="btn-row">
+          <button onclick="setTheme('cosmic')" class="active" id="btn-cosmic">Cosmic</button>
+          <button onclick="setTheme('blue-night')" id="btn-blue-night">Blue Night</button>
+          <button onclick="setTheme('matrix')" id="btn-matrix">Matrix</button>
+          <button onclick="setTheme('stormy')" id="btn-stormy">Stormy <span class="badge">NEW</span></button>
+          <button onclick="setTheme('aurora')" id="btn-aurora">Aurora <span class="badge">NEW</span></button>
+          <button onclick="setTheme('meshwater')" id="btn-meshwater">Mesh Water <span class="badge">NEW</span></button>
+          <button onclick="setTheme('blaze')" id="btn-blaze">Blaze <span class="badge">NEW</span></button>
+          <button onclick="setTheme('light')" id="btn-light">Light</button>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Fonts</h3>
+        <div class="btn-row">
+          <button onclick="setFont('default')" class="active" id="btn-font-default">Default</button>
+          <button onclick="setFont('razor')" id="btn-font-razor">Razor</button>
+          <button onclick="setFont('luxe')" id="btn-font-luxe">Luxe</button>
+          <button onclick="setFont('nova')" id="btn-font-nova">Nova</button>
+          <button onclick="setFont('code')" id="btn-font-code">Code</button>
+          <button onclick="setFont('gothic')" id="btn-font-gothic">Gothic</button>
+          <button onclick="setFont('soft')" id="btn-font-soft">Soft</button>
+          <button onclick="setFont('artisan')" id="btn-font-artisan">Artisan</button>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Mode</h3>
+        <div class="btn-row">
+          <button onclick="setMode('idle')" class="active" id="btn-mode-idle">Idle</button>
+          <button onclick="setMode('active')" id="btn-mode-active">Active</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme configurations (simplified from main file)
+    const THEME_CONFIGS = {
+      cosmic: {
+        background: '#0a0a0f',
+        colors: ['#00b8d9', '#0891b2', '#0e7490', '#8b5cf6', '#7c3aed', '#6d28d9', '#d946ef', '#c026d3', '#a21caf', '#10b981', '#059669', '#047857', '#d97706', '#b45309', '#92400e', '#3b82f6', '#2563eb', '#1d4ed8', '#db2777', '#be185d'],
+        microColors: ['#22d3ee', '#67e8f9', '#a5f3fc', '#c084fc', '#d8b4fe', '#e9d5ff', '#e879f9', '#f0abfc', '#f5d0fe', '#34d399', '#6ee7b7', '#a7f3d0', '#fcd34d', '#fde68a', '#fef3c7', '#60a5fa', '#93c5fd', '#bfdbfe', '#f472b6', '#f9a8d4'],
+        linkColor: '0, 217, 255',
+        mouseLinkColor: '168, 85, 247',
+        particleSizeMultiplier: 1,
+        flowSpeed: 1,
+        glowIntensity: 1,
+        title: 'COSMIC',
+        subtitle: 'The classic NovAura experience',
+        fontFamily: "'Inter', sans-serif",
+      },
+      'blue-night': {
+        background: '#0f1729',
+        colors: ['#60a5fa', '#ffffff', '#fbbf24', '#f59e0b', '#ef4444', '#60a5fa'],
+        microColors: ['#60a5fa', '#93c5fd', '#ffffff', '#fcd34d', '#fbbf24', '#f97316', '#ef4444'],
+        linkColor: '96, 165, 250',
+        mouseLinkColor: '251, 191, 36',
+        particleSizeMultiplier: 1,
+        flowSpeed: 1,
+        glowIntensity: 1,
+        title: 'BLUE NIGHT',
+        subtitle: 'Calm midnight blues',
+        fontFamily: "'Inter', sans-serif",
+      },
+      light: {
+        background: '#f5f2ed',
+        colors: ['#5a8a6e', '#6b9b7f', '#7cac90', '#b86b7e', '#c97c8f', '#da8da0', '#c9a35f', '#dab470', '#ebc581', '#7a9a8a', '#8bab9b', '#9cbcac', '#a67c6b', '#b78d7c', '#c89e8d'],
+        microColors: ['#8cbfa3', '#9dd0b4', '#aee1c5', '#d49aaa', '#e5abbb', '#f6bccc', '#e4c882', '#f5d993', '#ffea84', '#aaccbb', '#bbddcc', '#cceedd', '#c9a99a', '#dabfab', '#ebd5cc'],
+        linkColor: '90, 138, 110',
+        mouseLinkColor: '184, 107, 126',
+        particleSizeMultiplier: 1,
+        flowSpeed: 1,
+        glowIntensity: 1,
+        title: 'LIGHT',
+        subtitle: 'Easy on the eyes',
+        fontFamily: "'Playfair Display', serif",
+      },
+      matrix: {
+        background: '#000a00',
+        colors: ['#00ff00', '#00f500', '#00eb00', '#00e000', '#00d600', '#00cc00', '#00c200', '#00b800', '#00ad00', '#00a300', '#009900', '#008f00', '#008500', '#007a00', '#007000', '#006600', '#005c00', '#005200', '#004700', '#003d00', '#003300', '#002900', '#001f00', '#001400'],
+        microColors: ['#39ff14', '#32ff12', '#2bff10', '#1aff0d', '#0dff0b', '#05ff09', '#00fa08', '#00f007', '#00e607', '#00db06', '#00d106', '#00c705', '#00bc05', '#00b204', '#00a804', '#009d04', '#009303', '#008903', '#1aff66', '#33ff7a', '#4dff8f'],
+        linkColor: '0, 255, 65',
+        mouseLinkColor: '57, 255, 20',
+        particleSizeMultiplier: 0.5,
+        flowSpeed: 0.6,
+        glowIntensity: 1.5,
+        title: 'MATRIX',
+        subtitle: 'Enter the digital rain',
+        fontFamily: "'JetBrains Mono', monospace",
+      },
+      stormy: {
+        background: '#0d1117',
+        colors: ['#64748b', '#475569', '#334155', '#94a3b8', '#cbd5e1', '#e2e8f0', '#60a5fa', '#3b82f6', '#2563eb', '#a855f7', '#8b5cf6', '#7c3aed'],
+        microColors: ['#94a3b8', '#a8b5c4', '#bcc8d4', '#60a5fa', '#7bb3fb', '#96c1fc', '#a78bfa', '#b69dfb', '#c5b0fc'],
+        linkColor: '148, 163, 184',
+        mouseLinkColor: '96, 165, 250',
+        particleSizeMultiplier: 0.7,
+        flowSpeed: 1.8,
+        glowIntensity: 0.8,
+        hasRain: true,
+        rainCount: 150,
+        title: 'STORMY',
+        subtitle: 'Thunder and rain',
+        fontFamily: "'Cinzel', serif",
+      },
+      aurora: {
+        background: '#0a0f1a',
+        colors: ['#22d3ee', '#06b6d4', '#0891b2', '#a855f7', '#c084fc', '#d8b4fe', '#4ade80', '#22c55e', '#16a34a', '#f472b6', '#fb7185', '#fda4af'],
+        microColors: ['#67e8f9', '#7ee7fa', '#95e6fb', '#c4b5fd', '#d4c8fe', '#e4dbff', '#86efac', '#9df2b8', '#b4f5c4'],
+        linkColor: '34, 211, 238',
+        mouseLinkColor: '168, 85, 247',
+        particleSizeMultiplier: 1.2,
+        flowSpeed: 0.4,
+        glowIntensity: 2.0,
+        hasStars: true,
+        starCount: 200,
+        auroraWaves: 5,
+        title: 'AURORA',
+        subtitle: 'Dancing northern lights',
+        fontFamily: "'Quicksand', sans-serif",
+      },
+      meshwater: {
+        background: '#0c1a2d',
+        colors: ['#0ea5e9', '#0284c7', '#0369a1', '#06b6d4', '#0891b2', '#0e7490', '#22d3ee', '#67e8f9', '#a5f3fc'],
+        microColors: ['#7dd3fc', '#a3dffd', '#c9ebfe', '#5eead4', '#8df0e3', '#bcf5f1', '#bae6fd', '#d0effe', '#e6f7ff'],
+        linkColor: '14, 165, 233',
+        mouseLinkColor: '34, 211, 238',
+        particleSizeMultiplier: 0.6,
+        flowSpeed: 0.5,
+        glowIntensity: 1.2,
+        meshMode: true,
+        meshRows: 12,
+        meshCols: 16,
+        waveAmplitude: 30,
+        waveFrequency: 0.02,
+        title: 'MESH WATER',
+        subtitle: 'Floating on the surface',
+        fontFamily: "'Montserrat', sans-serif",
+      },
+      blaze: {
+        background: '#1a0f05',
+        colors: ['#fbbf24', '#f59e0b', '#d97706', '#f97316', '#ea580c', '#c2410c', '#ef4444', '#dc2626', '#b91c1c', '#fcd34d', '#fde68a', '#fef3c7'],
+        microColors: ['#fcd34d', '#fde47a', '#fef1b8', '#fdba74', '#fdc595', '#fed0b6', '#fca5a5', '#fdb8b8', '#fecbcb'],
+        linkColor: '251, 191, 36',
+        mouseLinkColor: '239, 68, 68',
+        particleSizeMultiplier: 0.9,
+        flowSpeed: 1.3,
+        glowIntensity: 1.8,
+        heatDistortion: true,
+        sparkCount: 50,
+        title: 'BLAZE',
+        subtitle: 'Golden flames rise',
+        fontFamily: "'Cinzel Decorative', serif",
+      },
+    };
+
+    // Font configurations
+    const FONT_CONFIGS = {
+      default: { family: "'Inter', sans-serif", label: 'Default' },
+      razor: { family: "'Orbitron', sans-serif", label: 'Razor', desc: 'Sharp, pointed, cyberpunk' },
+      luxe: { family: "'Playfair Display', serif", label: 'Luxe', desc: 'Sophisticated, elegant' },
+      nova: { family: "'Montserrat', sans-serif", label: 'Nova', desc: 'Modern geometric' },
+      code: { family: "'JetBrains Mono', monospace", label: 'Code', desc: 'Developer monospace' },
+      gothic: { family: "'Cinzel', serif", label: 'Gothic', desc: 'Dark, medieval' },
+      soft: { family: "'Quicksand', sans-serif", label: 'Soft', desc: 'Rounded, friendly' },
+      artisan: { family: "'Caveat', cursive", label: 'Artisan', desc: 'Handwritten, artistic' },
+    };
+
+    // State
+    let currentTheme = 'cosmic';
+    let currentFont = 'default';
+    let currentMode = 'idle';
+    let canvas, ctx;
+    let particles = [], micros = [], attractors = [], microAttractors = [];
+    let rain = [], stars = [], sparks = [], meshNodes = [];
+    let mouse = { x: -1000, y: -1000 };
+    let isMouseDown = false;
+    let animationId;
+
+    function init() {
+      canvas = document.getElementById('canvas');
+      ctx = canvas.getContext('2d');
+      resize();
+      window.addEventListener('resize', resize);
+      
+      // Mouse events
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+      window.addEventListener('mousedown', () => isMouseDown = true);
+      window.addEventListener('mouseup', () => isMouseDown = false);
+      window.addEventListener('mouseleave', () => { mouse.x = -1000; mouse.y = -1000; isMouseDown = false; });
+      
+      initTheme(currentTheme);
+      animate();
+    }
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function initTheme(theme) {
+      const tc = THEME_CONFIGS[theme];
+      particles = [];
+      micros = [];
+      rain = [];
+      stars = [];
+      sparks = [];
+      meshNodes = [];
+      
+      const particleCount = currentMode === 'active' ? 140 : 100;
+      const microCount = currentMode === 'active' ? 100 : 70;
+      const baseSpeed = currentMode === 'active' ? 2.5 : 1.2;
+      
+      // Main particles
+      for (let i = 0; i < particleCount; i++) {
+        const colorGroup = i % 20;
+        const baseSize = (Math.random() * 3 + 1) * (tc.particleSizeMultiplier || 1);
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * baseSpeed * 2 * (tc.flowSpeed || 1) * (0.5 + Math.random()),
+          vy: (Math.random() - 0.5) * baseSpeed * 2 * (tc.flowSpeed || 1) * (0.5 + Math.random()),
+          size: Math.max(baseSize, 0.8),
+          color: tc.colors[colorGroup % tc.colors.length],
+          colorPhase: Math.random() * Math.PI * 2,
+          colorSpeed: (0.3 + Math.random() * 2.2) * (tc.flowSpeed || 1),
+          opacity: Math.random() * 0.5 + 0.3,
+          opacityDir: Math.random() > 0.5 ? 1 : -1,
+          driftAngle: Math.random() * Math.PI * 2,
+          driftSpeed: (0.2 + Math.random() * 0.4) * (tc.flowSpeed || 1),
+          swirlOffset: Math.random() * 1000,
+          fallBias: tc.hasRain ? 2 : (theme === 'matrix' ? (Math.random() * 0.5 + 0.5) : 1),
+        });
+      }
+      
+      // Micro particles
+      for (let i = 0; i < microCount; i++) {
+        const colorGroup = i % 20;
+        micros.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.8 * (tc.flowSpeed || 1),
+          vy: (Math.random() - 0.5) * 0.8 * (tc.flowSpeed || 1),
+          size: 0.4 + Math.random() * 1.2,
+          color: tc.microColors[colorGroup % tc.microColors.length],
+          colorPhase: Math.random() * Math.PI * 2,
+          colorSpeed: 0.3 + Math.random() * 1.2,
+          opacity: 0.15 + Math.random() * 0.35,
+          opacityDir: Math.random() > 0.5 ? 1 : -1,
+          pulseSpeed: 0.002 + Math.random() * 0.004,
+          driftAngle: Math.random() * Math.PI * 2,
+          driftSpeed: 0.1 + Math.random() * 0.3,
+          swirlOffset: Math.random() * 1000,
+          fallBias: tc.hasRain ? 1.5 : (theme === 'matrix' ? (Math.random() * 0.3 + 0.7) : 1),
+        });
+      }
+      
+      // Attractors
+      for (let i = 0; i < 4; i++) {
+        attractors.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 3,
+          vy: (Math.random() - 0.5) * 3,
+          strength: 0.015 + Math.random() * 0.025,
+          radius: 180 + Math.random() * 120,
+          lifetime: 0,
+          maxLife: 200 + Math.random() * 400,
+          hue: [190, 270, 320, 140][i],
+        });
+      }
+      
+      // Micro-attractors
+      for (let i = 0; i < 6; i++) {
+        microAttractors.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: (Math.random() - 0.5) * 1.5,
+          strength: 0.008 + Math.random() * 0.015,
+          radius: 100 + Math.random() * 80,
+          lifetime: 0,
+          maxLife: 150 + Math.random() * 300,
+          hue: [190, 230, 270, 310, 140, 60][i],
+        });
+      }
+      
+      // Rain for stormy
+      if (tc.hasRain) {
+        for (let i = 0; i < (tc.rainCount || 100); i++) {
+          rain.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            length: Math.random() * 20 + 10,
+            speed: Math.random() * 15 + 10,
+            opacity: Math.random() * 0.4 + 0.1,
+            width: Math.random() * 1 + 0.5,
+          });
+        }
+      }
+      
+      // Stars for aurora
+      if (tc.hasStars) {
+        for (let i = 0; i < (tc.starCount || 150); i++) {
+          stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height * 0.6,
+            size: Math.random() * 1.5 + 0.5,
+            opacity: Math.random() * 0.8 + 0.2,
+            twinkleSpeed: Math.random() * 0.02 + 0.005,
+            twinklePhase: Math.random() * Math.PI * 2,
+          });
+        }
+      }
+      
+      // Sparks for blaze
+      if (tc.heatDistortion) {
+        for (let i = 0; i < (tc.sparkCount || 40); i++) {
+          sparks.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height + Math.random() * 100,
+            vx: (Math.random() - 0.5) * 2,
+            vy: -(Math.random() * 3 + 2),
+            size: Math.random() * 2 + 0.5,
+            life: Math.random(),
+            decay: Math.random() * 0.01 + 0.005,
+          });
+        }
+      }
+      
+      // Mesh for water
+      if (tc.meshMode) {
+        const rows = tc.meshRows || 10;
+        const cols = tc.meshCols || 14;
+        const spacingX = canvas.width / (cols - 1);
+        const spacingY = canvas.height / (rows - 1);
+        
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            meshNodes.push({
+              baseX: c * spacingX,
+              baseY: r * spacingY,
+              x: c * spacingX,
+              y: r * spacingY,
+              row: r,
+              col: c,
+              phase: (r + c) * 0.3,
+            });
+          }
+        }
+      }
+    }
+
+    function updateAttractors(arr) {
+      for (let att of arr) {
+        att.lifetime++;
+        if (att.lifetime > att.maxLife) {
+          att.lifetime = 0;
+          att.maxLife = 150 + Math.random() * 400;
+          const angle = Math.random() * Math.PI * 2;
+          const spd = 0.5 + Math.random() * 2.5;
+          att.vx = Math.cos(angle) * spd * 2;
+          att.vy = Math.sin(angle) * spd * 2;
+        }
+        att.vx += (Math.random() - 0.5) * 0.08;
+        att.vy += (Math.random() - 0.5) * 0.08;
+        const aspd = Math.sqrt(att.vx * att.vx + att.vy * att.vy);
+        if (aspd > 4) { att.vx = (att.vx / aspd) * 4; att.vy = (att.vy / aspd) * 4; }
+        att.x += att.vx;
+        att.y += att.vy;
+        if (att.x < -50) att.x = canvas.width + 50;
+        if (att.x > canvas.width + 50) att.x = -50;
+        if (att.y < -50) att.y = canvas.height + 50;
+        if (att.y > canvas.height + 50) att.y = -50;
+      }
+    }
+
+    function animate() {
+      const tc = THEME_CONFIGS[currentTheme];
+      const time = Date.now() * 0.001;
+      
+      ctx.fillStyle = tc.background;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw stars
+      if (tc.hasStars) {
+        for (let s of stars) {
+          const twinkle = Math.sin(time * s.twinkleSpeed * 100 + s.twinklePhase);
+          ctx.globalAlpha = s.opacity * (0.7 + twinkle * 0.3);
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      // Draw aurora
+      if (tc.auroraWaves) {
+        const colors = ['#22d3ee', '#a855f7', '#4ade80', '#f472b6'];
+        for (let w = 0; w < tc.auroraWaves; w++) {
+          const yOffset = 100 + w * 80;
+          ctx.globalAlpha = 0.3;
+          const gradient = ctx.createLinearGradient(0, yOffset - 50, 0, yOffset + 50);
+          gradient.addColorStop(0, 'transparent');
+          gradient.addColorStop(0.5, colors[w % colors.length] + '40');
+          gradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          for (let x = 0; x <= canvas.width; x += 10) {
+            const y = yOffset + Math.sin(x * 0.003 + time * 0.5 + w) * 30 +
+                      Math.sin(x * 0.007 + time * 0.3 + w * 2) * 20 +
+                      Math.sin(x * 0.001 + time * 0.2) * 40;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineTo(canvas.width, canvas.height);
+          ctx.lineTo(0, canvas.height);
+          ctx.fill();
+        }
+      }
+      
+      // Draw mesh
+      if (tc.meshMode) {
+        const rows = tc.meshRows || 10;
+        const cols = tc.meshCols || 14;
+        const amp = tc.waveAmplitude || 20;
+        const freq = tc.waveFrequency || 0.02;
+        
+        for (let n of meshNodes) {
+          n.x = n.baseX + Math.cos(n.baseY * freq * 0.5 + time * 0.5) * (amp * 0.3);
+          n.y = n.baseY + Math.sin(n.baseX * freq + time) * amp +
+                Math.sin(n.baseX * freq * 2 + time * 0.7) * (amp * 0.5);
+        }
+        
+        ctx.strokeStyle = 'rgba(14, 165, 233, 0.2)';
+        ctx.lineWidth = 1;
+        for (let r = 0; r < rows; r++) {
+          ctx.beginPath();
+          for (let c = 0; c < cols; c++) {
+            const node = meshNodes[r * cols + c];
+            if (c === 0) ctx.moveTo(node.x, node.y);
+            else ctx.lineTo(node.x, node.y);
+          }
+          ctx.stroke();
+        }
+        for (let c = 0; c < cols; c++) {
+          ctx.beginPath();
+          for (let r = 0; r < rows; r++) {
+            const node = meshNodes[r * cols + c];
+            if (r === 0) ctx.moveTo(node.x, node.y);
+            else ctx.lineTo(node.x, node.y);
+          }
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(34, 211, 238, 0.6)';
+        for (let n of meshNodes) {
+          ctx.globalAlpha = 0.4 + Math.sin(time + n.phase) * 0.2;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      // Draw sparks
+      if (tc.heatDistortion) {
+        for (let s of sparks) {
+          s.x += s.vx;
+          s.y += s.vy;
+          s.vx += (Math.random() - 0.5) * 0.1;
+          s.life -= s.decay;
+          if (s.life <= 0) {
+            s.x = Math.random() * canvas.width;
+            s.y = canvas.height + Math.random() * 50;
+            s.vx = (Math.random() - 0.5) * 2;
+            s.vy = -(Math.random() * 3 + 2);
+            s.life = 1;
+          }
+          ctx.globalAlpha = s.life * 0.8;
+          ctx.fillStyle = '#fbbf24';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#f97316';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+      
+      // Draw rain
+      if (tc.hasRain) {
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+        ctx.lineWidth = 1;
+        for (let r of rain) {
+          r.y += r.speed;
+          r.x += Math.sin(time * 2 + rain.indexOf(r)) * 0.5;
+          if (r.y > canvas.height) {
+            r.y = -r.length;
+            r.x = Math.random() * canvas.width;
+          }
+          ctx.globalAlpha = r.opacity;
+          ctx.beginPath();
+          ctx.moveTo(r.x, r.y);
+          ctx.lineTo(r.x + Math.sin(time + rain.indexOf(r)) * 2, r.y + r.length);
+          ctx.stroke();
+        }
+      }
+      
+      updateAttractors(attractors);
+      updateAttractors(microAttractors);
+      
+      // Draw micros
+      for (let p of micros) {
+        p.opacity += p.opacityDir * p.pulseSpeed;
+        if (p.opacity > 0.5) { p.opacity = 0.5; p.opacityDir = -1; }
+        if (p.opacity < 0.08) { p.opacity = 0.08; p.opacityDir = 1; }
+        p.driftAngle += 0.003 + Math.random() * 0.002;
+        p.vx += Math.cos(p.driftAngle) * p.driftSpeed * 0.005;
+        p.vy += Math.sin(p.driftAngle) * p.driftSpeed * 0.005 * (p.fallBias || 1);
+        for (let att of microAttractors) {
+          const dx = att.x - p.x;
+          const dy = att.y - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < att.radius && dist > 0) {
+            p.vx += dx / dist * att.strength;
+            p.vy += dy / dist * att.strength;
+          }
+        }
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.996;
+        p.vy *= 0.996;
+        if (p.x < 0) { p.vx = Math.abs(p.vx) * 0.8; p.x = 1; }
+        else if (p.x > canvas.width) { p.vx = -Math.abs(p.vx) * 0.8; p.x = canvas.width - 1; }
+        if (p.y < 0) { p.vy = Math.abs(p.vy) * 0.8; p.y = 1; }
+        else if (p.y > canvas.height) { p.vy = -Math.abs(p.vy) * 0.8; p.y = canvas.height - 1; }
+        
+        const swirlTime = time * p.colorSpeed + p.swirlOffset * 0.001;
+        const colorProgress = (Math.sin(swirlTime + p.colorPhase) + 1) / 2;
+        const colorIndex = Math.floor(colorProgress * tc.microColors.length);
+        const color = tc.microColors[colorIndex];
+        
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        if (p.size > 0.8) {
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+      
+      // Draw particles
+      for (let p of particles) {
+        p.opacity += p.opacityDir * 0.003;
+        if (p.opacity > 0.8) { p.opacity = 0.8; p.opacityDir = -1; }
+        if (p.opacity < 0.2) { p.opacity = 0.2; p.opacityDir = 1; }
+        p.driftAngle += 0.005 + Math.random() * 0.003;
+        p.vx += Math.cos(p.driftAngle) * p.driftSpeed * 0.008;
+        p.vy += Math.sin(p.driftAngle) * p.driftSpeed * 0.008 * (p.fallBias || 1);
+        if (isMouseDown) {
+          const mdx = mouse.x - p.x;
+          const mdy = mouse.y - p.y;
+          const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+          if (mdist < 200 && mdist > 0) {
+            p.vx += mdx / mdist * 0.04;
+            p.vy += mdy / mdist * 0.04;
+          }
+        }
+        for (let att of attractors) {
+          const adx = att.x - p.x;
+          const ady = att.y - p.y;
+          const adist = Math.sqrt(adx * adx + ady * ady);
+          if (adist < att.radius && adist > 0) {
+            p.vx += adx / adist * att.strength;
+            p.vy += ady / adist * att.strength;
+          }
+        }
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.993;
+        p.vy *= 0.993;
+        if (p.x < 0) { p.vx = Math.abs(p.vx) * 0.7 + 0.2; p.x = 1; }
+        else if (p.x > canvas.width) { p.vx = -Math.abs(p.vx) * 0.7 - 0.2; p.x = canvas.width - 1; }
+        if (p.y < 0) { p.vy = Math.abs(p.vy) * 0.7 + 0.2; p.y = 1; }
+        else if (p.y > canvas.height) { p.vy = -Math.abs(p.vy) * 0.7 - 0.2; p.y = canvas.height - 1; }
+        
+        const swirlTime = time * p.colorSpeed * 0.5 + p.swirlOffset * 0.001;
+        const colorWave = Math.sin(swirlTime + p.colorPhase) * 0.5 + 
+                         Math.sin(swirlTime * 0.7 + p.x * 0.01) * 0.3 + 
+                         Math.sin(swirlTime * 0.5 + p.y * 0.01) * 0.2;
+        const colorProgress = (colorWave + 1) / 2;
+        const colorIndex = Math.floor(colorProgress * tc.colors.length);
+        const color = tc.colors[colorIndex];
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.globalAlpha = p.opacity;
+        ctx.fill();
+        ctx.shadowBlur = 15 * (tc.glowIntensity || 1);
+        ctx.shadowColor = color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      
+      // Draw links
+      if (!tc.meshMode) {
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const a = particles[i];
+            const b = particles[j];
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 150) {
+              const opacity = (1 - dist / 150) * 0.2;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(${tc.linkColor}, ${opacity})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+      }
+      
+      if (isMouseDown) {
+        for (let p of particles) {
+          const dx = mouse.x - p.x;
+          const dy = mouse.y - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 200) {
+            const opacity = (1 - dist / 200) * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.strokeStyle = `rgba(${tc.mouseLinkColor}, ${opacity})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+      
+      animationId = requestAnimationFrame(animate);
+    }
+
+    // UI Control functions
+    function setTheme(theme) {
+      currentTheme = theme;
+      document.querySelectorAll('[id^="btn-"]').forEach(b => {
+        if (b.id.startsWith('btn-') && !b.id.includes('font') && !b.id.includes('mode')) {
+          b.classList.remove('active');
+        }
+      });
+      document.getElementById(`btn-${theme}`).classList.add('active');
+      
+      const tc = THEME_CONFIGS[theme];
+      document.getElementById('themeTitle').textContent = tc.title;
+      document.getElementById('themeSubtitle').textContent = tc.subtitle;
+      document.body.style.color = tc.colors[0];
+      
+      initTheme(theme);
+    }
+
+    function setFont(font) {
+      currentFont = font;
+      document.querySelectorAll('[id^="btn-font-"]').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-font-${font}`).classList.add('active');
+      
+      const fc = FONT_CONFIGS[font];
+      document.body.style.fontFamily = fc.family;
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('[id^="btn-mode-"]').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-mode-${mode}`).classList.add('active');
+      initTheme(currentTheme);
+    }
+
+    // Initialize
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovAura Matrix Theme Preview</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      overflow: hidden;
+      background: #000a00;
+      font-family: 'Courier New', monospace;
+    }
+    
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .overlay {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: #00ff00;
+      z-index: 10;
+      pointer-events: none;
+      text-shadow: 0 0 10px #00ff00;
+    }
+    
+    .overlay h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    
+    .overlay p {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10;
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid #00ff00;
+      color: #00ff00;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      transition: all 0.3s;
+    }
+    
+    button:hover {
+      background: rgba(0, 255, 0, 0.3);
+      box-shadow: 0 0 15px #00ff00;
+    }
+    
+    button.active {
+      background: rgba(0, 255, 0, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  
+  <div class="overlay">
+    <h1>MATRIX THEME</h1>
+    <p>Flowing green gradient particles</p>
+    <p>Half-size • Uneven flow • No flicker</p>
+  </div>
+  
+  <div class="controls">
+    <button id="btn-idle" class="active" onclick="setMode('idle')">IDLE</button>
+    <button id="btn-active" onclick="setMode('active')">ACTIVE</button>
+    <button onclick="toggleLinks()">TOGGLE LINKS</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let width, height;
+    let particles = [];
+    let micros = [];
+    let attractors = [];
+    let microAttractors = [];
+    let mouse = { x: -1000, y: -1000 };
+    let isMouseDown = false;
+    let mode = 'idle';
+    let showLinks = true;
+    
+    // Matrix theme config
+    const theme = {
+      background: '#000a00',
+      colors: [
+        '#00ff00', '#00f500', '#00eb00', // Electric lime
+        '#00e000', '#00d600', '#00cc00', // Bright green
+        '#00c200', '#00b800', '#00ad00', // Pure green
+        '#00a300', '#009900', '#008f00', // Rich green
+        '#008500', '#007a00', '#007000', // Forest green
+        '#006600', '#005c00', '#005200', // Dark forest
+        '#004700', '#003d00', '#003300', // Deep green
+        '#002900', '#001f00', '#001400', // Very dark green
+      ],
+      microColors: [
+        '#39ff14', '#32ff12', '#2bff10', // Neon lime
+        '#1aff0d', '#0dff0b', '#05ff09', // Electric
+        '#00fa08', '#00f007', '#00e607', // Bright
+        '#00db06', '#00d106', '#00c705', // Vivid
+        '#00bc05', '#00b204', '#00a804', // Medium
+        '#009d04', '#009303', '#008903', // Standard
+        '#1aff66', '#33ff7a', '#4dff8f', // Mint accents
+      ],
+      linkColor: '0, 255, 65',
+      mouseLinkColor: '57, 255, 20',
+      particleSizeMultiplier: 0.5,
+      flowSpeed: 0.6,
+      glowIntensity: 1.5,
+    };
+    
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    
+    function init() {
+      resize();
+      window.addEventListener('resize', resize);
+      
+      const particleCount = mode === 'active' ? 140 : 100;
+      const microCount = mode === 'active' ? 100 : 70;
+      const baseSpeed = mode === 'active' ? 2.5 : 1.2;
+      
+      // Init main particles (half size)
+      particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        const colorGroup = i % 20;
+        const baseSize = (Math.random() * 3 + 1) * theme.particleSizeMultiplier;
+        
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * baseSpeed * 2 * theme.flowSpeed * (0.5 + Math.random()),
+          vy: (Math.random() - 0.5) * baseSpeed * 2 * theme.flowSpeed * (0.5 + Math.random()),
+          size: Math.max(baseSize, 0.8),
+          color: theme.colors[colorGroup % theme.colors.length],
+          baseColorIndex: colorGroup % theme.colors.length,
+          colorGroup: colorGroup,
+          colorPhase: Math.random() * Math.PI * 2,
+          colorSpeed: (0.3 + Math.random() * 2.2) * theme.flowSpeed,
+          opacity: Math.random() * 0.5 + 0.3,
+          opacityDir: Math.random() > 0.5 ? 1 : -1,
+          driftAngle: Math.random() * Math.PI * 2,
+          driftSpeed: (0.2 + Math.random() * 0.4) * theme.flowSpeed,
+          swirlOffset: Math.random() * 1000,
+          fallBias: Math.random() * 0.5 + 0.5,
+        });
+      }
+      
+      // Init micro particles (stay tiny)
+      micros = [];
+      for (let i = 0; i < microCount; i++) {
+        const colorGroup = i % 20;
+        micros.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.8 * theme.flowSpeed,
+          vy: (Math.random() - 0.5) * 0.8 * theme.flowSpeed,
+          size: 0.4 + Math.random() * 1.2, // Unchanged tiny size
+          color: theme.microColors[colorGroup % theme.microColors.length],
+          baseColorIndex: colorGroup % theme.microColors.length,
+          colorGroup: colorGroup,
+          colorPhase: Math.random() * Math.PI * 2,
+          colorSpeed: 0.3 + Math.random() * 1.2,
+          opacity: 0.15 + Math.random() * 0.35,
+          opacityDir: Math.random() > 0.5 ? 1 : -1,
+          pulseSpeed: 0.002 + Math.random() * 0.004,
+          driftAngle: Math.random() * Math.PI * 2,
+          driftSpeed: 0.1 + Math.random() * 0.3,
+          swirlOffset: Math.random() * 1000,
+          fallBias: Math.random() * 0.3 + 0.7,
+        });
+      }
+      
+      // Init attractors (green hues only)
+      attractors = [];
+      for (let i = 0; i < 4; i++) {
+        attractors.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 3,
+          vy: (Math.random() - 0.5) * 3,
+          strength: 0.015 + Math.random() * 0.025,
+          radius: 180 + Math.random() * 120,
+          lifetime: 0,
+          maxLife: 200 + Math.random() * 400,
+          speedMult: 0.5 + Math.random() * 2.5,
+          hue: [100, 120, 130, 140][i],
+        });
+      }
+      
+      // Init micro attractors
+      microAttractors = [];
+      for (let i = 0; i < 6; i++) {
+        microAttractors.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: (Math.random() - 0.5) * 1.5,
+          strength: 0.008 + Math.random() * 0.015,
+          radius: 100 + Math.random() * 80,
+          lifetime: 0,
+          maxLife: 150 + Math.random() * 300,
+          hue: [100, 110, 120, 130, 140, 150][i],
+        });
+      }
+    }
+    
+    function updateAttractors(arr) {
+      for (let a = 0; a < arr.length; a++) {
+        const att = arr[a];
+        att.lifetime++;
+        
+        if (att.lifetime > att.maxLife) {
+          att.lifetime = 0;
+          att.maxLife = 150 + Math.random() * 400;
+          const angle = Math.random() * Math.PI * 2;
+          const spd = 0.5 + Math.random() * 2.5;
+          att.vx = Math.cos(angle) * spd * 2;
+          att.vy = Math.sin(angle) * spd * 2;
+          att.strength = 0.008 + Math.random() * 0.025;
+          att.radius = 100 + Math.random() * 120;
+        }
+        
+        att.vx += (Math.random() - 0.5) * 0.08;
+        att.vy += (Math.random() - 0.5) * 0.08;
+        
+        const aspd = Math.sqrt(att.vx * att.vx + att.vy * att.vy);
+        if (aspd > 4) { att.vx = (att.vx / aspd) * 4; att.vy = (att.vy / aspd) * 4; }
+        
+        att.x += att.vx;
+        att.y += att.vy;
+        
+        if (att.x < -50) att.x = width + 50;
+        if (att.x > width + 50) att.x = -50;
+        if (att.y < -50) att.y = height + 50;
+        if (att.y > height + 50) att.y = -50;
+      }
+    }
+    
+    function animate() {
+      const time = Date.now() * 0.001;
+      
+      ctx.fillStyle = theme.background;
+      ctx.fillRect(0, 0, width, height);
+      
+      updateAttractors(attractors);
+      updateAttractors(microAttractors);
+      
+      // Update & draw micro particles
+      for (let i = 0; i < micros.length; i++) {
+        const p = micros[i];
+        
+        p.opacity += p.opacityDir * p.pulseSpeed;
+        if (p.opacity > 0.5) { p.opacity = 0.5; p.opacityDir = -1; }
+        if (p.opacity < 0.08) { p.opacity = 0.08; p.opacityDir = 1; }
+        
+        p.driftAngle += 0.003 + Math.random() * 0.002;
+        p.vx += Math.cos(p.driftAngle) * p.driftSpeed * 0.005;
+        p.vy += Math.sin(p.driftAngle) * p.driftSpeed * 0.005 * p.fallBias;
+        
+        for (let a = 0; a < microAttractors.length; a++) {
+          const att = microAttractors[a];
+          const dx = att.x - p.x;
+          const dy = att.y - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < att.radius && dist > 0) {
+            p.vx += dx / dist * att.strength;
+            p.vy += dy / dist * att.strength;
+          }
+        }
+        
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.996;
+        p.vy *= 0.996;
+        
+        const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        if (spd < 0.15) {
+          p.vx += Math.cos(p.driftAngle) * 0.1;
+          p.vy += Math.sin(p.driftAngle) * 0.1;
+        }
+        
+        if (p.x < 0) { p.vx = Math.abs(p.vx) * 0.8; p.x = 1; }
+        else if (p.x > width) { p.vx = -Math.abs(p.vx) * 0.8; p.x = width - 1; }
+        if (p.y < 0) { p.vy = Math.abs(p.vy) * 0.8; p.y = 1; }
+        else if (p.y > height) { p.vy = -Math.abs(p.vy) * 0.8; p.y = height - 1; }
+        
+        // Color cycling
+        const swirlTime = time * p.colorSpeed + p.swirlOffset * 0.001;
+        const colorProgress = (Math.sin(swirlTime + p.colorPhase) + 1) / 2;
+        const colorIndex = Math.floor(colorProgress * theme.microColors.length);
+        const particleColor = theme.microColors[colorIndex];
+        
+        ctx.globalAlpha = p.opacity;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = particleColor;
+        ctx.fill();
+        
+        if (p.size > 0.8) {
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = particleColor;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+      
+      // Update & draw main particles
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        
+        p.opacity += p.opacityDir * 0.003;
+        if (p.opacity > 0.8) { p.opacity = 0.8; p.opacityDir = -1; }
+        if (p.opacity < 0.2) { p.opacity = 0.2; p.opacityDir = 1; }
+        
+        p.driftAngle += 0.005 + Math.random() * 0.003;
+        p.vx += Math.cos(p.driftAngle) * p.driftSpeed * 0.008;
+        p.vy += Math.sin(p.driftAngle) * p.driftSpeed * 0.008 * p.fallBias;
+        
+        if (isMouseDown) {
+          const mdx = mouse.x - p.x;
+          const mdy = mouse.y - p.y;
+          const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+          if (mdist < 200 && mdist > 0) {
+            p.vx += mdx / mdist * 0.04;
+            p.vy += mdy / mdist * 0.04;
+          }
+        }
+        
+        for (let a = 0; a < attractors.length; a++) {
+          const att = attractors[a];
+          const adx = att.x - p.x;
+          const ady = att.y - p.y;
+          const adist = Math.sqrt(adx * adx + ady * ady);
+          if (adist < att.radius && adist > 0) {
+            p.vx += adx / adist * att.strength;
+            p.vy += ady / adist * att.strength;
+          }
+        }
+        
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.993;
+        p.vy *= 0.993;
+        
+        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        if (speed < 0.3) {
+          p.vx += Math.cos(p.driftAngle) * 0.15;
+          p.vy += Math.sin(p.driftAngle) * 0.15;
+        }
+        
+        if (p.x < 0) { p.vx = Math.abs(p.vx) * 0.7 + 0.2; p.x = 1; }
+        else if (p.x > width) { p.vx = -Math.abs(p.vx) * 0.7 - 0.2; p.x = width - 1; }
+        if (p.y < 0) { p.vy = Math.abs(p.vy) * 0.7 + 0.2; p.y = 1; }
+        else if (p.y > height) { p.vy = -Math.abs(p.vy) * 0.7 - 0.2; p.y = height - 1; }
+        
+        // Color cycling with uneven flow
+        const swirlTime = time * p.colorSpeed * 0.5 + p.swirlOffset * 0.001;
+        const colorWave = Math.sin(swirlTime + p.colorPhase) * 0.5 + 
+                         Math.sin(swirlTime * 0.7 + p.x * 0.01) * 0.3 + 
+                         Math.sin(swirlTime * 0.5 + p.y * 0.01) * 0.2;
+        const colorProgress = (colorWave + 1) / 2;
+        const mainColorIndex = Math.floor(colorProgress * theme.colors.length);
+        const mainParticleColor = theme.colors[mainColorIndex];
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = mainParticleColor;
+        ctx.globalAlpha = p.opacity;
+        ctx.fill();
+        
+        // Matrix glow effect
+        ctx.shadowBlur = 15 * theme.glowIntensity;
+        ctx.shadowColor = mainParticleColor;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      
+      // Draw particle links
+      if (showLinks) {
+        ctx.globalAlpha = 1;
+        const linkDistance = 150;
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const a = particles[i];
+            const b = particles[j];
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < linkDistance) {
+              const opacity = (1 - dist / linkDistance) * 0.2;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(${theme.linkColor}, ${opacity})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+        
+        // Mouse links
+        if (isMouseDown) {
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const dx = mouse.x - p.x;
+            const dy = mouse.y - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 200) {
+              const opacity = (1 - dist / 200) * 0.4;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(mouse.x, mouse.y);
+              ctx.strokeStyle = `rgba(${theme.mouseLinkColor}, ${opacity})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+        }
+      }
+      
+      // Ghost attractor links
+      for (let a = 0; a < attractors.length; a++) {
+        const att = attractors[a];
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const dx = att.x - p.x;
+          const dy = att.y - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < att.radius * 0.5) {
+            const opacity = (1 - dist / (att.radius * 0.5)) * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(att.x, att.y);
+            ctx.strokeStyle = `hsla(${att.hue}, 80%, 60%, ${opacity})`;
+            ctx.lineWidth = 0.4;
+            ctx.stroke();
+          }
+        }
+      }
+      
+      // Micro-attractor subtle aura
+      for (let a = 0; a < microAttractors.length; a++) {
+        const att = microAttractors[a];
+        const grad = ctx.createRadialGradient(att.x, att.y, 0, att.x, att.y, att.radius * 0.4);
+        grad.addColorStop(0, `hsla(${att.hue}, 70%, 60%, 0.02)`);
+        grad.addColorStop(1, `hsla(${att.hue}, 70%, 60%, 0)`);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(att.x, att.y, att.radius * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      requestAnimationFrame(animate);
+    }
+    
+    // Controls
+    function setMode(newMode) {
+      mode = newMode;
+      document.getElementById('btn-idle').classList.toggle('active', mode === 'idle');
+      document.getElementById('btn-active').classList.toggle('active', mode === 'active');
+      init();
+    }
+    
+    function toggleLinks() {
+      showLinks = !showLinks;
+    }
+    
+    // Event listeners
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    
+    window.addEventListener('mousedown', () => isMouseDown = true);
+    window.addEventListener('mouseup', () => isMouseDown = false);
+    window.addEventListener('mouseleave', () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+      isMouseDown = false;
+    });
+    
+    // Start
+    init();
+    animate();
+  </script>
+</body>
+</html>

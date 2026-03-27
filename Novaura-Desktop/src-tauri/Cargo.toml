@@ -1,0 +1,52 @@
+[package]
+name = "novaura-desktop"
+version = "0.1.0"
+description = "Novaura Web OS - Desktop Edition"
+authors = ["Aura x Nova"]
+license = "MIT"
+repository = "https://github.com/novaura/novaura-desktop"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1.5.1", features = [] }
+
+[dependencies]
+tauri = { version = "1.6.0", features = [ "window-close", "window-minimize", "os-all", "window-maximize", "window-unminimize", "window-hide", "path-all", "window-unmaximize", "window-set-focus", "window-start-dragging", "window-show", "shell-open", "system-tray"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+reqwest = { version = "0.11", features = ["json", "stream"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+futures-util = "0.3"
+
+# SQLite with vector support
+rusqlite = { version = "0.30", features = ["bundled", "chrono"] }
+
+# File system
+walkdir = "2.4"
+
+# File watching for IDE
+notify = "6.1"
+
+# Notifications
+notify-rust = "4.10"
+
+# Process management
+sysinfo = "0.30"
+
+# Additional dependencies
+open = "5.0"
+dirs = "5.0"
+lazy_static = "1.4"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

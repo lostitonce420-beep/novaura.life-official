@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SOCIAL PROFILES
+    // ═══════════════════════════════════════════════════════════════
+    match /social_profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SOCIAL POSTS
+    // ═══════════════════════════════════════════════════════════════
+    match /social_posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.authorId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        (resource.data.authorId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && 
+        (resource.data.authorId == request.auth.uid || isAdmin());
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && 
+          request.resource.data.authorId == request.auth.uid;
+        allow update: if isAuthenticated() && 
+          (resource.data.authorId == request.auth.uid || isAdmin());
+        allow delete: if isAuthenticated() && 
+          (resource.data.authorId == request.auth.uid || isAdmin());
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SOCIAL FRIENDS / FOLLOWERS
+    // ═══════════════════════════════════════════════════════════════
+    match /social_friends/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    match /social_followers/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DM THREADS
+    // ═══════════════════════════════════════════════════════════════
+    match /social_dm_threads/{threadId} {
+      allow read: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+      allow create: if isAuthenticated() && 
+        request.auth.uid in request.resource.data.participants;
+      allow update: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+      allow delete: if false; // Never delete threads, only archive
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/social_dm_threads/$(threadId)).data.participants;
+        allow create: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/social_dm_threads/$(threadId)).data.participants &&
+          request.resource.data.senderId == request.auth.uid;
+        allow update: if false; // Messages immutable
+        allow delete: if false; // Messages immutable
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CHAT ROOMS
+    // ═══════════════════════════════════════════════════════════════
+    match /social_chat_rooms/{roomId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && 
+          request.resource.data.authorId == request.auth.uid;
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FCM TOKENS
+    // ═══════════════════════════════════════════════════════════════
+    match /user_fcm_tokens/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
+
+      match /tokens/{token} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ADMIN USERS
+    // ═══════════════════════════════════════════════════════════════
+    match /admin_users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "novaura-webos",
+  "type": "static",
+  "build": { "output": "dist" },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://novaura-api.polsia.app/api/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      }
+    },
+    {
+      "src": "/auth/(.*)",
+      "dest": "https://novaura-api.polsia.app/auth/$1"
+    },
+    {
+      "src": "/ai/(.*)",
+      "dest": "https://novaura-api.polsia.app/ai/$1"
+    },
+    {
+      "src": "/health",
+      "dest": "https://novaura-api.polsia.app/health"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}

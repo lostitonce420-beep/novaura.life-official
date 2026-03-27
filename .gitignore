@@ -1,0 +1,11 @@
+node_modules/
+.vs/
+.vscode/
+dist/
+.env
+.env.local
+*.sqlite
+*.bin
+.wrangler/
+.DS_Store
+Thumbs.db

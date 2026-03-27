@@ -1,0 +1,78 @@
+ALIBABA ARCHITECTURE SESSION PREP
+=================================
+
+QUICK REPLY:
+------------
+Hi Cinco,
+
+This sounds perfect. Infrastructure has been my biggest blocker - having it unified and optimized would let me focus 100% on the product.
+
+Next week works great. Here are my windows:
+- Tuesday 2-5pm CST
+- Wednesday 10am-2pm CST  
+- Thursday any time after 11am CST
+
+Looking forward to the architecture session.
+
+Thanks,
+[Your name]
+
+
+WHAT THEY WANT TO KNOW:
+-----------------------
+
+Current Stack:
+- Frontend: React 19 + Vite (134 files, ~26K lines)
+- Backend: Cloudflare Workers + TypeScript
+- Database: PostgreSQL
+- AI: Gemini + Ollama + BYOK
+- Desktop: Tauri (Rust) + WPF (C#, 68K lines)
+
+Traffic Estimates:
+- Month 1: 1K users, 10K requests/day
+- Month 6: 10K users, 100K requests/day
+- AI calls: 100-10K/day depending on tier
+
+AI Usage:
+- Free: 7 calls/day, 4K tokens (Gemini Flash)
+- Paid: 50-200 calls/day, 8K-16K context
+- Pro: BYOK (user brings own API key)
+
+Growth Goals:
+- Year 1: 50K users, 5K paying, $50K MRR
+
+
+WHAT YOU NEED:
+--------------
+
+Infrastructure:
+- ECS instances: $200-400/month
+- RDS PostgreSQL: $300-500/month  
+- CDN: $100/month
+- Function Compute (AI): $200-500/month
+- OSS (storage): $50/month
+- Total: ~$1000-1500/month
+
+Credits Ask: $5K-15K (6-12 months runway)
+
+
+QUESTIONS FOR THEM:
+-------------------
+1. Best setup for AI inference - Function Compute or ECS?
+2. Can you help optimize PostgreSQL for our RAG system?
+3. Recommendation for real-time features (WebSockets)?
+4. How to handle BYOK API keys securely?
+5. Path from credits to paid partnership?
+6. Startup pricing after credits expire?
+7. Marketplace featuring timeline?
+
+
+THE GOAL:
+---------
+Walk away with:
+- $5K-15K cloud credits confirmed
+- Architecture recommendation  
+- Migration timeline
+- Partner Growth team intro
+
+This is a foot in the door. Prove the tech works, then negotiate the bigger partnership.

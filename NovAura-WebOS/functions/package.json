@@ -1,0 +1,40 @@
+{
+  "name": "novaura-systems-functions",
+  "version": "2.0.0",
+  "description": "Firebase Cloud Functions — NovAura unified backend (social + platform API)",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "googleapis": "^144.0.0",
+    "@google-cloud/vertexai": "^1.9.0",
+    "ws": "^8.18.0",
+    
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.0.0",
+    "typescript": "^5.9.3",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/ws": "^8.5.13",
+    "@types/node": "^20.0.0"
+  },
+  "private": true
+}

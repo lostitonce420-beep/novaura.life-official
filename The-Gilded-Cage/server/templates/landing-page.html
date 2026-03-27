@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>The Gilded Cage — A Fantasy RPG</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A dark fantasy RPG of mystery, choices, and redemption. Begin your adventure in The Gilded Cage." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --gold: #d4af37;
+        --gold-dim: rgba(212, 175, 55, 0.6);
+        --gold-faint: rgba(212, 175, 55, 0.12);
+        --parchment: #f0e3c4;
+        --bg-deep: #0a0806;
+        --bg-dark: #130f0a;
+        --bg-card: rgba(30, 22, 12, 0.9);
+        --text-muted: rgba(240, 227, 196, 0.55);
+        --danger: #8b2500;
+        --radius: 12px;
+      }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        font-family: 'Crimson Text', Georgia, serif;
+        background-color: var(--bg-deep);
+        color: var(--parchment);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* ── HERO ── */
+      .hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 80px 24px 60px;
+        overflow: hidden;
+      }
+
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 60% at 50% 30%, rgba(139, 69, 19, 0.18) 0%, transparent 70%),
+          radial-gradient(ellipse 60% 80% at 20% 80%, rgba(212, 175, 55, 0.06) 0%, transparent 60%),
+          radial-gradient(ellipse 50% 50% at 80% 10%, rgba(80, 40, 10, 0.15) 0%, transparent 60%),
+          linear-gradient(180deg, #0a0806 0%, #1a1008 40%, #0e0b06 100%);
+      }
+
+      .hero-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(212, 175, 55, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(212, 175, 55, 0.04) 1px, transparent 1px);
+        background-size: 60px 60px;
+        mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 80%);
+      }
+
+      .hero-ornament {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+        opacity: 0.7;
+      }
+
+      .ornament-line {
+        width: 60px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gold));
+      }
+
+      .ornament-line.right {
+        background: linear-gradient(90deg, var(--gold), transparent);
+      }
+
+      .ornament-diamond {
+        width: 8px;
+        height: 8px;
+        background: var(--gold);
+        transform: rotate(45deg);
+      }
+
+      .hero-eyebrow {
+        font-family: 'Cinzel', serif;
+        font-size: 11px;
+        letter-spacing: 4px;
+        color: var(--gold);
+        text-transform: uppercase;
+      }
+
+      .hero-title {
+        font-family: 'Cinzel', serif;
+        font-weight: 900;
+        font-size: clamp(48px, 10vw, 96px);
+        color: var(--parchment);
+        line-height: 1.0;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
+        position: relative;
+      }
+
+      .hero-title span {
+        color: var(--gold);
+      }
+
+      .hero-subtitle {
+        font-family: 'Crimson Text', serif;
+        font-style: italic;
+        font-size: clamp(18px, 3vw, 24px);
+        color: var(--text-muted);
+        max-width: 520px;
+        line-height: 1.6;
+        margin: 0 auto 44px;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .btn-primary {
+        font-family: 'Cinzel', serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: var(--bg-deep);
+        background: linear-gradient(135deg, #e8c840 0%, #c8a020 50%, #d4af37 100%);
+        padding: 16px 40px;
+        border-radius: var(--radius);
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 24px rgba(212, 175, 55, 0.3), 0 0 0 1px rgba(212, 175, 55, 0.4);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(212, 175, 55, 0.45), 0 0 0 1px rgba(212, 175, 55, 0.6);
+      }
+
+      .btn-secondary {
+        font-family: 'Cinzel', serif;
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: var(--gold);
+        background: transparent;
+        padding: 16px 32px;
+        border-radius: var(--radius);
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-secondary:hover {
+        background: var(--gold-faint);
+        border-color: rgba(212, 175, 55, 0.6);
+      }
+
+      .hero-scroll {
+        position: absolute;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        opacity: 0.35;
+        animation: bounce 2s ease-in-out infinite;
+      }
+
+      .hero-scroll span {
+        font-family: 'Cinzel', serif;
+        font-size: 10px;
+        letter-spacing: 3px;
+        color: var(--gold);
+        text-transform: uppercase;
+      }
+
+      .scroll-arrow {
+        width: 1px;
+        height: 32px;
+        background: linear-gradient(180deg, var(--gold), transparent);
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(6px); }
+      }
+
+      /* ── FEATURES ── */
+      .section {
+        padding: 96px 24px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 64px;
+      }
+
+      .section-eyebrow {
+        font-family: 'Cinzel', serif;
+        font-size: 11px;
+        letter-spacing: 4px;
+        color: var(--gold);
+        text-transform: uppercase;
+        opacity: 0.7;
+        margin-bottom: 16px;
+      }
+
+      .section-title {
+        font-family: 'Cinzel', serif;
+        font-weight: 600;
+        font-size: clamp(28px, 5vw, 44px);
+        color: var(--parchment);
+        line-height: 1.2;
+      }
+
+      .section-desc {
+        font-style: italic;
+        font-size: 18px;
+        color: var(--text-muted);
+        margin-top: 16px;
+        max-width: 560px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+      }
+
+      .feature-card {
+        background: var(--bg-card);
+        border: 1px solid rgba(212, 175, 55, 0.18);
+        border-radius: var(--radius);
+        padding: 32px;
+        transition: all 0.25s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        opacity: 0;
+        transition: opacity 0.25s;
+      }
+
+      .feature-card:hover {
+        border-color: rgba(212, 175, 55, 0.35);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      }
+
+      .feature-card:hover::before {
+        opacity: 1;
+      }
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        background: rgba(212, 175, 55, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        font-size: 22px;
+      }
+
+      .feature-title {
+        font-family: 'Cinzel', serif;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--parchment);
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+      }
+
+      .feature-desc {
+        font-size: 15px;
+        color: var(--text-muted);
+        line-height: 1.7;
+      }
+
+      /* ── ACTS ── */
+      .acts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+
+      .act-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 40px;
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .act-card.act-1 {
+        border-color: rgba(139, 69, 19, 0.4);
+        background: linear-gradient(135deg, rgba(30, 22, 12, 0.95) 0%, rgba(20, 12, 5, 0.95) 100%);
+      }
+
+      .act-card.act-2 {
+        border-color: rgba(70, 130, 180, 0.3);
+        background: linear-gradient(135deg, rgba(12, 18, 28, 0.95) 0%, rgba(8, 14, 22, 0.95) 100%);
+      }
+
+      .act-glow {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.15;
+        top: -40px;
+        right: -40px;
+        pointer-events: none;
+      }
+
+      .act-1 .act-glow { background: #8b4513; }
+      .act-2 .act-glow { background: #4682b4; }
+
+      .act-label {
+        font-family: 'Cinzel', serif;
+        font-size: 10px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        opacity: 0.6;
+      }
+
+      .act-1 .act-label { color: #d4783a; }
+      .act-2 .act-label { color: #6ba3c8; }
+
+      .act-title {
+        font-family: 'Cinzel', serif;
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--parchment);
+        margin-bottom: 14px;
+        line-height: 1.3;
+      }
+
+      .act-desc {
+        font-style: italic;
+        font-size: 15px;
+        color: var(--text-muted);
+        line-height: 1.8;
+      }
+
+      .act-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .act-tag {
+        font-family: 'Cinzel', serif;
+        font-size: 10px;
+        letter-spacing: 1px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        border: 1px solid;
+        opacity: 0.75;
+      }
+
+      .act-1 .act-tag { color: #d4783a; border-color: rgba(212, 120, 58, 0.35); background: rgba(212, 120, 58, 0.08); }
+      .act-2 .act-tag { color: #6ba3c8; border-color: rgba(107, 163, 200, 0.35); background: rgba(107, 163, 200, 0.08); }
+
+      /* ── PLAY SECTION ── */
+      .play-section {
+        background: linear-gradient(180deg, transparent, rgba(212, 175, 55, 0.04) 30%, rgba(212, 175, 55, 0.04) 70%, transparent);
+        border-top: 1px solid rgba(212, 175, 55, 0.1);
+        border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        padding: 96px 24px;
+      }
+
+      .play-inner {
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      .play-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 48px;
+      }
+
+      .play-card {
+        background: var(--bg-card);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        border-radius: 16px;
+        padding: 36px 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .play-card-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+      }
+
+      .play-card-title {
+        font-family: 'Cinzel', serif;
+        font-size: 18px;
+        color: var(--parchment);
+      }
+
+      .play-card-desc {
+        font-style: italic;
+        font-size: 14px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        text-align: center;
+      }
+
+      .play-card-action {
+        margin-top: auto;
+        width: 100%;
+      }
+
+      .qr-wrap {
+        width: 160px;
+        height: 160px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 10px;
+        margin: 0 auto;
+      }
+
+      .qr-wrap canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        padding: 40px 24px;
+        text-align: center;
+        border-top: 1px solid rgba(212, 175, 55, 0.1);
+      }
+
+      .footer-logo {
+        font-family: 'Cinzel', serif;
+        font-size: 18px;
+        color: var(--gold);
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+      }
+
+      .footer-sub {
+        font-style: italic;
+        font-size: 14px;
+        color: var(--text-muted);
+      }
+
+      /* ── LOADING ── */
+      .loading {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--bg-deep);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .loading.active { display: flex; }
+
+      .spinner {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid rgba(212, 175, 55, 0.2);
+        border-top-color: var(--gold);
+        animation: spin 0.9s linear infinite;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .loading-text {
+        font-family: 'Cinzel', serif;
+        font-size: 13px;
+        letter-spacing: 3px;
+        color: var(--gold-dim);
+        text-transform: uppercase;
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 720px) {
+        .acts-grid, .play-cards {
+          grid-template-columns: 1fr;
+        }
+
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-title { font-size: 42px; }
+        .hero-actions { flex-direction: column; align-items: stretch; }
+        .btn-primary, .btn-secondary { text-align: center; }
+      }
+
+      /* ── FADE-IN ── */
+      .fade-up {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+
+      .fade-up.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Opening the cage...</div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+
+      <div class="hero-ornament">
+        <div class="ornament-line"></div>
+        <div class="ornament-diamond"></div>
+        <span class="hero-eyebrow">A Fantasy RPG Experience</span>
+        <div class="ornament-diamond"></div>
+        <div class="ornament-line right"></div>
+      </div>
+
+      <h1 class="hero-title">The <span>Gilded</span> Cage</h1>
+
+      <p class="hero-subtitle">
+        A dark tale of mystery, memory, and choices that echo through two worlds.
+        Survive the gilded walls of a forbidden house — then uncover the truth in the city of iron and steam.
+      </p>
+
+      <div class="hero-actions">
+        <a href="/" class="btn-primary" id="play-web-btn">
+          Play in Browser
+        </a>
+        <a href="#get-the-app" class="btn-secondary">
+          Get on Mobile
+        </a>
+      </div>
+
+      <div class="hero-scroll">
+        <span>Explore</span>
+        <div class="scroll-arrow"></div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section fade-up">
+      <div class="section-header">
+        <p class="section-eyebrow">What awaits you</p>
+        <h2 class="section-title">A World Built on Consequence</h2>
+        <p class="section-desc">Every conversation, every alliance, every secret uncovered shapes the path ahead.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card fade-up">
+          <div class="feature-icon">&#9876;</div>
+          <div class="feature-title">Turn-Based Combat</div>
+          <p class="feature-desc">Strategic battles against a growing bestiary of creatures through 30 floors of a procedurally-generated dungeon.</p>
+        </div>
+
+        <div class="feature-card fade-up">
+          <div class="feature-icon">&#128172;</div>
+          <div class="feature-title">Deep Relationships</div>
+          <p class="feature-desc">Six unique characters with affinity systems, hidden backstories, and branching dialogue that evolves with your choices.</p>
+        </div>
+
+        <div class="feature-card fade-up">
+          <div class="feature-icon">&#128269;</div>
+          <div class="feature-title">Mystery Investigation</div>
+          <p class="feature-desc">Collect clues, decode secrets, and piece together a conspiracy that spans both Acts of the story.</p>
+        </div>
+
+        <div class="feature-card fade-up">
+          <div class="feature-icon">&#9883;</div>
+          <div class="feature-title">Steampunk Open World</div>
+          <p class="feature-desc">Explore Ironhaven — a city of gears and secrets with shops, guilds, and a web of side quests waiting to be unraveled.</p>
+        </div>
+
+        <div class="feature-card fade-up">
+          <div class="feature-icon">&#9800;</div>
+          <div class="feature-title">Amnesia-Driven Story</div>
+          <p class="feature-desc">Who are you? Why are you here? The answer spans two acts and changes everything you thought you knew.</p>
+        </div>
+
+        <div class="feature-card fade-up">
+          <div class="feature-icon">&#127918;</div>
+          <div class="feature-title">Visual Sprite World</div>
+          <p class="feature-desc">Hand-crafted 2.5D town maps, animated combat scenes, and first-person dungeon crawls — all rendered in-engine.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTS -->
+    <section class="section fade-up">
+      <div class="section-header">
+        <p class="section-eyebrow">The Story</p>
+        <h2 class="section-title">Two Acts. One Truth.</h2>
+        <p class="section-desc">A journey from the gilded darkness of captivity to the iron streets of a city with no memory of who you are.</p>
+      </div>
+
+      <div class="acts-grid">
+        <div class="act-card act-1 fade-up">
+          <div class="act-glow"></div>
+          <div class="act-label">Act I</div>
+          <div class="act-title">The Gilded Cage</div>
+          <p class="act-desc">
+            You wake inside a lavish but secretive establishment with no memory of how you arrived.
+            Six extraordinary residents each hold a piece of the puzzle. Earn their trust — or betray it.
+            Every choice narrows the circle of suspects.
+          </p>
+          <div class="act-tags">
+            <span class="act-tag">Mystery</span>
+            <span class="act-tag">Dark Fantasy</span>
+            <span class="act-tag">Dialogue Choices</span>
+            <span class="act-tag">Puzzle</span>
+          </div>
+        </div>
+
+        <div class="act-card act-2 fade-up">
+          <div class="act-glow"></div>
+          <div class="act-label">Act II</div>
+          <div class="act-title">Ironhaven</div>
+          <p class="act-desc">
+            The city of gears and steam holds the answers — but first you must survive it.
+            Navigate a sprawling open town, descend into a 30-floor dungeon, and
+            untangle the conspiracy that connects both worlds.
+          </p>
+          <div class="act-tags">
+            <span class="act-tag">Steampunk</span>
+            <span class="act-tag">Open World</span>
+            <span class="act-tag">Dungeon Crawl</span>
+            <span class="act-tag">RPG</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAY SECTION -->
+    <section class="play-section" id="get-the-app">
+      <div class="play-inner">
+        <p class="section-eyebrow fade-up">Begin Your Journey</p>
+        <h2 class="section-title fade-up">Play Anywhere</h2>
+        <p class="section-desc fade-up">Available in your browser right now, or scan the QR code to play on iOS and Android via Expo Go.</p>
+
+        <div class="play-cards">
+          <div class="play-card fade-up">
+            <div class="play-card-icon">&#128187;</div>
+            <div class="play-card-title">Web Browser</div>
+            <p class="play-card-desc">No download required. Jump straight into the story from any modern browser on desktop or mobile.</p>
+            <div class="play-card-action">
+              <a href="/" id="play-web-btn-2" class="btn-primary" style="display: block; text-align: center;">
+                Play Now — Free
+              </a>
+            </div>
+          </div>
+
+          <div class="play-card fade-up">
+            <div class="play-card-icon">&#128241;</div>
+            <div class="play-card-title">iOS &amp; Android</div>
+            <p class="play-card-desc">Scan with your phone's camera or the Expo Go app to experience it natively on your device.</p>
+            <div class="play-card-action">
+              <div class="qr-wrap" id="qr-code"></div>
+              <a href="exps://EXPS_URL_PLACEHOLDER" id="expo-open-btn" class="btn-secondary" style="display: block; text-align: center; margin-top: 12px;">
+                Open in Expo Go
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-logo">The Gilded Cage</div>
+      <p class="footer-sub">A fantasy RPG built with Expo &amp; React Native &mdash; playable anywhere</p>
+    </footer>
+
+    <script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+    <script>
+      (function () {
+        const deepLink = "exps://EXPS_URL_PLACEHOLDER";
+
+        // QR Code
+        const qrCode = new QRCodeStyling({
+          width: 400, height: 400,
+          data: deepLink,
+          image: "/assets/images/icon.png",
+          dotsOptions: { color: "#1a1008", type: "rounded" },
+          backgroundOptions: { color: "#ffffff" },
+          imageOptions: { crossOrigin: "anonymous", margin: 6, imageSize: 0.3 },
+          cornersSquareOptions: { type: "extra-rounded" },
+          cornersDotOptions: { type: "dot" },
+          qrOptions: { errorCorrectionLevel: "H" },
+        });
+        qrCode.append(document.getElementById("qr-code"));
+
+        // Auto-open on mobile
+        const ua = navigator.userAgent;
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(ua) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+        if (isMobile) {
+          const loading = document.getElementById("loading");
+          loading.classList.add("active");
+          window.location.href = deepLink;
+          setTimeout(function () {
+            loading.classList.remove("active");
+          }, 800);
+        }
+
+        // Intersection Observer for fade-up animations
+        const observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+              }
+            });
+          },
+          { threshold: 0.1 }
+        );
+
+        document.querySelectorAll(".fade-up").forEach(function (el) {
+          observer.observe(el);
+        });
+      })();
+    </script>
+  </body>
+</html>
