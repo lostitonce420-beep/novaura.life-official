@@ -8,12 +8,12 @@
  * - Auth headers, error handling, provider fallback
  */
 
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
 
 // ─── Auth ──────────────────────────────────────────────────────────────
 
 export function getAuthHeaders() {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('novaura-auth-token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

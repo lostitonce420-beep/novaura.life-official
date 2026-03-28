@@ -67,11 +67,41 @@ export default function BillingWindow() {
     
     setIsLoading(true);
     
-    // Mock Stripe checkout
-    setTimeout(() => {
+    try {
+      // Call our common checkout API
+      const user = JSON.parse(localStorage.getItem('user_data') || '{}');
+      const response = await fetch(`${BACKEND_URL}/stripe/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('novaura-auth-token')}`
+        },
+        body: JSON.stringify({
+          userId: user.uid || user.id,
+          items: [{
+            asset: {
+              id: planId,
+              title: `NovAura ${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan`,
+              price: PLANS.find(p => p.id === planId)?.price * 100, // into cents
+              type: 'subscription',
+              shortDescription: `Monthly subscription to ${planId} tier features.`
+            }
+          }]
+        })
+      });
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+    } catch (err) {
+      console.error('Subscription error:', err);
+      alert(`Error starting subscription: ${err.message}`);
+    } finally {
       setIsLoading(false);
-      alert(`Redirecting to Stripe checkout for ${planId} plan...\n\nIn production, this would open Stripe Checkout`);
-    }, 1000);
+    }
   };
 
   const getColorClass = (color) => {

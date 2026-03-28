@@ -15,6 +15,7 @@ import vertexRoutes from './routes/vertex';
 import driveRoutes from './routes/drive';
 import musicRoutes from './routes/music';
 import searchRoutes from './routes/search';
+import stripeRoutes from './routes/stripe';
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use('/vertex', vertexRoutes);
 app.use('/drive', driveRoutes);
 app.use('/music', musicRoutes);
 app.use('/search', searchRoutes);
+app.use('/stripe', stripeRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

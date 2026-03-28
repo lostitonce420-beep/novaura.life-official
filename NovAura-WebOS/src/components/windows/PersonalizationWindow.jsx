@@ -105,6 +105,12 @@ export default function PersonalizationWindow({ onThemeChange, onOpenWindow }) {
   const [activeTab, setActiveTab] = useState('themes');
   const [selectedTheme, setSelectedTheme] = useState('cosmic');
   const [taskbarApps, setTaskbarApps] = useState([]);
+  const [llmConfig, setLlmConfig] = useState({
+    useLocalLLM: false,
+    localLLMUrl: 'http://localhost:11434/api/generate',
+    localLLMModel: 'llama3',
+    apiKey: ''
+  });
   const [draggedItem, setDraggedItem] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -112,17 +118,19 @@ export default function PersonalizationWindow({ onThemeChange, onOpenWindow }) {
   useEffect(() => {
     const savedTheme = localStorage.getItem('novaura-theme') || 'cosmic';
     const savedApps = localStorage.getItem('novaura-taskbar-apps');
+    const savedAI = localStorage.getItem('llm_config');
     
     setSelectedTheme(savedTheme);
     
     if (savedApps) {
       setTaskbarApps(JSON.parse(savedApps));
     } else {
-      // Use defaults
-      const defaults = AVAILABLE_APPS
-        .filter(app => app.default)
-        .map(app => app.id);
+      const defaults = AVAILABLE_APPS.filter(app => app.default).map(app => app.id);
       setTaskbarApps(defaults);
+    }
+
+    if (savedAI) {
+      setLlmConfig(JSON.parse(savedAI));
     }
   }, []);
 
@@ -174,12 +182,14 @@ export default function PersonalizationWindow({ onThemeChange, onOpenWindow }) {
   const saveSettings = () => {
     localStorage.setItem('novaura-theme', selectedTheme);
     localStorage.setItem('novaura-taskbar-apps', JSON.stringify(taskbarApps));
+    localStorage.setItem('llm_config', JSON.stringify(llmConfig));
 
     // Apply theme
     document.documentElement.setAttribute('data-theme', selectedTheme);
 
-    // Notify Toolbar to update in real-time (same-tab writes don't fire 'storage')
+    // Notify Toolbar and App to update in real-time
     window.dispatchEvent(new CustomEvent('novaura-taskbar-update', { detail: taskbarApps }));
+    window.dispatchEvent(new CustomEvent('novaura-ai-config-update', { detail: llmConfig }));
 
     toast.success('Settings saved!', {
       description: 'Your personalization preferences have been updated.',
@@ -247,7 +257,7 @@ export default function PersonalizationWindow({ onThemeChange, onOpenWindow }) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="themes" className="gap-2">
             <Palette className="w-4 h-4" />
             Themes
@@ -255,6 +265,10 @@ export default function PersonalizationWindow({ onThemeChange, onOpenWindow }) {
           <TabsTrigger value="taskbar" className="gap-2">
             <Layout className="w-4 h-4" />
             Taskbar
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="gap-2">
+            <Cpu className="w-4 h-4" />
+            AI Engine
           </TabsTrigger>
         </TabsList>
 
@@ -339,89 +353,85 @@ export default function PersonalizationWindow({ onThemeChange, onOpenWindow }) {
         </TabsContent>
 
         {/* Taskbar Tab */}
-        <TabsContent value="taskbar" className="space-y-6">
-          <div>
-            <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-              <Grid className="w-5 h-5 text-primary" />
-              Taskbar Apps
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Select which apps appear in your taskbar and drag to reorder them.
-            </p>
-
-            {/* App Selection */}
-            <Card className="p-4 mb-6">
-              <h3 className="font-medium mb-3">Visible Apps</h3>
-              <div className="flex flex-wrap gap-2">
-                {AVAILABLE_APPS.map((app) => {
-                  const isEnabled = taskbarApps.includes(app.id);
-                  return (
-                    <button
-                      key={app.id}
-                      onClick={() => toggleApp(app.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                        isEnabled
-                          ? 'bg-primary/10 border-primary text-primary'
-                          : 'bg-muted border-transparent text-muted-foreground hover:border-border'
-                      }`}
-                    >
-                      <span>{isEnabled ? '✓' : '+'}</span>
-                      <span className="text-lg">{app.icon}</span>
-                      <span className="text-sm font-medium">{app.name}</span>
-                    </button>
-                  );
-                })}
+        {/* AI Engine Tab */}
+        <TabsContent value="ai" className="space-y-6">
+          <Card className="p-4 bg-muted/50 border-primary/20">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Cpu className="w-5 h-5 text-primary" />
+                  AI Provider Settings
+                </h3>
+                <p className="text-sm text-muted-foreground">Toggle between Cloud and Local inference</p>
               </div>
-            </Card>
+              <Switch 
+                checked={llmConfig.useLocalLLM} 
+                onCheckedChange={(val) => {
+                  setLlmConfig(prev => ({ ...prev, useLocalLLM: val }));
+                  setHasChanges(true);
+                }} 
+              />
+            </div>
 
-            {/* Taskbar Preview / Reorder */}
-            <Card className="p-4">
-              <h3 className="font-medium mb-3 flex items-center gap-2">
-                <GripVertical className="w-4 h-4 text-muted-foreground" />
-                Taskbar Order
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Drag items to rearrange their order in the taskbar.
-              </p>
-
-              <div className="flex flex-wrap gap-2 p-4 bg-muted/50 rounded-lg min-h-[60px]">
-                {taskbarApps.length === 0 ? (
-                  <p className="text-muted-foreground text-sm w-full text-center py-2">
-                    No apps selected. Choose apps above to add them to your taskbar.
-                  </p>
-                ) : (
-                  taskbarApps.map((appId, index) => {
-                    const app = AVAILABLE_APPS.find(a => a.id === appId);
-                    if (!app) return null;
-                    
-                    return (
-                      <div
-                        key={app.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, index)}
-                        onDragOver={(e) => handleDragOver(e, index)}
-                        onDragEnd={handleDragEnd}
-                        className="flex items-center gap-2 px-3 py-2 bg-background border rounded-lg cursor-move hover:border-primary transition-colors"
-                      >
-                        <GripVertical className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-lg">{app.icon}</span>
-                        <span className="text-sm font-medium">{app.name}</span>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </Card>
-          </div>
-
-          {/* Tips */}
+            <div className="space-y-4 pt-4 border-t border-border">
+              {llmConfig.useLocalLLM ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg text-[11px] text-blue-400 mb-2">
+                    Ensure Ollama or LM Studio is running and CORS is enabled.
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium text-muted-foreground uppercase">Endpoint URL</label>
+                      <input 
+                        className="w-full bg-background border border-border p-2 rounded text-sm"
+                        value={llmConfig.localLLMUrl}
+                        onChange={(e) => {
+                          setLlmConfig(prev => ({ ...prev, localLLMUrl: e.target.value }));
+                          setHasChanges(true);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium text-muted-foreground uppercase">Model Name</label>
+                      <input 
+                        className="w-full bg-background border border-border p-2 rounded text-sm"
+                        value={llmConfig.localLLMModel}
+                        onChange={(e) => {
+                          setLlmConfig(prev => ({ ...prev, localLLMModel: e.target.value }));
+                          setHasChanges(true);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg text-[11px] text-purple-400 mb-2">
+                    Using Google Vertex AI / Gemini Cloud Infrastructure.
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase">Platform API Key (Optional Override)</label>
+                    <input 
+                      type="password"
+                      className="w-full bg-background border border-border p-2 rounded text-sm"
+                      placeholder="Leave blank to use platform default"
+                      value={llmConfig.apiKey}
+                      onChange={(e) => {
+                        setLlmConfig(prev => ({ ...prev, apiKey: e.target.value }));
+                        setHasChanges(true);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+          
           <Card className="p-4 bg-muted/50">
-            <h3 className="font-semibold mb-2">💡 Pro Tips</h3>
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>You can have up to 10 apps in your taskbar</li>
-              <li>Frequently used apps should be placed at the beginning</li>
-              <li>Changes take effect immediately after saving</li>
-            </ul>
+            <h3 className="font-semibold mb-2">Platform Fee Notice</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Standard 10% platform fee applies to all marketplace transactions. AI inference is provided as part of your base subscription tier. Use of local models (Ollama/LM Studio) is free and privacy-focused.
+            </p>
           </Card>
         </TabsContent>
       </Tabs>

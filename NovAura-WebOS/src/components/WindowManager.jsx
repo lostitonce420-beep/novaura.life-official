@@ -1,66 +1,71 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import TouchFriendlyWindow from './TouchFriendlyWindow';
-import IDEWindow from './windows/IDEWindow';
-import BrowserWindow from './windows/BrowserWindow';
-import MediaWindow from './windows/MediaWindow';
-import ChatWindow from './windows/ChatWindow';
-import TerminalWindow from './windows/TerminalWindow';
-import AIAssistantWindow from './windows/AIAssistantWindow';
-import VoiceChatWindow from './windows/VoiceChatWindow';
-import VertexAIWindow from './windows/VertexAIWindow';
-import BackgroundRemoverWindow from './windows/BackgroundRemoverWindow';
-import WebsiteBuilderWindow from './windows/WebsiteBuilderWindow';
-import MediaLibraryWindow from './windows/MediaLibraryWindow';
-import AppStoreWindow from './windows/AppStoreWindow';
-import ProfileWindow from './windows/ProfileWindow';
-import GameWindow from './windows/GameWindow';
-import LiteratureIDEWindow from './windows/LiteratureIDEWindow';
-import GamesArenaWindow from './windows/GamesArenaWindow';
-import MusicComposerWindow from './windows/MusicComposerWindow';
-import PoemsCreatorWindow from './windows/PoemsCreatorWindow';
-import AetheriumTCGWindow from './windows/AetheriumTCGWindow';
-import ComicCreatorWindow from './windows/ComicCreatorWindow';
-import BusinessCardWindow from './windows/BusinessCardWindow';
-import ArtStudioWindow from './windows/ArtStudioWindow';
-import ArtGalleryWindow from './windows/ArtGalleryWindow';
-import ClothingCreatorWindow from './windows/ClothingCreatorWindow';
-import OutfitGeneratorWindow from './windows/OutfitGeneratorWindow';
-import CollaborativeWritingWindow from './windows/CollaborativeWritingWindow';
-import WritingLibraryWindow from './windows/WritingLibraryWindow';
-import ScriptFusionWindow from './windows/ScriptFusionWindow';
-import ConstructorWindow from './windows/ConstructorWindow';
-import CreatorStudioWindow from './windows/CreatorStudioWindow';
-import VibeCodingWindow from './windows/VibeCodingWindow';
-import WorkspaceWindow from './windows/WorkspaceWindow';
-import AvatarBuilderWindow from './windows/AvatarBuilderWindow';
-import LiveBroadcastWindow from './windows/LiveBroadcastWindow';
-import DojoWindow from './windows/DojoWindow';
-import ChallengesWindow from './windows/ChallengesWindow';
-import PsychometricsWindow from './windows/PsychometricsWindow';
-import AICompanionWindow from './windows/AICompanionWindow';
-import NotificationsWindow from './windows/NotificationsWindow';
-// ModelPersonalitiesWindow removed — feature dropped
-import AvatarGalleryWindow from './windows/AvatarGalleryWindow';
-import OutfitManagerWindow from './windows/OutfitManagerWindow';
-import CardDeckCreatorWindow from './windows/CardDeckCreatorWindow';
-import TaxFilingWindow from './windows/TaxFilingWindow';
-import AdminPanelWindow from './windows/AdminPanelWindow';
-import PersonalizationWindow from './windows/PersonalizationWindow';
-import PricingPage from './PricingPage';
-import SecretsWindow from './windows/SecretsWindow';
-import GitWindow from './windows/GitWindow';
-import BillingWindow from './windows/BillingWindow';
-import FilesWindow from './windows/FilesWindow';
-import PixAIWindow from './windows/PixAIWindow';
-import BusinessOperatorWindow from './windows/BusinessOperatorWindow';
-import NovaConciergeWindow from './windows/NovaConciergeWindow';
-import GraphicsSettingsWindow from './windows/GraphicsSettingsWindow';
-import SocialNetworkWindow from './windows/SocialNetworkWindow';
-import ImagenWindow from './windows/ImagenWindow';
-import LiveAIWindow from './windows/LiveAIWindow';
-import WeatherWindow from './windows/WeatherWindow';
-import CryptoWindow from './windows/CryptoWindow';
-import CalculatorWindow from './windows/CalculatorWindow';
+
+// ── Lazy load all windows to prevent build crashes & improve performance ────
+const IDEWindow = lazy(() => import('./windows/IDEWindow'));
+const BrowserWindow = lazy(() => import('./windows/BrowserWindow'));
+const MediaWindow = lazy(() => import('./windows/MediaWindow'));
+const ChatWindow = lazy(() => import('./windows/ChatWindow'));
+const TerminalWindow = lazy(() => import('./windows/TerminalWindow'));
+const AIAssistantWindow = lazy(() => import('./windows/AIAssistantWindow'));
+const VoiceChatWindow = lazy(() => import('./windows/VoiceChatWindow'));
+const VertexAIWindow = lazy(() => import('./windows/VertexAIWindow'));
+const BackgroundRemoverWindow = lazy(() => import('./windows/BackgroundRemoverWindow'));
+const WebsiteBuilderWindow = lazy(() => import('./windows/WebsiteBuilderWindow'));
+const MediaLibraryWindow = lazy(() => import('./windows/MediaLibraryWindow'));
+const AppStoreWindow = lazy(() => import('./windows/AppStoreWindow'));
+const ProfileWindow = lazy(() => import('./windows/ProfileWindow'));
+const GameWindow = lazy(() => import('./windows/GameWindow'));
+    const LiteratureIDEWindow = lazy(() => import('./windows/LiteratureIDEWindow'));
+    const GamesArenaWindow = lazy(() => import('./windows/GamesArenaWindow'));
+    const MusicComposerWindow = lazy(() => import('./windows/MusicComposerWindow'));
+    const PoemsCreatorWindow = lazy(() => import('./windows/PoemsCreatorWindow'));
+    const AetheriumTCGWindow = lazy(() => import('./windows/AetheriumTCGWindow'));
+    const ComicCreatorWindow = lazy(() => import('./windows/ComicCreatorWindow'));
+    const BusinessCardWindow = lazy(() => import('./windows/BusinessCardWindow'));
+    const ArtStudioWindow = lazy(() => import('./windows/ArtStudioWindow'));
+    const ArtGalleryWindow = lazy(() => import('./windows/ArtGalleryWindow'));
+    const ClothingCreatorWindow = lazy(() => import('./windows/ClothingCreatorWindow'));
+    const OutfitGeneratorWindow = lazy(() => import('./windows/OutfitGeneratorWindow'));
+    const CollaborativeWritingWindow = lazy(() => import('./windows/CollaborativeWritingWindow'));
+    const WritingLibraryWindow = lazy(() => import('./windows/WritingLibraryWindow'));
+    const ScriptFusionWindow = lazy(() => import('./windows/ScriptFusionWindow'));
+    const ConstructorWindow = lazy(() => import('./windows/ConstructorWindow'));
+    const CreatorStudioWindow = lazy(() => import('./windows/CreatorStudioWindow'));
+    const VibeCodingWindow = lazy(() => import('./windows/VibeCodingWindow'));
+    const WorkspaceWindow = lazy(() => import('./windows/WorkspaceWindow'));
+    const AvatarBuilderWindow = lazy(() => import('./windows/AvatarBuilderWindow'));
+    const LiveBroadcastWindow = lazy(() => import('./windows/LiveBroadcastWindow'));
+    const DojoWindow = lazy(() => import('./windows/DojoWindow'));
+    const ChallengesWindow = lazy(() => import('./windows/ChallengesWindow'));
+    const PsychometricsWindow = lazy(() => import('./windows/PsychometricsWindow'));
+    const AICompanionWindow = lazy(() => import('./windows/AICompanionWindow'));
+    const NotificationsWindow = lazy(() => import('./windows/NotificationsWindow'));
+    const AvatarGalleryWindow = lazy(() => import('./windows/AvatarGalleryWindow'));
+    const OutfitManagerWindow = lazy(() => import('./windows/OutfitManagerWindow'));
+    const CardDeckCreatorWindow = lazy(() => import('./windows/CardDeckCreatorWindow'));
+    const TaxFilingWindow = lazy(() => import('./windows/TaxFilingWindow'));
+    const AdminPanelWindow = lazy(() => import('./windows/AdminPanelWindow'));
+    const PersonalizationWindow = lazy(() => import('./windows/PersonalizationWindow'));
+    const PricingPage = lazy(() => import('./PricingPage'));
+    const SecretsWindow = lazy(() => import('./windows/SecretsWindow'));
+    const GitWindow = lazy(() => import('./windows/GitWindow'));
+    const BillingWindow = lazy(() => import('./windows/BillingWindow'));
+    const FilesWindow = lazy(() => import('./windows/FilesWindow'));
+    const PixAIWindow = lazy(() => import('./windows/PixAIWindow'));
+    const BusinessOperatorWindow = lazy(() => import('./windows/BusinessOperatorWindow'));
+/*
+    const NovaConciergeWindow = lazy(() => import('./windows/NovaConciergeWindow'));
+*/
+    const GraphicsSettingsWindow = lazy(() => import('./windows/GraphicsSettingsWindow'));
+/*
+    const SocialNetworkWindow = lazy(() => import('./windows/SocialNetworkWindow'));
+    const ImagenWindow = lazy(() => import('./windows/ImagenWindow'));
+*/
+    const LiveAIWindow = lazy(() => import('./windows/LiveAIWindow'));
+    const WeatherWindow = lazy(() => import('./windows/WeatherWindow'));
+    const CryptoWindow = lazy(() => import('./windows/CryptoWindow'));
+    const CalculatorWindow = lazy(() => import('./windows/CalculatorWindow'));
 
 const windowComponents = {
   ide: IDEWindow,
@@ -77,53 +82,56 @@ const windowComponents = {
   'appstore': AppStoreWindow,
   'profile': ProfileWindow,
   'game': GameWindow,
-  'literature-ide': LiteratureIDEWindow,
-  'games-arena': GamesArenaWindow,
-  'music-composer': MusicComposerWindow,
-  'poems': PoemsCreatorWindow,
-  'aetherium-tcg': AetheriumTCGWindow,
-  'comic-creator': ComicCreatorWindow,
-  'business-card': BusinessCardWindow,
-  'art-studio': ArtStudioWindow,
-  'art-gallery': ArtGalleryWindow,
-  'clothing-creator': ClothingCreatorWindow,
-  'outfit-generator': OutfitGeneratorWindow,
-  'collab-writing': CollaborativeWritingWindow,
-  'writing-library': WritingLibraryWindow,
-  'script-fusion': ScriptFusionWindow,
-  'constructor': ConstructorWindow,
-  'creator-studio': CreatorStudioWindow,
-  'vibe-coding': VibeCodingWindow,
-  'workspace': WorkspaceWindow,
-  'avatar-builder': AvatarBuilderWindow,
-  'live-broadcast': LiveBroadcastWindow,
-  'dojo': DojoWindow,
-  'challenges': ChallengesWindow,
-  'psychometrics': PsychometricsWindow,
-  'ai-companion': AICompanionWindow,
-  'notifications': NotificationsWindow,
-  // 'model-personalities' removed
-  'avatar-gallery': AvatarGalleryWindow,
-  'outfit-manager': OutfitManagerWindow,
-  'card-deck-creator': CardDeckCreatorWindow,
-  'tax-filing': TaxFilingWindow,
-  'admin-panel': AdminPanelWindow,
-  'personalization': PersonalizationWindow,
-  'pricing': PricingPage,
-  'secrets': SecretsWindow,
-  'git': GitWindow,
-  'billing': BillingWindow,
-  'files': FilesWindow,
-  'pixai': PixAIWindow,
-  'business-operator': BusinessOperatorWindow,
-  'nova-concierge': NovaConciergeWindow,
-  'graphics-settings': GraphicsSettingsWindow,
-  'social': SocialNetworkWindow,
-  'imagen': ImagenWindow,
-  'live-ai': LiveAIWindow,
-  'weather': WeatherWindow,
-  'crypto': CryptoWindow,
-  'calculator': CalculatorWindow,
+    'literature-ide': LiteratureIDEWindow,
+    'games-arena': GamesArenaWindow,
+    'music-composer': MusicComposerWindow,
+    'poems': PoemsCreatorWindow,
+    'aetherium-tcg': AetheriumTCGWindow,
+    'comic-creator': ComicCreatorWindow,
+    'business-card': BusinessCardWindow,
+    'art-studio': ArtStudioWindow,
+    'art-gallery': ArtGalleryWindow,
+    'clothing-creator': ClothingCreatorWindow,
+    'outfit-generator': OutfitGeneratorWindow,
+    'collab-writing': CollaborativeWritingWindow,
+    'writing-library': WritingLibraryWindow,
+    'script-fusion': ScriptFusionWindow,
+    'constructor': ConstructorWindow,
+    'creator-studio': CreatorStudioWindow,
+    'vibe-coding': VibeCodingWindow,
+    'workspace': WorkspaceWindow,
+    'avatar-builder': AvatarBuilderWindow,
+    'live-broadcast': LiveBroadcastWindow,
+    'dojo': DojoWindow,
+    'challenges': ChallengesWindow,
+    'psychometrics': PsychometricsWindow,
+    'ai-companion': AICompanionWindow,
+    'notifications': NotificationsWindow,
+    'avatar-gallery': AvatarGalleryWindow,
+    'outfit-manager': OutfitManagerWindow,
+    'card-deck-creator': CardDeckCreatorWindow,
+    'tax-filing': TaxFilingWindow,
+    'admin-panel': AdminPanelWindow,
+    'personalization': PersonalizationWindow,
+    'pricing': PricingPage,
+    'secrets': SecretsWindow,
+    'git': GitWindow,
+    'billing': BillingWindow,
+    'files': FilesWindow,
+    'pixai': PixAIWindow,
+    'business-operator': BusinessOperatorWindow,
+/*
+    'nova-concierge': NovaConciergeWindow,
+*/
+    'graphics-settings': GraphicsSettingsWindow,
+/*
+    'social': SocialNetworkWindow,
+    'imagen': ImagenWindow,
+*/
+    'live-ai': LiveAIWindow,
+    'weather': WeatherWindow,
+    'crypto': CryptoWindow,
+    'calculator': CalculatorWindow,
 };
 
 const defaultSizes = {
@@ -255,7 +263,16 @@ export default function WindowManager({ windows, onClose, onFocus, onOpenWindow,
             onClose={() => onClose(window.id)}
             onFocus={() => onFocus(window.id)}
           >
-            <Component {...window.props} {...extraProps} />
+            <Suspense fallback={
+              <div className="flex h-full items-center justify-center bg-black/40 backdrop-blur-md">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 rounded-full border-t-2 border-primary animate-spin" />
+                  <span className="text-xs text-primary/60 font-medium">Reifying {window.title}...</span>
+                </div>
+              </div>
+            }>
+              <Component {...window.props} {...extraProps} />
+            </Suspense>
           </TouchFriendlyWindow>
         );
       })}

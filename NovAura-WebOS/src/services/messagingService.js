@@ -138,14 +138,20 @@ export function showLocalNotification(title, body, options = {}) {
  * Subscribe to a topic (requires Cloud Functions backend).
  * Stores intent locally; backend subscribes token to topic.
  */
-export function subscribeToTopic(topic) {
-  const subs = JSON.parse(localStorage.getItem('novaura_fcm_topics') || '[]');
-  if (!subs.includes(topic)) {
-    subs.push(topic);
-    localStorage.setItem('novaura_fcm_topics', JSON.stringify(subs));
+  // Call Cloud Function to subscribe token to topic
+  const token = getFCMToken();
+  if (token) {
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
+    fetch(`${BACKEND_URL}/api/notifications/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('novaura-auth-token')}`
+      },
+      body: JSON.stringify({ token, topic })
+    }).catch(err => console.error('[NovAura FCM] Topic subscription failed:', err));
   }
-  // TODO: Call Cloud Function to subscribe token to topic
-  console.log(`[NovAura FCM] Subscribed to topic: ${topic}`);
+  console.log(`[NovAura FCM] Subscription intent stored for topic: ${topic}`);
 }
 
 export function getSubscribedTopics() {

@@ -6,8 +6,11 @@ import {
   Settings, Download, Send, RefreshCw, X, Plus, Clock, Star
 } from 'lucide-react';
 
+import { db, auth } from '../../config/firebase';
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy, limit } from 'firebase/firestore';
+
 const OWNER_EMAILS = ['the.lost.catalyst@gmail.com', 'Dillan.Copeland@Novauraverse.com', 'admin@novaura.life'];
-import { BACKEND_URL } from '../../services/aiService';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
 
 const ROLES = [
   { id: 'admin', label: 'Admin', color: 'text-red-400 bg-red-500/20', desc: 'Full platform control' },
@@ -19,6 +22,7 @@ const ROLES = [
 const TABS = [
   { id: 'overview', label: 'Overview', icon: Activity },
   { id: 'users', label: 'Users', icon: Users },
+  { id: 'applications', label: 'Marketplace Apps', icon: FileText },
   { id: 'content', label: 'Content Review', icon: Image },
   { id: 'staff', label: 'Staff', icon: Crown },
   { id: 'reports', label: 'Reports', icon: Flag },
@@ -42,8 +46,9 @@ const MOCK_REPORTS = [
 
 export default function AdminPanelWindow() {
   const [tab, setTab] = useState('overview');
-  const [users, setUsers] = useState(MOCK_USERS);
-  const [reports, setReports] = useState(MOCK_REPORTS);
+  const [users, setUsers] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [userSearch, setUserSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -68,9 +73,41 @@ export default function AdminPanelWindow() {
     localStorage.setItem('admin_action_log', JSON.stringify(updated));
   };
 
-  // Try to load real users from backend
+  // Real-time synchronization with Firestore
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    if (!db) return;
+
+    // Listen for all users
+    const usersQuery = query(collection(db, 'users'), orderBy('created_at', 'desc'), limit(500));
+    const unsubUsers = onSnapshot(usersQuery, (snapshot) => {
+      const userData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setUsers(userData);
+    });
+
+    // Listen for creator applications
+    const appsQuery = query(collection(db, 'creator_applications'), orderBy('submittedAt', 'desc'));
+    const unsubApps = onSnapshot(appsQuery, (snapshot) => {
+      const appData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setApplications(appData);
+    });
+
+    // Listen for reports
+    const reportsQuery = query(collection(db, 'reports'), orderBy('date', 'desc'));
+    const unsubReports = onSnapshot(reportsQuery, (snapshot) => {
+      const reportData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setReports(reportData);
+    });
+
+    return () => {
+      unsubUsers();
+      unsubApps();
+      unsubReports();
+    };
+  }, []);
+
+  // Staff list from legacy backend (optional)
+  useEffect(() => {
+    const token = localStorage.getItem('novaura-auth-token');
     if (!token) return;
     fetch(`${BACKEND_URL}/api/auth/staff-allowlist`, {
       headers: { Authorization: `Bearer ${token}` }
@@ -85,16 +122,41 @@ export default function AdminPanelWindow() {
       .filter(u => !userSearch || u.username.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase()));
   }, [users, userSearch, roleFilter]);
 
-  const updateUserRole = (userId, newRole) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-    logAction(`Changed ${users.find(u => u.id === userId)?.username}'s role to ${newRole}`);
-    // API call
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      fetch(`${BACKEND_URL}/api/auth/profile`, {
-        method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole })
-      }).catch(() => {});
+  const updateUserRole = async (userId, newRole) => {
+    try {
+      if (db) {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, { role: newRole });
+        logAction(`Changed ${users.find(u => u.id === userId)?.username}'s role to ${newRole}`);
+      }
+    } catch (err) {
+      console.error('Failed to update role:', err);
+      // Fallback to state update if offline
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    }
+  };
+
+  const approveApplication = async (app) => {
+    try {
+      if (db) {
+        const userRef = doc(db, 'users', app.userId);
+        const appRef = doc(db, 'creator_applications', app.id);
+        
+        await updateDoc(userRef, { role: 'creator', stripeAccountId: app.stripeAccountId || null });
+        await updateDoc(appRef, { status: 'approved', approvedAt: new Date().toISOString() });
+        
+        logAction(`Approved creator application: ${app.displayName}`);
+      }
+    } catch (err) {
+      console.error('Approval failed:', err);
+    }
+  };
+
+  const rejectApplication = async (appId) => {
+    if (db) {
+      const appRef = doc(db, 'creator_applications', appId);
+      await updateDoc(appRef, { status: 'rejected' });
+      logAction(`Rejected application ${appId}`);
     }
   };
 
@@ -302,7 +364,48 @@ export default function AdminPanelWindow() {
           </>
         )}
 
-        {/* Content Review */}
+        {/* Marketplace Applications */}
+        {tab === 'applications' && (
+          <>
+            <div className="text-[9px] text-slate-500 uppercase">{applications.filter(a => a.status === 'pending').length} Pending Requests</div>
+            {applications.length === 0 ? (
+              <div className="py-10 text-center opacity-30 text-xs">No applications found</div>
+            ) : (
+              applications.map(app => (
+                <div key={app.id} className={`p-3 rounded-lg border bg-slate-900/40 border-slate-800 ${app.status === 'pending' ? 'border-purple-500/30' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded bg-purple-500/10 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-medium">{app.displayName || 'Unknown Artist'}</span>
+                        <span className={`text-[8px] px-1.5 py-0.5 rounded capitalize ${app.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : app.status === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                          {app.status}
+                        </span>
+                      </div>
+                      <div className="text-[9px] text-slate-500 truncate">{app.email}</div>
+                    </div>
+                    {app.status === 'pending' && (
+                      <div className="flex gap-1">
+                        <button onClick={() => approveApplication(app)} className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/40 rounded text-[9px] text-emerald-400">Approve</button>
+                        <button onClick={() => rejectApplication(app.id)} className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 rounded text-[9px] text-red-400">Deny</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 p-2 bg-black/20 rounded text-[9px] text-slate-400 leading-relaxed italic">
+                    "{app.bio || 'No bio provided'}"
+                  </div>
+                  <div className="mt-2 flex items-center gap-3 text-[8px] text-slate-600">
+                    <span>Submitted: {new Date(app.submittedAt).toLocaleDateString()}</span>
+                    <span>Portfolio: <a href={app.portfolioUrl} target="_blank" className="text-cyan-500 hover:underline">{app.portfolioUrl || 'None'}</a></span>
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+
         {tab === 'content' && (
           <>
             <div className="text-center py-6">

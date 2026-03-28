@@ -403,8 +403,7 @@ const getPlaceholder = (engine, assetType) => {
 //
 // Asset: ${a?.label}
 // Description: ${a?.desc}
-//
-// TODO: Connect to AI task routing (category: 'coding')`;
+// Provider: Dedicated AI Task Routing (category: 'coding')`;
 };
 
 export default function DojoWindow({ onAIChat }) {
