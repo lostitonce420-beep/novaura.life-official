@@ -8,17 +8,11 @@
  * Initialized with Service Account for God Mode access
  */
 
+// MUST import init first — initializes Firebase Admin before any route modules
+import { admin } from './init';
 import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
-import * as serviceAccount from './service-account.json';
 import apiApp from './api/app';
 
-// Initialize Firebase Admin with Service Account (GOD MODE)
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-  databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
-  storageBucket: `${serviceAccount.project_id}.appspot.com`
-});
 
 // Firestore shorthand
 const db = admin.firestore();

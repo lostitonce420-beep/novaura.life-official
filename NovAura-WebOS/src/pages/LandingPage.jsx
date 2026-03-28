@@ -91,7 +91,7 @@ export default function LandingPage({ onLaunchOS }) {
 
           {/* Platform */}
           <button
-            onClick={() => onLaunchOS()}
+            onClick={() => window.location.href = 'https://platform.novaura.life'}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <LayoutGrid className="w-4 h-4" style={{ color: '#4285f4' }} />
@@ -100,7 +100,7 @@ export default function LandingPage({ onLaunchOS }) {
 
           {/* Market */}
           <button
-            onClick={() => onLaunchOS('appstore')}
+            onClick={() => window.location.href = 'https://market.novaura.life'}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4" style={{ color: '#fbbc05' }} />
@@ -109,14 +109,14 @@ export default function LandingPage({ onLaunchOS }) {
 
           {/* NovaLow */}
           <button
-            onClick={() => onLaunchOS('browser')}
+            onClick={() => window.location.href = 'https://novalow.novaura.life'}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <Globe className="w-4 h-4" style={{ color: '#34a853' }} />
             <span className="hidden sm:inline">NovaLow</span>
           </button>
           
-          {/* Launch OS */}
+          {/* Launch OS - THIS IS THE ONLY BUTTON THAT SHOULD LAUNCH THE OS */}
           <button
             onClick={() => onLaunchOS()}
             className="flex items-center gap-2 px-4 py-2 ml-2 rounded-lg text-sm bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-colors border border-cyan-500/30 cursor-pointer"

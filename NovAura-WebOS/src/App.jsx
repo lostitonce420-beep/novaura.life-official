@@ -78,24 +78,14 @@ export default function App() {
     }
   }, []);
 
-  // URL deep-link support — if user arrives at /platform, /market, /os, /domains
-  // automatically enter the OS flow (Firebase rewrites all paths to index.html)
+  // URL deep-link support for specific OS features (if any are left)
   const location = useLocation();
   useEffect(() => {
     const path = location.pathname;
-    const deepLinkMap = {
-      '/os': null,
-      '/platform': null,
-      '/market': 'appstore',
-      '/domains': 'browser',
-    };
-    if (path in deepLinkMap) {
-      if (deepLinkMap[path]) {
-        setPendingWindow(deepLinkMap[path]);
-      }
+    if (path === '/os') {
       setShowOS(true);
     }
-  }, []); // Only on initial mount
+  }, [location.pathname]);
   
   // Persist Aura history
   useEffect(() => {

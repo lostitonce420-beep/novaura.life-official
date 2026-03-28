@@ -20,7 +20,15 @@ const app = express();
 
 // CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://novaura.life',
+  origin: [
+    'https://ecosystem.novaura.life',
+    'https://novaura-systems.web.app',
+    'https://novaura-systems.firebaseapp.com',
+    'https://novaura-o-s-63232239-3ee79.web.app',
+    'https://novaura-o-s-63232239-3ee79.firebaseapp.com',
+    'https://novaura.life',
+    'http://localhost:5173', // Vite dev server
+  ],
   credentials: true
 }));
 
