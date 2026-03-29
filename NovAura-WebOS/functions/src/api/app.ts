@@ -19,7 +19,7 @@ import stripeRoutes from './routes/stripe';
 
 const app = express();
 
-// CORS
+// CORS - Allow both Firebase and Replit deployments
 app.use(cors({
   origin: [
     'https://ecosystem.novaura.life',
@@ -27,8 +27,11 @@ app.use(cors({
     'https://novaura-systems.firebaseapp.com',
     'https://novaura-o-s-63232239-3ee79.web.app',
     'https://novaura-o-s-63232239-3ee79.firebaseapp.com',
-    'https://novaura.life',
-    'http://localhost:5173', // Vite dev server
+    'https://novaura.life',        // Firebase hosting (primary)
+    'https://www.novaura.life',    // Replit hosting (secondary)
+    'http://localhost:5173',       // Vite dev server
+    /\.repl\.co$/,                 // Any Replit deployment
+    /\.replit\.dev$/,              // New Replit domains
   ],
   credentials: true
 }));
