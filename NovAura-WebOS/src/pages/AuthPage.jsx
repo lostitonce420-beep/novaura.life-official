@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { toast } from 'sonner';
 
 import { auth, googleProvider, isFirebaseConfigured } from '../config/firebase';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -20,7 +21,9 @@ export default function AuthPage({ onAuthComplete }) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    name: ''
+    name: '',
+    username: '',
+    backupEmail: ''
   });
 
   useEffect(() => {
@@ -93,12 +96,37 @@ export default function AuthPage({ onAuthComplete }) {
       if (!isFirebaseConfigured || !auth) {
         throw new Error('Firebase is not configured. Please set VITE_FIREBASE_* env vars.');
       }
+      const username = (formData.username || formData.name || '').trim().toLowerCase();
+      const usernameCheck = await fetch(`${BACKEND_URL}/auth/check-username?username=${encodeURIComponent(username)}`);
+      const usernameData = await usernameCheck.json();
+      if (!usernameData.available) throw new Error('Username is already taken');
+
       const credential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       // Set display name on the newly created user
       if (formData.name) {
         await updateProfile(credential.user, { displayName: formData.name });
       }
       completeAuth(credential.user, formData.name);
+      // Persist profile extended metadata
+      try {
+        const idToken = await credential.user.getIdToken();
+        await fetch(`${BACKEND_URL}/auth/profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            displayName: formData.name || formData.username,
+            username: username,
+            backupEmail: formData.backupEmail || null
+          })
+        });
+      } catch (innerErr) {
+        console.warn('Profile sync failed', innerErr);
+      }
+
+
       toast.success('Account created!', {
         description: 'Welcome to NovAura AI OS'
       });
@@ -158,7 +186,20 @@ export default function AuthPage({ onAuthComplete }) {
             NovAura AI OS
           </h1>
           <p className="text-muted-foreground">Sign in to access your workspace</p>
+
+        {/* Cinematic intro */}
+        <div className="mb-6 rounded-xl overflow-hidden border border-white/10">
+          <video
+            src={import.meta.env.VITE_CINEMATIC_CLIP_URL || '/assets/cinematic-intro.mp4'}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-54 object-cover"
+          />
         </div>
+
+                </div>
 
         {/* Auth Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -233,7 +274,42 @@ export default function AuthPage({ onAuthComplete }) {
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
                   Name
+                </label>              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Username
                 </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="username"
+                    className="pl-10 mt-1 bg-window-bg border-primary/20"
+                    required
+                    data-testid="signup-username-input"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Backup Email (optional)
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    value={formData.backupEmail}
+                    onChange={(e) => setFormData(prev => ({ ...prev, backupEmail: e.target.value }))}
+                    placeholder="backup@example.com"
+                    className="pl-10 mt-1 bg-window-bg border-primary/20"
+                    data-testid="signup-backup-email-input"
+                  />
+                </div>
+              </div>
+
+
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input

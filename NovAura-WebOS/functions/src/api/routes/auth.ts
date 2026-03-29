@@ -34,6 +34,21 @@ router.get('/me', async (req, res) => {
   }
 });
 
+
+// Check username availability
+router.get('/check-username', async (req, res) => {
+  try {
+    const username = (req.query.username || '').toString().trim().toLowerCase();
+    if (!username) return res.status(400).json({ available: false, error: 'No username provided' });
+
+    const snapshot = await db.collection('social_profiles').where('username', '==', username).limit(1).get();
+    return res.json({ available: snapshot.empty });
+  } catch (err) {
+    console.error('Username check error:', err);
+    return res.status(500).json({ available: false, error: 'Error verifying username' });
+  }
+});
+
 // Create/update user profile after Firebase Auth signup
 router.post('/profile', async (req, res) => {
   try {
