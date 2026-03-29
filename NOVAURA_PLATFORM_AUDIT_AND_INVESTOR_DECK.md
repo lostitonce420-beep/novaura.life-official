@@ -257,7 +257,7 @@ User on novaura.life (Firebase)
 
 | Tier | Price | Prompts/Month | Est. Cost | Margin | Key Feature |
 |------|-------|---------------|-----------|--------|-------------|
-| **Free** | $0 | 20 | ~$18 | -$18 | Trial |
+| **Free** | $0 | 7 | ~$6 | -$6 | Trial |
 | **Starter** | $17.99 | 30 | ~$27 | -$9 | Hobbyists |
 | **Builder** | $29.99 | 100 | ~$90 | -$60 | Power users |
 | **Pro BYOK** ⭐ | $29.99 | 100 + BYOK unlimited | Varies | **+$30** | **Best Value** |
@@ -282,7 +282,7 @@ Both Builder and Pro are $29.99, but:
 Users self-select: heavy users pick Pro BYOK immediately.
 
 **Profitability Path:**
-1. Free (20): -$18 acquisition cost
+1. Free (7): -$6 acquisition cost
 2. Starter (30): -$9 loss leader  
 3. Builder (100): -$60, but conversion to...
 4. **Pro BYOK: +$30/month** 💰

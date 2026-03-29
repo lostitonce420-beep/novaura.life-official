@@ -13,8 +13,8 @@ const PLANS = [
     name: 'Free',
     price: 0,
     description: 'Try before you buy',
-    features: ['4K context', '20 builder prompts/month', '3 projects', 'Community support'],
-    limits: { context: '4K', calls: 20, projects: 3 },
+    features: ['4K context', '7 builder prompts/month', '3 projects', 'Community support'],
+    limits: { context: '4K', calls: 7, projects: 3 },
     color: 'gray',
   },
   {
