@@ -71,6 +71,11 @@ export default function LandingPage({ onLaunchOS }) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
+      {/* DEPLOYMENT MARKER - Green dot means novaura-systems site */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[1001] px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full text-green-400 text-xs font-mono">
+        ● LIVE DEPLOY
+      </div>
+
       {/* Top Navigation */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5">
         <div className="flex items-center gap-2">

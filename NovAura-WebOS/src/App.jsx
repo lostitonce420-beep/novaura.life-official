@@ -501,6 +501,11 @@ export default function App() {
         }}
       />
       
+      {/* DEPLOYMENT MARKER - Green dot means novaura-systems site */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[1001] px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full text-green-400 text-xs font-mono">
+        ● LIVE DEPLOY
+      </div>
+
       {/* Aura Memory Toggle Button - Top Right */}
       <button
         onClick={() => setShowAuraHistory(!showAuraHistory)}
