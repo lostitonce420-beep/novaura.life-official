@@ -245,46 +245,49 @@ User on novaura.life (Firebase)
 - 1,000 domains/month @ $10 avg = $10,000/month
 - 10,000 domains/month @ $10 avg = $100,000/month
 
-## 2. Premium Subscriptions (Hybrid Hosted + BYOK Model)
+## 2. Premium Subscriptions (Smart Model Routing)
 
-**The Reality:** Claude 3.5 = ~$0.40/call, Gemini 3.1 Pro = ~$0.30/call
-9 passes per prompt = **$2.70-3.60 per user prompt!**
+**Cost Optimization Strategy:**
+- 2× Claude passes ($0.40) = $0.80
+- 2× Kimi passes ($0.03) = $0.06
+- 5× Gemini Flash passes ($0.005) = $0.025
+- **Total: ~$0.90 per prompt** (vs $3.60 for all-Claude!)
 
 **Tier Structure:**
 
-| Tier | Price | Hosted Prompts | BYOK | Key Feature |
-|------|-------|----------------|------|-------------|
-| **Free** | $0 | 20/month | ❌ | Trial/learning |
-| **Starter** | $17.99/mo | 30/month | ❌ | Hobbyists |
-| **Pro BYOK** ⭐ | $29.99/mo | 100/month | ✅ Unlimited | **Best Value** |
-| **Enterprise** | Custom | Custom | ✅ | White-label |
+| Tier | Price | Prompts/Month | Est. Cost | Margin | Key Feature |
+|------|-------|---------------|-----------|--------|-------------|
+| **Free** | $0 | 20 | ~$18 | -$18 | Trial |
+| **Starter** | $17.99 | 30 | ~$27 | -$9 | Hobbyists |
+| **Builder** | $29.99 | 100 | ~$90 | -$60 | Power users |
+| **Pro BYOK** ⭐ | $29.99 | 100 + BYOK unlimited | Varies | **+$30** | **Best Value** |
 
-**Cost Breakdown:**
-- Free: 20 × $3 = $60 cost, $0 revenue = **-$60** (acquisition)
-- Starter: 30 × $3 = $90 cost, $18 revenue = **-$72** (loss leader)
-- Pro: 100 × $3 = $300 cost, $30 revenue = **-$270**... 
-  **BUT** users switch to BYOK after 100 prompts!
+**Smart Model Routing:**
+- Architect: Claude (reasoning) - $0.40
+- Coder: Kimi (code) - $0.03
+- Reviewer: Gemini Flash - $0.005
+- Tester: Gemini Flash - $0.005
+- Debugger: Kimi (code) - $0.03
+- Documenter: Gemini Flash - $0.005
+- Optimizer: Gemini Flash - $0.005
+- Security: Claude (critical) - $0.40
+- Deploy: Gemini Flash - $0.005
+- **Total: ~$0.90/prompt**
 
-**The Hybrid BYOK Model:**
+**Why Pro BYOK at Same Price?**
+Both Builder and Pro are $29.99, but:
+- **Builder**: 100 prompts hosted, then must upgrade
+- **Pro BYOK**: 100 prompts hosted + BYOK option for unlimited
 
-```
-Pro BYOK: $29.99/month
-├── First 100 prompts: Hosted on NovAura's keys (~$300 cost)
-├── After 100 prompts: User brings own API key
-├── Unlimited usage: User pays ~$3/prompt to provider
-└── NovAura provides: OS + pipeline + UI = $30/mo profit
-```
+Users self-select: heavy users pick Pro BYOK immediately.
 
-**Why This Works:**
-1. **Light users** (<100 prompts): NovAura eats the cost, user gets convenience
-2. **Heavy users** (>100 prompts): Switch to BYOK, NovAura becomes profitable
-3. **Power users**: Immediately BYOK, never hit the 100 cap
-4. **The $29.99 price** is justified by "unlimited with BYOK"
+**Profitability Path:**
+1. Free (20): -$18 acquisition cost
+2. Starter (30): -$9 loss leader  
+3. Builder (100): -$60, but conversion to...
+4. **Pro BYOK: +$30/month** 💰
 
-**Conversion Funnel:**
-- Free (20) → Starter (30) → Pro BYOK (100+unlimited)
-- Users naturally grow into BYOK as they scale
-- Heavy users subsidize light users through monthly fee
+BYOK users pay their own API costs (~$0.90/prompt), NovAura keeps $30 for platform.
 
 ## 3. Compute & API Usage
 

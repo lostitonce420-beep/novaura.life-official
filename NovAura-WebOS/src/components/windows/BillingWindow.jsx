@@ -29,6 +29,17 @@ const PLANS = [
     popular: false,
   },
   {
+    id: 'builder',
+    name: 'Builder',
+    price: 29.99,
+    priceId: 'price_builder',
+    description: 'For power users',
+    features: ['16K context', '100 builder prompts/month', 'Unlimited projects', 'Priority support', '3 custom domains'],
+    limits: { context: '16K', calls: 100, projects: '∞' },
+    color: 'purple',
+    popular: true,
+  },
+  {
     id: 'pro_byok',
     name: 'Pro BYOK',
     price: 29.99,
@@ -37,7 +48,7 @@ const PLANS = [
     features: ['16K context', '100 hosted prompts/mo', 'BYOK for unlimited', 'Unlimited projects', '5 custom domains', 'Priority support'],
     limits: { context: '16K', calls: 100, projects: '∞' },
     color: 'amber',
-    popular: true,
+    popular: false,
   },
 ];
 
@@ -278,17 +289,22 @@ export default function BillingWindow() {
             How does BYOK work?
           </h3>
           <p className="text-sm text-white/70 mb-2">
-            Each builder prompt runs <strong>9 AI passes</strong> (architect → coder → reviewer → etc.)
+            Each builder prompt runs <strong>9 AI passes</strong> using smart model routing:
           </p>
+          <ul className="text-sm text-white/70 mb-2 list-disc list-inside">
+            <li>2× Claude passes (reasoning/security) - ~$0.80</li>
+            <li>2× Kimi passes (coding) - ~$0.06</li>
+            <li>5× Gemini Flash passes (rest) - ~$0.03</li>
+          </ul>
           <p className="text-sm text-white/70 mb-2">
-            With Claude 3.5 at ~$0.40/call, that's <strong>~$3.60 per prompt</strong>.
+            <strong>Total: ~$0.90 per prompt</strong> (not $3.60 for all-Claude!)
           </p>
           <p className="text-sm text-white/70 mb-2">
             <strong>Pro BYOK ($29.99):</strong> Get 100 hosted prompts included. 
-            After that, add your own API keys from OpenAI/Anthropic/Google for <strong>unlimited usage</strong>.
+            After that, add your own API keys for <strong>unlimited usage</strong>.
           </p>
           <p className="text-sm text-white/70">
-            You pay providers directly (~$3-4/prompt), we provide the OS + 9-pass pipeline.
+            You pay providers directly (~$0.90/prompt), we provide the OS + 9-pass pipeline.
             <span className="text-amber-400"> Best value for serious builders!</span>
           </p>
         </div>
