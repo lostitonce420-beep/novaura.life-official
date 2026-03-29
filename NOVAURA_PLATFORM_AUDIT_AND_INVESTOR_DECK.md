@@ -247,26 +247,33 @@ User on novaura.life (Firebase)
 
 **Tier Structure:**
 
-| Tier | Price | AI Calls | Context | Projects | Custom Domains | Key Feature |
-|------|-------|----------|---------|----------|----------------|-------------|
-| **Free** | $0 | 7/day | 4K | 3 | ❌ | Try before you buy |
-| **Starter** | $14.99/mo | 50/day | 8K | 10 | 1 | Individual developers |
-| **Builder** ⭐ | $29.99/mo | 200/day | 16K | Unlimited | 3 | **Most Popular** |
-| **Pro (BYOK)** | $75/mo | Unlimited* | 128K | Unlimited | 10 | Bring Your Own API Key |
+| Tier | Price | Prompts/Day | Est. API Calls* | Context | Projects | Key Feature |
+|------|-------|-------------|-----------------|---------|----------|-------------|
+| **Free** | $0 | 3/day | ~27 | 4K | 3 | Try before you buy |
+| **Starter** | $9.99/mo | 10/day | ~90 | 8K | 10 | Individual developers |
+| **Builder** ⭐ | $17.99/mo | 25/day | ~225 | 16K | Unlimited | **Most Popular** |
+| **Pro** | $29.99/mo | 50/day | ~450 | 32K | Unlimited | Power users |
+| **Pro+ (BYOK)** | $49.99/mo | Unlimited | User pays | 128K | Unlimited | Bring Your Own Key |
 
-*Pro tier unlimited calls only when user brings their own API keys. Platform credits capped at ~500-1000 calls/month for cost control.
+*Each "builder prompt" runs 9 AI passes (architect → coder → reviewer → etc.) = 9x API calls per user prompt
+
+**Cost Reality Check:**
+- Builder tier: 25 prompts/day × 9 passes × 30 days = ~6,750 API calls/month
+- At $0.002 per API call = ~$13.50/month API cost
+- $17.99 price - $13.50 cost = ~$4.49 margin (25% gross margin)
 
 **BYOK (Bring Your Own Key) Model:**
-- Users supply their own OpenAI/Gemini/Claude API keys
-- NovAura provides the OS interface + orchestration
-- **Zero marginal cost** for AI inference on Pro tier
-- Sustainable even at $75/month
+- Pro+ users supply their own OpenAI/Gemini/Claude API keys
+- NovAura provides the OS + 9-pass pipeline orchestration
+- **Zero marginal AI cost** = sustainable margins
+- User pays API costs directly to providers
 
 **Why This Works:**
-- Free tier: Acquisition funnel (7 calls/day = try, not rely)
-- Starter ($15): Light users, cost-controlled
-- Builder ($30): Power users, 200 calls/day = ~6K calls/month
-- Pro ($75): Heavy users bring own keys = sustainable margins
+- Free: 3 prompts/day (27 API calls) = taste, not replacement
+- Starter: 10/day = hobbyists, light use
+- Builder: 25/day = serious builders (6,750 API calls/mo)
+- Pro: 50/day = power users (13,500 API calls/mo)
+- Pro+: Unlimited with BYOK = enterprise/heavy users
 
 ## 3. Compute & API Usage
 
