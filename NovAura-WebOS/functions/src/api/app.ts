@@ -16,6 +16,7 @@ import driveRoutes from './routes/drive';
 import musicRoutes from './routes/music';
 import searchRoutes from './routes/search';
 import stripeRoutes from './routes/stripe';
+import syncRoutes from './routes/sync';
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/drive', driveRoutes);
 app.use('/music', musicRoutes);
 app.use('/search', searchRoutes);
 app.use('/stripe', stripeRoutes);
+app.use('/sync', syncRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
