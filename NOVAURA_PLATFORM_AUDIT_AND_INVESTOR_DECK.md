@@ -245,13 +245,32 @@ User on novaura.life (Firebase)
 - 1,000 domains/month @ $10 avg = $10,000/month
 - 10,000 domains/month @ $10 avg = $100,000/month
 
-## 2. Premium Subscriptions
+## 2. Premium Subscriptions - The NovAura Journey
 
-**Status:** Pricing tiers being finalized.
+NovAura's pricing follows the user's journey from curiosity to mastery:
 
-**Approach:** Freemium model with Bring Your Own Key (BYOK) option for power users to ensure sustainable unit economics.
+| Tier | Price | Position | Meaning |
+|------|-------|----------|---------|
+| **Free** | $0 | The Beginning | Start the journey |
+| **Spark** | $9.99 | Wonder Into | Ignite curiosity |
+| **Emergent** | $17.99 | Discovering | Find your flow |
+| **Catalyst** ⭐ | $29.99 | Biggest Bang for Your Buck | Accelerate everything |
+| **Nova** | $75.00 | Ultimate | Unlimited power |
+| **Catalytic Crew** | $349.99 | Enterprise | Team transformation |
 
-*Specific pricing to be determined.*
+**The Philosophy:**
+Each tier name represents a stage of growth:
+- **Spark**: The moment of inspiration, wondering what's possible
+- **Emergent**: Discovery phase, finding what works
+- **Catalyst**: The inflection point where everything accelerates (most popular)
+- **Nova**: The explosion of capability - ultimate creative power
+- **Catalytic Crew**: Bringing the transformation to entire teams
+
+**Business Model:**
+- Lower tiers subsidized to maximize user growth
+- Catalyst tier ($29.99) positioned as "best value" for conversion
+- Nova and Catalytic Crew provide BYOK (Bring Your Own Key) for sustainable margins at scale
+- Heavy users self-select into BYOK, ensuring unit economics work
 
 ## 3. Compute & API Usage
 
