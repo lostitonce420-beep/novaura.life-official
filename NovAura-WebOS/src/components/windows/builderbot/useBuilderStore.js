@@ -7,6 +7,8 @@ const STORAGE_RULES = 'novaura_builder_rules';
 const STORAGE_AI_CONFIG = 'novaura_builder_ai_config';
 const STORAGE_PROMPT_LIBRARY = 'novaura_prompt_library';
 const STORAGE_AURA_HISTORY = 'novaura_aura_history';
+const STORAGE_CODE_LIBRARIES = 'novaura_code_libraries';
+
 
 // ── Helpers ─────────────────────────────────────────────────
 let _nextId = Date.now();
@@ -146,6 +148,23 @@ function defaultRules() {
 }
 
 // ── Default AI config ───────────────────────────────────────
+
+function defaultCodeLibraries() {
+  return [
+    { id: 'lib-ui', name: 'UI Component Kit', description: 'Reusable frontend components (buttons, cards, forms, modals).', snippets: ['button', 'card', 'form', 'modal'] },
+    { id: 'lib-auth', name: 'Auth Flow Template', description: 'Email/password sign-in/signup with validation and token handling.', snippets: ['login', 'register', 'logout', 'auth-api'] },
+    { id: 'lib-data', name: 'Data Layer Utilities', description: 'Fetch/resilient data access helpers, caching, and error boundaries.', snippets: ['fetcher', 'retry', 'cache', 'api-client'] },
+  ];
+}
+
+function loadCodeLibraries() {
+  try {
+    const raw = localStorage.getItem(STORAGE_CODE_LIBRARIES);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return defaultCodeLibraries();
+}
+
 function defaultAIConfig() {
   return {
     mode: 'coder',
@@ -230,6 +249,9 @@ const useBuilderStore = create((set, get) => {
     // ── Aura Memory & Prompt Library ──
     auraHistory: loadAuraHistory(),
     promptLibrary: loadPromptLibrary(),
+    codeLibraries: loadCodeLibraries(),
+    activeCodeLibraryId: 'lib-ui',
+
 
     // ── Terminal state ──
     terminalLines: [{ type: 'system', text: 'Cybeni Terminal v1.0 — Type JavaScript or use AI commands' }],
@@ -740,6 +762,20 @@ const useBuilderStore = create((set, get) => {
       const files = flattenFiles(tree);
       if (files.length > 0) {
         parts.push('\n## Current Project Files');
+      const codeLibraries = get().codeLibraries || [];
+      const selectedLibrary = get().codeLibraries.find((lib) => lib.id === get().activeCodeLibraryId);
+      if (codeLibraries.length > 0) {
+        parts.push('\n## Code Library Templates');
+        codeLibraries.forEach((lib) => {
+          const marker = lib.id === get().activeCodeLibraryId ? ' (selected)' : '';
+          parts.push(`- ${lib.name}${marker}: ${lib.description || ''}`);
+        });
+        if (selectedLibrary) {
+          parts.push('\n### Selected Library Guidance');
+          parts.push(`Use the selected library: ${selectedLibrary.name}. Prefer its patterns when generating or refactoring code.`);
+        }
+      }
+
         files.forEach((f) => parts.push(`- ${f.path} (${f.content?.length || 0} chars)`));
       }
 

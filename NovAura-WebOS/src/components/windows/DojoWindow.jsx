@@ -1,232 +1,330 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { 
-  Swords, Copy, Download, Play, Code2, ChevronDown, Sparkles,
-  Save, FolderOpen, FileArchive, Cloud, Wand2, GitBranch,
-  CheckSquare, Lightbulb, Zap, RefreshCw
+  Swords, Copy, Download, Play, Code2, Sparkles, Wand2,
+  Save, FolderOpen, FileArchive, Cloud, GitBranch,
+  CheckSquare, Lightbulb, Zap, RefreshCw, Search, Globe,
+  Database, Upload, Folder, FileText, Image, Box, Layers,
+  BookOpen, Cpu, Code, Settings, ChevronRight, ChevronDown,
+  Plus, Trash2, ExternalLink, Loader2, AlertCircle,
+  Grid3X3, Mountain, TreePine, Waves, Wind
 } from 'lucide-react';
-import { exportProjectAsZip, exportAsJson, downloadFile } from '../../utils/exportUtils';
+import { exportProjectAsZip, downloadFile } from '../../utils/exportUtils';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENHANCED DOJO - Game Development Powerhouse
+// Knowledge base, web research, asset management, 3D world generation
+// ═══════════════════════════════════════════════════════════════════════════════
 
 const ENGINES = [
-  { id: 'unreal', label: 'Unreal Engine', lang: 'C++', ext: '.cpp', icon: '🎮', color: 'text-blue-400' },
-  { id: 'unity', label: 'Unity', lang: 'C#', ext: '.cs', icon: '🔷', color: 'text-cyan-400' },
-  { id: 'godot', label: 'Godot', lang: 'GDScript', ext: '.gd', icon: '🤖', color: 'text-green-400' },
+  { id: 'unreal', label: 'Unreal Engine 5', lang: 'C++', ext: '.cpp', icon: '🎮', color: 'text-blue-400', supports: ['3d', 'blueprint', 'nanite', 'lumen'] },
+  { id: 'unity', label: 'Unity 6', lang: 'C#', ext: '.cs', icon: '🔷', color: 'text-cyan-400', supports: ['3d', 'urp', 'hdrp', 'dots'] },
+  { id: 'godot', label: 'Godot 4', lang: 'GDScript', ext: '.gd', icon: '🤖', color: 'text-green-400', supports: ['3d', 'gdextension', 'visual'] },
 ];
 
 const ASSET_TYPES = [
-  { id: 'character-controller', label: 'Character Controller', desc: 'Player movement, jumping, camera', complexity: 'medium' },
-  { id: 'enemy-ai', label: 'Enemy AI', desc: 'Patrol, chase, attack behaviors', complexity: 'high' },
-  { id: 'inventory', label: 'Inventory System', desc: 'Item slots, stacking, equipping', complexity: 'medium' },
-  { id: 'ui-hud', label: 'UI / HUD', desc: 'Health bar, minimap, score display', complexity: 'low' },
-  { id: 'dialogue', label: 'Dialogue System', desc: 'NPC conversations, branching choices', complexity: 'medium' },
-  { id: 'combat', label: 'Combat System', desc: 'Melee/ranged attacks, damage, abilities', complexity: 'high' },
-  { id: 'save-load', label: 'Save / Load', desc: 'Game state persistence and recovery', complexity: 'medium' },
-  { id: 'particles', label: 'Particle Effects', desc: 'Fire, smoke, magic, explosions', complexity: 'low' },
-  { id: 'procedural', label: 'Procedural Generation', desc: 'Random levels, items, terrain', complexity: 'high' },
-  { id: 'multiplayer', label: 'Multiplayer Networking', desc: 'Sync, lobby, matchmaking', complexity: 'very-high' },
+  { id: 'world-3d', label: '3D World/Level', desc: 'Complete 3D environment with terrain, props, lighting', complexity: 'very-high', category: 'world' },
+  { id: 'character-controller', label: 'Character Controller', desc: 'Player movement, jumping, camera', complexity: 'medium', category: 'gameplay' },
+  { id: 'enemy-ai', label: 'Enemy AI', desc: 'Patrol, chase, attack behaviors', complexity: 'high', category: 'ai' },
+  { id: 'inventory', label: 'Inventory System', desc: 'Item slots, stacking, equipping', complexity: 'medium', category: 'systems' },
+  { id: 'ui-hud', label: 'UI / HUD', desc: 'Health bar, minimap, score display', complexity: 'low', category: 'ui' },
+  { id: 'dialogue', label: 'Dialogue System', desc: 'NPC conversations, branching choices', complexity: 'medium', category: 'systems' },
+  { id: 'combat', label: 'Combat System', desc: 'Melee/ranged attacks, damage, abilities', complexity: 'high', category: 'gameplay' },
+  { id: 'save-load', label: 'Save / Load', desc: 'Game state persistence and recovery', complexity: 'medium', category: 'systems' },
+  { id: 'particles', label: 'Particle Effects', desc: 'Fire, smoke, magic, explosions', complexity: 'low', category: 'fx' },
+  { id: 'procedural', label: 'Procedural Generation', desc: 'Random levels, items, terrain', complexity: 'high', category: 'world' },
+  { id: 'multiplayer', label: 'Multiplayer Networking', desc: 'Sync, lobby, matchmaking', complexity: 'very-high', category: 'networking' },
+  { id: 'shader', label: 'Custom Shaders', desc: 'HLSL/GLSL/Shader Graph materials', complexity: 'high', category: 'fx' },
+  { id: 'animation', label: 'Animation System', desc: 'State machines, blending, IK', complexity: 'high', category: 'gameplay' },
+  { id: 'physics', label: 'Physics Interactions', desc: 'Ragdolls, joints, vehicles', complexity: 'high', category: 'gameplay' },
 ];
 
-// Pre-built templates for common assets
-const TEMPLATES = {
-  'unreal': {
-    'character-controller': generateUnrealCharacterController(),
-    'enemy-ai': generateUnrealEnemyAI(),
-    'inventory': generateUnrealInventory(),
-    'combat': generateUnrealCombat(),
-  },
-  'unity': {
-    'character-controller': generateUnityCharacterController(),
-    'enemy-ai': generateUnityEnemyAI(),
-    'inventory': generateUnityInventory(),
-    'combat': generateUnityCombat(),
-  },
-  'godot': {
-    'character-controller': generateGodotCharacterController(),
-    'enemy-ai': generateGodotEnemyAI(),
-    'inventory': generateGodotInventory(),
-    'combat': generateGodotCombat(),
-  },
-};
+const WORLD_GENERATORS = [
+  { id: 'forest', name: 'Enchanted Forest', icon: TreePine, biomes: ['dense woods', 'clearings', 'ancient ruins'], features: ['procedural trees', 'fog volumes', 'particle wildlife'] },
+  { id: 'desert', name: 'Cyber Desert', icon: Waves, biomes: ['dunes', 'oasis', 'abandoned structures'], features: ['sand shaders', 'heat haze', 'dynamic shadows'] },
+  { id: 'mountain', name: 'Snowy Peaks', icon: Mountain, biomes: ['peaks', 'valleys', 'frozen lakes'], features: ['snow deformation', 'avalanche fx', 'icicle systems'] },
+  { id: 'ocean', name: 'Underwater Realm', icon: Waves, biomes: ['coral reefs', 'deep trenches', 'sunken cities'], features: ['caustics', 'bubble particles', 'kelp forests'] },
+  { id: 'city', name: 'Neo Tokyo', icon: Grid3X3, biomes: ['streets', 'rooftops', 'underground'], features: ['neon signs', 'rain fx', 'crowd systems'] },
+  { id: 'space', name: 'Space Station', icon: Box, biomes: ['hangars', 'labs', 'docking bays'], features: ['zero-g physics', 'holograms', 'airlock systems'] },
+];
+
+const RESEARCH_SOURCES = [
+  { id: 'docs', name: 'Engine Documentation', icon: BookOpen },
+  { id: 'github', name: 'GitHub Repositories', icon: Code },
+  { id: 'tutorials', name: 'Video Tutorials', icon: Play },
+  { id: 'forums', name: 'Community Forums', icon: Globe },
+];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// AI-POWERED DOJO
-// Design-first game asset generation with visual logic mapping
+// MAIN DOJO COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function DojoWindow({ onAIChat }) {
-  // ── State ───────────────────────────────────────────────────────────────────
+  // ── Core State ───────────────────────────────────────────────────────────────
   const [engine, setEngine] = useState('godot');
-  const [assetType, setAssetType] = useState('character-controller');
+  const [assetType, setAssetType] = useState('world-3d');
   const [code, setCode] = useState('');
-  const [customPrompt, setCustomPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState('generate'); // generate | design | logic
+  const [activeTab, setActiveTab] = useState('generate'); // generate | knowledge | research | assets
   
-  // Design phase state
-  const [designAnswers, setDesignAnswers] = useState({});
-  const [logicMap, setLogicMap] = useState([]);
-  const [features, setFeatures] = useState([]);
+  // World generation state
+  const [selectedWorldType, setSelectedWorldType] = useState('forest');
+  const [worldSize, setWorldSize] = useState('medium'); // small | medium | large
+  const [worldComplexity, setWorldComplexity] = useState('balanced'); // simple | balanced | complex
+  const [worldFeatures, setWorldFeatures] = useState([]);
+  
+  // Knowledge base state
+  const [knowledgeBase, setKnowledgeBase] = useState({
+    codeSnippets: [],
+    uploadedAssets: [],
+    documentation: [],
+    projectReferences: []
+  });
+  const [selectedKnowledge, setSelectedKnowledge] = useState([]);
+  
+  // Research state
+  const [researchQuery, setResearchQuery] = useState('');
+  const [researchResults, setResearchResults] = useState([]);
+  const [researching, setResearching] = useState(false);
+  
+  // Asset upload state
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef(null);
+  
+  // Generation config
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [useKnowledgeBase, setUseKnowledgeBase] = useState(true);
+  const [useWebResearch, setUseWebResearch] = useState(false);
+  const [generationMode, setGenerationMode] = useState('asset'); // asset | world | research
 
   const currentEngine = ENGINES.find(e => e.id === engine);
   const currentAsset = ASSET_TYPES.find(a => a.id === assetType);
+  const currentWorld = WORLD_GENERATORS.find(w => w.id === selectedWorldType);
 
-  // ── Generation Handlers ──────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // KNOWLEDGE BASE MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════════════════════
 
-  const generateWithAI = useCallback(async () => {
+  const handleFileUpload = useCallback(async (files) => {
+    const newFiles = Array.from(files).map(file => ({
+      id: Date.now() + Math.random(),
+      name: file.name,
+      size: file.size,
+      type: file.type || 'application/octet-stream',
+      category: categorizeFile(file.name),
+      uploadDate: new Date().toISOString(),
+      // In real implementation, upload to Firebase Storage
+      status: 'uploaded'
+    }));
+
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+    
+    // Simulate upload progress
+    setUploadProgress(0);
+    for (let i = 0; i <= 100; i += 10) {
+      await new Promise(r => setTimeout(r, 100));
+      setUploadProgress(i);
+    }
+    setUploadProgress(0);
+  }, []);
+
+  const categorizeFile = (filename) => {
+    const ext = filename.split('.').pop().toLowerCase();
+    if (['fbx', 'obj', 'gltf', 'glb', 'blend', 'ma', 'mb'].includes(ext)) return '3d-model';
+    if (['png', 'jpg', 'jpeg', 'tga', 'psd', 'exr'].includes(ext)) return 'texture';
+    if (['cs', 'cpp', 'h', 'hpp', 'gd', 'py', 'js', 'ts'].includes(ext)) return 'code';
+    if (['wav', 'mp3', 'ogg', 'flac'].includes(ext)) return 'audio';
+    if (['mp4', 'mov', 'avi'].includes(ext)) return 'video';
+    if (['prefab', 'unitypackage', 'uasset', 'umap'].includes(ext)) return 'engine-asset';
+    return 'other';
+  };
+
+  const removeFile = (id) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== id));
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // WEB RESEARCH
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  const performResearch = useCallback(async () => {
+    if (!researchQuery.trim() || !onAIChat) return;
+    
+    setResearching(true);
+    try {
+      const prompt = `Search and summarize information about: "${researchQuery}"
+      
+Context: Game development for ${currentEngine.label}
+Focus on: Implementation details, best practices, code examples, and common pitfalls.
+
+Provide:
+1. Quick summary (2-3 sentences)
+2. Key implementation points
+3. Code snippet example (if applicable)
+4. Relevant documentation links
+5. Community forum discussions summary`;
+
+      const result = await onAIChat(prompt, 'research');
+      
+      const newResult = {
+        id: Date.now(),
+        query: researchQuery,
+        response: result?.response || 'Research completed',
+        timestamp: new Date().toISOString(),
+        engine: engine
+      };
+      
+      setResearchResults(prev => [newResult, ...prev]);
+    } catch (err) {
+      console.error('Research failed:', err);
+    } finally {
+      setResearching(false);
+      setResearchQuery('');
+    }
+  }, [researchQuery, onAIChat, engine, currentEngine]);
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // AI GENERATION
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  const generateWorld = useCallback(async () => {
     if (!onAIChat) {
-      // Fall back to template
-      const template = TEMPLATES[engine]?.[assetType];
-      if (template) {
-        setCode(template);
-      } else {
-        setCode(generatePlaceholder(engine, assetType));
-      }
+      setCode(generateWorldTemplate(engine, selectedWorldType, worldSize, worldComplexity));
       return;
     }
 
     setGenerating(true);
     try {
-      const prompt = customPrompt.trim() || 
-        `Generate a complete, production-ready ${currentAsset.label} for ${currentEngine.label} in ${currentEngine.lang}. 
-        
-Requirements:
-${currentAsset.desc}
-- Include detailed comments explaining the logic
-- Follow best practices for ${currentEngine.label}
-- Handle edge cases and errors
-- Optimize for performance
-- Include setup instructions in comments
+      const worldConfig = WORLD_GENERATORS.find(w => w.id === selectedWorldType);
+      
+      const knowledgeContext = useKnowledgeBase && uploadedFiles.length > 0
+        ? `\n\nReference Assets Available:\n${uploadedFiles.map(f => `- ${f.name} (${f.category})`).join('\n')}`
+        : '';
 
-Design considerations:
-${logicMap.map(l => `- ${l}`).join('\n')}
+      const prompt = `Generate a complete ${worldSize} ${worldConfig.name} for ${currentEngine.label}.
 
-Generate the complete code that can be dropped into a project and work immediately.`;
+Configuration:
+- Engine: ${currentEngine.label} (${currentEngine.lang})
+- Complexity: ${worldComplexity}
+- Size: ${worldSize}
+- Biomes: ${worldConfig.biomes.join(', ')}
+- Features: ${worldConfig.features.join(', ')}
+${worldFeatures.length > 0 ? `- Custom Features: ${worldFeatures.join(', ')}` : ''}
+${knowledgeContext}
+
+Generate:
+1. Scene setup code with proper node hierarchy
+2. Procedural generation scripts
+3. Lighting and environment setup
+4. Player spawn and basic navigation
+5. Optimization settings
+6. Comments explaining each section
+
+This should be a complete, runnable world that can be dropped into a project.`;
 
       const result = await onAIChat(prompt, 'coding');
-      
-      if (result?.code || result?.response) {
-        setCode(result.code || result.response);
-        
-        // Auto-detect features from AI response
-        const detectedFeatures = extractFeaturesFromCode(result.code || result.response);
-        setFeatures(detectedFeatures);
-      } else {
-        throw new Error('No code generated');
-      }
+      setCode(result?.code || result?.response || generateWorldTemplate(engine, selectedWorldType, worldSize, worldComplexity));
     } catch (err) {
-      console.error('AI generation failed:', err);
-      // Fallback to template
-      const template = TEMPLATES[engine]?.[assetType];
-      setCode(template || generatePlaceholder(engine, assetType));
+      console.error('World generation failed:', err);
+      setCode(generateWorldTemplate(engine, selectedWorldType, worldSize, worldComplexity));
     } finally {
       setGenerating(false);
     }
-  }, [engine, assetType, customPrompt, onAIChat, currentAsset, currentEngine, logicMap]);
+  }, [engine, selectedWorldType, worldSize, worldComplexity, worldFeatures, onAIChat, currentEngine, uploadedFiles, useKnowledgeBase]);
 
-  const generateDesignFirst = useCallback(async () => {
-    if (!onAIChat) return;
-    
+  const generateAsset = useCallback(async () => {
+    if (assetType === 'world-3d') {
+      generateWorld();
+      return;
+    }
+
+    if (!onAIChat) {
+      setCode(generatePlaceholder(engine, assetType));
+      return;
+    }
+
     setGenerating(true);
     try {
-      // First, generate the design/logic map
-      const designPrompt = `As a game architect, design a ${currentAsset.label} system for ${currentEngine.label}.
+      const knowledgeContext = useKnowledgeBase && uploadedFiles.length > 0
+        ? `\n\nReference Code Snippets:\n${uploadedFiles.filter(f => f.category === 'code').map(f => `- ${f.name}`).join('\n')}`
+        : '';
 
-Requirements: ${currentAsset.desc}
+      const prompt = `Generate production-ready ${currentAsset.label} for ${currentEngine.label} in ${currentEngine.lang}.
 
-Please provide:
-1. A logic flow description (step-by-step behavior)
-2. Key features this system needs
-3. Edge cases to handle
-4. Component breakdown
+Requirements:
+${currentAsset.desc}
+Complexity: ${currentAsset.complexity}
+${knowledgeContext}
 
-Format as a structured design document.`;
+Include:
+- Complete implementation with error handling
+- Performance optimizations
+- Integration examples
+- Comments explaining architecture
+- Best practices for ${currentEngine.label}
 
-      const designResult = await onAIChat(designPrompt, 'coding');
-      
-      // Parse the design result
-      const parsedDesign = parseDesignResponse(designResult.response || designResult.code);
-      setLogicMap(parsedDesign.logicFlow);
-      setFeatures(parsedDesign.features);
-      
-      // Then generate code based on design
-      const codePrompt = `Implement the following ${currentAsset.label} design for ${currentEngine.label} in ${currentEngine.lang}:
+The code should be production-ready and follow engine conventions.`;
 
-Design:
-${parsedDesign.logicFlow.join('\n')}
-
-Features to implement:
-${parsedDesign.features.map(f => `- ${f.name}: ${f.description}`).join('\n')}
-
-Generate complete, production-ready code with comments.`;
-
-      const codeResult = await onAIChat(codePrompt, 'coding');
-      setCode(codeResult.code || codeResult.response);
-      setActiveTab('generate');
-      
+      const result = await onAIChat(prompt, 'coding');
+      setCode(result?.code || result?.response || generatePlaceholder(engine, assetType));
     } catch (err) {
-      console.error('Design-first generation failed:', err);
+      console.error('Asset generation failed:', err);
+      setCode(generatePlaceholder(engine, assetType));
     } finally {
       setGenerating(false);
     }
-  }, [engine, assetType, onAIChat, currentAsset, currentEngine]);
+  }, [assetType, engine, onAIChat, currentAsset, currentEngine, uploadedFiles, useKnowledgeBase, generateWorld]);
 
-  // ── Export Handlers ──────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // EXPORT HANDLERS
+  // ═══════════════════════════════════════════════════════════════════════════════
 
-  const copyCode = () => {
-    navigator.clipboard.writeText(code);
-  };
-
-  const downloadCode = () => {
-    const filename = `${assetType}${currentEngine.ext}`;
-    downloadFile(code, filename);
-  };
-
-  const exportAssetPackage = async () => {
+  const exportAsset = async () => {
     const files = [
-      { name: `src/${assetType}${currentEngine.ext}`, content: code },
-      { name: 'README.md', content: generateAssetReadme() },
-      { name: '.novaura/asset.json', content: JSON.stringify({
-        engine: engine,
-        assetType: assetType,
-        generatedAt: new Date().toISOString(),
-        features: features
+      { name: `${assetType}${currentEngine.ext}`, content: code },
+      { name: 'README.md', content: generateReadme() },
+      { name: '.novaura/dojo-config.json', content: JSON.stringify({
+        engine, assetType, selectedWorldType, worldSize, worldComplexity,
+        generatedAt: new Date().toISOString()
       }, null, 2)}
     ];
 
     await exportProjectAsZip({
       files,
-      projectName: `${currentAsset.label}-${currentEngine.label}`,
-      metadata: {
-        engine,
-        assetType,
-        type: 'game-asset'
-      }
+      projectName: `dojo-${currentAsset?.label || 'asset'}-${currentEngine.label}`,
+      metadata: { engine, assetType, type: 'dojo-asset' }
     });
   };
 
-  const generateAssetReadme = () => `# ${currentAsset.label}
+  const generateReadme = () => `# ${currentAsset?.label || 'Game Asset'}
 
 **Engine:** ${currentEngine.label}  
-**Language:** ${currentEngine.lang}
+**Type:** ${currentAsset?.label || 'Custom'}  
+**Generated:** ${new Date().toLocaleString()}
 
-## Description
-${currentAsset.desc}
+## Overview
+${currentAsset?.desc || 'Custom generated game asset'}
 
-## Features
-${features.map(f => `- ${f.name}`).join('\n')}
+## Files
+- Main implementation: \`${assetType}${currentEngine.ext}\`
+- Configuration: \`.novaura/dojo-config.json\`
 
 ## Installation
-1. Copy the code from \`src/${assetType}${currentEngine.ext}\`
-2. Add it to your ${currentEngine.label} project
-3. Follow any setup instructions in the code comments
+1. Import/copy the code into your ${currentEngine.label} project
+2. Follow setup instructions in code comments
+3. Configure any exposed parameters
 
-## Usage
-See inline comments in the code for usage examples.
+## Dependencies
+- ${currentEngine.label} (latest stable)
+- See code comments for specific dependencies
 
 ---
-Generated with NovAura Dojo
+Generated with NovAura Dojo 🎮
 `;
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════════════════════════
 
   return (
     <div className="h-full flex flex-col bg-slate-950 text-white overflow-hidden">
@@ -238,46 +336,37 @@ Generated with NovAura Dojo
           </div>
           <div>
             <h1 className="font-bold text-white">Dojo</h1>
-            <p className="text-xs text-slate-500">Game Asset Generator</p>
+            <p className="text-xs text-slate-500">AI Game Development Studio</p>
           </div>
         </div>
         
-        {/* Tabs */}
+        {/* Main Tabs */}
         <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab('generate')}
-            className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'generate' ? 'bg-orange-600/30 text-orange-300' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            Generate
-          </button>
-          <button
-            onClick={() => setActiveTab('design')}
-            className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'design' ? 'bg-orange-600/30 text-orange-300' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Lightbulb className="w-4 h-4" />
-            Design
-          </button>
-          <button
-            onClick={() => setActiveTab('logic')}
-            className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
-              activeTab === 'logic' ? 'bg-orange-600/30 text-orange-300' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <GitBranch className="w-4 h-4" />
-            Logic
-          </button>
+          {[
+            { id: 'generate', icon: Sparkles, label: 'Generate' },
+            { id: 'knowledge', icon: Database, label: 'Knowledge' },
+            { id: 'research', icon: Search, label: 'Research' },
+            { id: 'assets', icon: Folder, label: 'Assets' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                activeTab === tab.id ? 'bg-orange-600/30 text-orange-300' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Configuration */}
+        {/* Left Sidebar */}
         <div className="w-72 border-r border-slate-800 overflow-y-auto p-4 space-y-4 shrink-0">
+          
           {/* Engine Selection */}
           <div>
             <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
@@ -306,213 +395,471 @@ Generated with NovAura Dojo
             </div>
           </div>
 
-          {/* Asset Type */}
+          {/* Generation Mode */}
           <div>
             <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
-              Asset Type
+              Generation Mode
             </label>
             <div className="space-y-1">
-              {ASSET_TYPES.map(a => (
+              {[
+                { id: 'asset', label: 'Game Asset', desc: 'Scripts, systems, components' },
+                { id: 'world', label: '3D World', desc: 'Complete environments' },
+              ].map(mode => (
                 <button
-                  key={a.id}
-                  onClick={() => setAssetType(a.id)}
-                  className={`w-full text-left p-2.5 rounded-lg text-sm transition-colors flex items-center justify-between ${
-                    assetType === a.id
-                      ? 'bg-orange-600/20 text-orange-300'
-                      : 'text-slate-400 hover:bg-slate-900'
+                  key={mode.id}
+                  onClick={() => {
+                    setGenerationMode(mode.id);
+                    if (mode.id === 'world') setAssetType('world-3d');
+                  }}
+                  className={`w-full text-left p-3 rounded-lg text-sm transition-colors border ${
+                    generationMode === mode.id
+                      ? 'bg-blue-600/20 border-blue-600/50 text-blue-300'
+                      : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-700'
                   }`}
                 >
-                  <span>{a.label}</span>
-                  <span className={`text-xs px-1.5 py-0.5 rounded ${
-                    a.complexity === 'low' ? 'bg-green-900/50 text-green-400' :
-                    a.complexity === 'medium' ? 'bg-yellow-900/50 text-yellow-400' :
-                    a.complexity === 'high' ? 'bg-orange-900/50 text-orange-400' :
-                    'bg-red-900/50 text-red-400'
-                  }`}>
-                    {a.complexity}
-                  </span>
+                  <div className="font-medium">{mode.label}</div>
+                  <div className="text-xs text-slate-500">{mode.desc}</div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Custom Prompt */}
-          <div>
-            <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
-              Custom Requirements (Optional)
+          {/* Context Options */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useKnowledgeBase}
+                onChange={e => setUseKnowledgeBase(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-orange-600"
+              />
+              Use Knowledge Base
             </label>
-            <textarea
-              value={customPrompt}
-              onChange={e => setCustomPrompt(e.target.value)}
-              placeholder="Add specific requirements, game mechanics, or constraints..."
-              className="w-full h-24 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-600 resize-none focus:outline-none focus:border-orange-600/50"
-            />
+            <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useWebResearch}
+                onChange={e => setUseWebResearch(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-orange-600"
+              />
+              Enable Web Research
+            </label>
           </div>
 
-          {/* Generate Buttons */}
-          <div className="space-y-2">
-            <button
-              onClick={generateDesignFirst}
-              disabled={generating || !onAIChat}
-              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-medium text-slate-200 flex items-center justify-center gap-2 transition-colors"
-            >
-              <Lightbulb className="w-4 h-4" />
-              Design First
-            </button>
-            <button
-              onClick={generateWithAI}
-              disabled={generating}
-              className="w-full py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-medium text-white flex items-center justify-center gap-2 transition-colors"
-            >
-              {generating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Generate Code
-                </>
-              )}
-            </button>
+          {/* Stats */}
+          <div className="p-3 bg-slate-900/50 rounded-xl border border-slate-800">
+            <div className="text-xs text-slate-500 mb-2">Knowledge Base</div>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Assets</span>
+                <span className="text-orange-400">{uploadedFiles.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Research</span>
+                <span className="text-blue-400">{researchResults.length}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right Panel - Output */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-800 shrink-0">
-            <div className="flex items-center gap-2">
-              <Code2 className="w-4 h-4 text-slate-500" />
-              <span className="text-sm text-slate-400">
-                {currentAsset?.label} — {currentEngine?.lang}
-                {features.length > 0 && ` • ${features.length} features detected`}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={copyCode}
-                disabled={!code}
-                className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
-                title="Copy Code"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-              <button
-                onClick={downloadCode}
-                disabled={!code}
-                className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
-                title="Download File"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <button
-                onClick={exportAssetPackage}
-                disabled={!code}
-                className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
-                title="Export Asset Package"
-              >
-                <FileArchive className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Content Area */}
-          <div className="flex-1 overflow-auto bg-slate-950">
-            {activeTab === 'generate' && (
-              <>
-                {code ? (
-                  <pre className="p-4 text-sm text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">
-                    {code}
-                  </pre>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-slate-600">
-                    <Swords className="w-16 h-16 mb-4 opacity-20" />
-                    <p className="text-lg font-medium">Select an engine & asset type</p>
-                    <p className="text-sm text-slate-700 mt-2">Click Generate to create production-ready code</p>
-                    
-                    {/* Quick tips */}
-                    <div className="mt-8 grid grid-cols-2 gap-4 max-w-md">
-                      <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-                        <Lightbulb className="w-5 h-5 text-orange-400 mb-2" />
-                        <p className="text-xs text-slate-400">Use &quot;Design First&quot; to plan before coding</p>
-                      </div>
-                      <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-                        <CheckSquare className="w-5 h-5 text-green-400 mb-2" />
-                        <p className="text-xs text-slate-400">Complexity ratings help estimate effort</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {activeTab === 'design' && (
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5 text-orange-400" />
-                  Design Document
-                </h3>
-                
-                {features.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-                      <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">
-                        Detected Features
-                      </h4>
-                      <div className="space-y-2">
-                        {features.map((feature, i) => (
-                          <div key={i} className="flex items-center gap-3 p-2 bg-slate-800/50 rounded-lg">
-                            <CheckSquare className="w-4 h-4 text-green-400" />
-                            <div>
-                              <div className="text-sm text-slate-200">{feature.name}</div>
-                              <div className="text-xs text-slate-500">{feature.description}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-slate-500">
-                    <p>No design generated yet.</p>
-                    <p className="text-sm mt-2">Click &quot;Design First&quot; to create a structured design document.</p>
-                  </div>
-                )}
+        {/* Center Panel */}
+        <div className="flex-1 overflow-auto p-6">
+          {activeTab === 'generate' && generationMode === 'world' && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-white mb-2">3D World Generator</h2>
+                <p className="text-slate-400">Generate complete game environments with AI</p>
               </div>
-            )}
 
-            {activeTab === 'logic' && (
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <GitBranch className="w-5 h-5 text-orange-400" />
-                  Logic Flow
-                </h3>
-                
-                {logicMap.length > 0 ? (
-                  <div className="space-y-2">
-                    {logicMap.map((step, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-orange-600/20 text-orange-400 flex items-center justify-center text-xs font-mono shrink-0">
-                          {i + 1}
-                        </div>
-                        <div className="flex-1 p-3 bg-slate-900 rounded-lg border border-slate-800">
-                          <p className="text-sm text-slate-300">{step}</p>
-                        </div>
-                      </div>
+              {/* World Type Selection */}
+              <div className="grid grid-cols-3 gap-4">
+                {WORLD_GENERATORS.map(world => (
+                  <button
+                    key={world.id}
+                    onClick={() => setSelectedWorldType(world.id)}
+                    className={`p-4 rounded-xl border text-left transition-all ${
+                      selectedWorldType === world.id
+                        ? 'bg-blue-600/20 border-blue-600/50'
+                        : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <world.icon className={`w-8 h-8 mb-3 ${selectedWorldType === world.id ? 'text-blue-400' : 'text-slate-500'}`} />
+                    <div className={`font-medium ${selectedWorldType === world.id ? 'text-blue-300' : 'text-slate-300'}`}>
+                      {world.name}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">{world.biomes.length} biomes</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* World Configuration */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                  <label className="text-sm font-medium text-slate-300 mb-2 block">World Size</label>
+                  <div className="flex gap-2">
+                    {['small', 'medium', 'large'].map(size => (
+                      <button
+                        key={size}
+                        onClick={() => setWorldSize(size)}
+                        className={`flex-1 py-2 rounded-lg text-sm capitalize transition-colors ${
+                          worldSize === size
+                            ? 'bg-blue-600/30 text-blue-300 border border-blue-600/50'
+                            : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {size}
+                      </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                  <label className="text-sm font-medium text-slate-300 mb-2 block">Complexity</label>
+                  <div className="flex gap-2">
+                    {['simple', 'balanced', 'complex'].map(comp => (
+                      <button
+                        key={comp}
+                        onClick={() => setWorldComplexity(comp)}
+                        className={`flex-1 py-2 rounded-lg text-sm capitalize transition-colors ${
+                          worldComplexity === comp
+                            ? 'bg-blue-600/30 text-blue-300 border border-blue-600/50'
+                            : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {comp}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Custom Features */}
+              <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                <label className="text-sm font-medium text-slate-300 mb-3 block">Custom Features</label>
+                <textarea
+                  value={worldFeatures.join('\n')}
+                  onChange={e => setWorldFeatures(e.target.value.split('\n').filter(f => f.trim()))}
+                  placeholder="Add specific features (one per line)...&#10;e.g.,&#10;underwater cave system&#10;ancient temple ruins&#10;dynamic weather system"
+                  className="w-full h-24 px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-600 resize-none focus:outline-none focus:border-blue-500/50"
+                />
+              </div>
+
+              {/* Generate Button */}
+              <button
+                onClick={generateWorld}
+                disabled={generating}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 rounded-xl text-lg font-semibold text-white transition-all flex items-center justify-center gap-3"
+              >
+                {generating ? (
+                  <><RefreshCw className="w-6 h-6 animate-spin" /> Generating World...</>
                 ) : (
+                  <><Wand2 className="w-6 h-6" /> Generate 3D World</>
+                )}
+              </button>
+            </div>
+          )}
+
+          {activeTab === 'generate' && generationMode === 'asset' && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-white mb-2">Game Asset Generator</h2>
+                <p className="text-slate-400">Generate scripts, systems, and components</p>
+              </div>
+
+              {/* Asset Type Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {ASSET_TYPES.map(asset => (
+                  <button
+                    key={asset.id}
+                    onClick={() => setAssetType(asset.id)}
+                    className={`p-4 rounded-xl border text-left transition-all ${
+                      assetType === asset.id
+                        ? 'bg-orange-600/20 border-orange-600/50'
+                        : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`font-medium ${assetType === asset.id ? 'text-orange-300' : 'text-slate-300'}`}>
+                        {asset.label}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${
+                        asset.complexity === 'low' ? 'bg-green-900/50 text-green-400' :
+                        asset.complexity === 'medium' ? 'bg-yellow-900/50 text-yellow-400' :
+                        asset.complexity === 'high' ? 'bg-orange-900/50 text-orange-400' :
+                        'bg-red-900/50 text-red-400'
+                      }`}>
+                        {asset.complexity}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500">{asset.desc}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Prompt */}
+              <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                <label className="text-sm font-medium text-slate-300 mb-2 block">Custom Requirements</label>
+                <textarea
+                  value={customPrompt}
+                  onChange={e => setCustomPrompt(e.target.value)}
+                  placeholder="Add specific requirements...&#10;e.g., 'Include double jump mechanic' or 'Use state machine pattern'"
+                  className="w-full h-24 px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-600 resize-none focus:outline-none focus:border-orange-500/50"
+                />
+              </div>
+
+              {/* Generate Button */}
+              <button
+                onClick={generateAsset}
+                disabled={generating}
+                className="w-full py-4 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 disabled:opacity-50 rounded-xl text-lg font-semibold text-white transition-all flex items-center justify-center gap-3"
+              >
+                {generating ? (
+                  <><RefreshCw className="w-6 h-6 animate-spin" /> Generating...</>
+                ) : (
+                  <><Sparkles className="w-6 h-6" /> Generate {currentAsset?.label}</>
+                )}
+              </button>
+            </div>
+          )}
+
+          {activeTab === 'knowledge' && (
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-bold text-white mb-6">Knowledge Base</h2>
+              
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Code className="w-5 h-5 text-blue-400" />
+                    <h3 className="font-medium text-white">Code Snippets</h3>
+                  </div>
+                  <p className="text-sm text-slate-500">Saved code examples and patterns</p>
+                  <div className="mt-3 text-2xl font-bold text-blue-400">
+                    {uploadedFiles.filter(f => f.category === 'code').length}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Box className="w-5 h-5 text-green-400" />
+                    <h3 className="font-medium text-white">3D Models</h3>
+                  </div>
+                  <p className="text-sm text-slate-500">Reference models and assets</p>
+                  <div className="mt-3 text-2xl font-bold text-green-400">
+                    {uploadedFiles.filter(f => f.category === '3d-model').length}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Image className="w-5 h-5 text-purple-400" />
+                    <h3 className="font-medium text-white">Textures & Materials</h3>
+                  </div>
+                  <p className="text-sm text-slate-500">Reference textures and shaders</p>
+                  <div className="mt-3 text-2xl font-bold text-purple-400">
+                    {uploadedFiles.filter(f => f.category === 'texture').length}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                  <div className="flex items-center gap-3 mb-3">
+                    <BookOpen className="w-5 h-5 text-yellow-400" />
+                    <h3 className="font-medium text-white">Documentation</h3>
+                  </div>
+                  <p className="text-sm text-slate-500">Saved research and docs</p>
+                  <div className="mt-3 text-2xl font-bold text-yellow-400">
+                    {researchResults.length}
+                  </div>
+                </div>
+              </div>
+
+              {/* Uploaded Files List */}
+              <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-800 flex items-center justify-between">
+                  <span className="font-medium text-white">Uploaded Assets</span>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm text-white flex items-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={e => handleFileUpload(e.target.files)}
+                  className="hidden"
+                />
+                
+                {uploadProgress > 0 && (
+                  <div className="px-4 py-2 bg-slate-800/30">
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-600 transition-all"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="divide-y divide-slate-800">
+                  {uploadedFiles.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-slate-500">
+                      <Folder className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No assets uploaded yet</p>
+                      <p className="text-sm mt-1">Upload code, models, or textures to use as reference</p>
+                    </div>
+                  ) : (
+                    uploadedFiles.map(file => (
+                      <div key={file.id} className="px-4 py-3 flex items-center justify-between hover:bg-slate-800/30">
+                        <div className="flex items-center gap-3">
+                          {file.category === 'code' && <Code className="w-4 h-4 text-blue-400" />}
+                          {file.category === '3d-model' && <Box className="w-4 h-4 text-green-400" />}
+                          {file.category === 'texture' && <Image className="w-4 h-4 text-purple-400" />}
+                          {file.category === 'audio' && <span className="text-pink-400">♪</span>}
+                          {!['code', '3d-model', 'texture', 'audio'].includes(file.category) && <FileText className="w-4 h-4 text-slate-400" />}
+                          <div>
+                            <div className="text-sm text-slate-300">{file.name}</div>
+                            <div className="text-xs text-slate-500">{file.category} • {(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFile(file.id)}
+                          className="p-1.5 hover:bg-red-600/20 rounded-lg text-slate-500 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'research' && (
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-bold text-white mb-6">Web Research</h2>
+              
+              {/* Search Box */}
+              <div className="flex gap-3 mb-6">
+                <input
+                  type="text"
+                  value={researchQuery}
+                  onChange={e => setResearchQuery(e.target.value)}
+                  onKeyPress={e => e.key === 'Enter' && performResearch()}
+                  placeholder="Search for solutions, patterns, best practices..."
+                  className="flex-1 px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50"
+                />
+                <button
+                  onClick={performResearch}
+                  disabled={researching || !researchQuery.trim()}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-xl text-white font-medium flex items-center gap-2"
+                >
+                  {researching ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                  Research
+                </button>
+              </div>
+
+              {/* Sources */}
+              <div className="flex gap-2 mb-6">
+                {RESEARCH_SOURCES.map(source => (
+                  <div
+                    key={source.id}
+                    className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-slate-400 flex items-center gap-2"
+                  >
+                    <source.icon className="w-4 h-4" />
+                    {source.name}
+                  </div>
+                ))}
+              </div>
+
+              {/* Results */}
+              <div className="space-y-4">
+                {researchResults.map(result => (
+                  <div key={result.id} className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium text-white">{result.query}</h3>
+                      <span className="text-xs text-slate-500">
+                        {new Date(result.timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="prose prose-invert prose-sm max-w-none">
+                      <pre className="whitespace-pre-wrap text-slate-300 text-sm">
+                        {result.response}
+                      </pre>
+                    </div>
+                  </div>
+                ))}
+                
+                {researchResults.length === 0 && !researching && (
                   <div className="text-center py-12 text-slate-500">
-                    <p>No logic map generated yet.</p>
-                    <p className="text-sm mt-2">Use &quot;Design First&quot; to generate a step-by-step logic flow.</p>
+                    <Globe className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Search the web for game dev solutions</p>
+                    <p className="text-sm mt-1">Try "inventory system pattern" or "Unity movement physics"</p>
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {activeTab === 'assets' && (
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-bold text-white mb-6">Asset Library</h2>
+              
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { name: 'Characters', count: 0, icon: '👤' },
+                  { name: 'Environments', count: 0, icon: '🌍' },
+                  { name: 'Props', count: 0, icon: '📦' },
+                  { name: 'Vehicles', count: 0, icon: '🚗' },
+                  { name: 'Weapons', count: 0, icon: '⚔️' },
+                  { name: 'Effects', count: 0, icon: '✨' },
+                ].map(category => (
+                  <div key={category.name} className="p-4 bg-slate-900 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
+                    <div className="text-3xl mb-2">{category.icon}</div>
+                    <div className="font-medium text-white">{category.name}</div>
+                    <div className="text-sm text-slate-500">{category.count} assets</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 p-6 bg-slate-900/50 rounded-xl border border-dashed border-slate-700 text-center">
+                <Database className="w-12 h-12 mx-auto mb-3 text-slate-600" />
+                <p className="text-slate-400">Connect asset store integrations</p>
+                <p className="text-sm text-slate-600 mt-1">Unity Asset Store, Unreal Marketplace, Sketchfab</p>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Right Panel - Code Output */}
+        {code && (
+          <div className="w-96 border-l border-slate-800 bg-slate-950 flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Code2 className="w-4 h-4 text-slate-500" />
+                <span className="text-sm text-slate-400">
+                  {generationMode === 'world' ? 'Generated World' : currentAsset?.label}
+                </span>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => navigator.clipboard.writeText(code)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400">
+                  <Copy className="w-4 h-4" />
+                </button>
+                <button onClick={exportAsset} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400">
+                  <FileArchive className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <pre className="p-4 text-xs text-slate-300 font-mono whitespace-pre-wrap">
+                {code}
+              </pre>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -522,287 +869,109 @@ Generated with NovAura Dojo
 // TEMPLATE GENERATORS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function generateUnrealCharacterController() {
-  return `// CharacterController.h
-#pragma once
-#include "CoreMinimal.h"
-#include "GameFramework/Character.h"
-#include "CharacterController.generated.h"
+function generateWorldTemplate(engine, worldType, size, complexity) {
+  const world = WORLD_GENERATORS.find(w => w.id === worldType);
+  
+  if (engine === 'godot') {
+    return `# ${world.name} - Godot 4
+# Size: ${size} | Complexity: ${complexity}
 
-UCLASS()
-class AMyCharacter : public ACharacter
-{
-    GENERATED_BODY()
+extends Node3D
 
-public:
-    AMyCharacter();
+@export var world_size: int = ${size === 'small' ? 256 : size === 'medium' ? 512 : 1024}
+@export var chunk_size: int = 64
 
-    UPROPERTY(EditAnywhere, Category = "Movement")
-    float MoveSpeed = 600.f;
-
-    UPROPERTY(EditAnywhere, Category = "Movement")
-    float JumpForce = 420.f;
-
-protected:
-    virtual void BeginPlay() override;
-    virtual void SetupPlayerInputComponent(class UInputComponent* Input) override;
-
-    void MoveForward(float Value);
-    void MoveRight(float Value);
-    void StartJump();
-    void StopJump();
-};
-
-// CharacterController.cpp
-#include "CharacterController.h"
-#include "GameFramework/CharacterMovementComponent.h"
-
-AMyCharacter::AMyCharacter()
-{
-    GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
-    GetCharacterMovement()->JumpZVelocity = JumpForce;
-}
-
-void AMyCharacter::SetupPlayerInputComponent(UInputComponent* Input)
-{
-    Super::SetupPlayerInputComponent(Input);
-    Input->BindAxis("MoveForward", this, &AMyCharacter::MoveForward);
-    Input->BindAxis("MoveRight", this, &AMyCharacter::MoveRight);
-    Input->BindAction("Jump", IE_Pressed, this, &AMyCharacter::StartJump);
-}`;
-}
-
-function generateUnrealEnemyAI() {
-  return `// EnemyAI.h - Basic patrol and chase behavior
-UENUM(BlueprintType)
-enum class EEnemyState : uint8 { Idle, Patrol, Chase, Attack };
-
-UCLASS()
-class AEnemyAI : public ACharacter
-{
-    GENERATED_BODY()
-public:
-    UPROPERTY(EditAnywhere) float DetectRange = 800.f;
-    UPROPERTY(EditAnywhere) float AttackRange = 150.f;
-    UPROPERTY(BlueprintReadOnly) EEnemyState CurrentState = EEnemyState::Idle;
-    
-protected:
-    virtual void Tick(float DeltaTime) override;
-    void UpdateAI();
-};`;
-}
-
-function generateUnityCharacterController() {
-  return `using UnityEngine;
-
-[RequireComponent(typeof(CharacterController))]
-public class PlayerController : MonoBehaviour
-{
-    [Header("Movement")]
-    public float moveSpeed = 6f;
-    public float jumpHeight = 1.2f;
-    
-    private CharacterController controller;
-    private Vector3 velocity;
-
-    void Start() => controller = GetComponent<CharacterController>();
-
-    void Update()
-    {
-        // Ground check
-        if (controller.isGrounded && velocity.y < 0)
-            velocity.y = -2f;
-
-        // Movement
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
-        Vector3 move = transform.right * x + transform.forward * z;
-        controller.Move(move * moveSpeed * Time.deltaTime);
-
-        // Jump
-        if (Input.GetButtonDown("Jump") && controller.isGrounded)
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y);
-
-        velocity.y += Physics.gravity.y * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
-    }
-}`;
-}
-
-function generateUnityEnemyAI() {
-  return `using UnityEngine;
-using UnityEngine.AI;
-
-[RequireComponent(typeof(NavMeshAgent))]
-public class EnemyAI : MonoBehaviour
-{
-    public float detectRange = 10f;
-    public float attackRange = 2f;
-    
-    private NavMeshAgent agent;
-    private Transform player;
-
-    void Start()
-    {
-        agent = GetComponent<NavMeshAgent>();
-        player = GameObject.FindGameObjectWithTag("Player")?.transform;
-    }
-
-    void Update()
-    {
-        if (!player) return;
-        
-        float dist = Vector3.Distance(transform.position, player.position);
-        
-        if (dist <= attackRange) Attack();
-        else if (dist <= detectRange) Chase();
-        else Patrol();
-    }
-
-    void Attack() { /* Attack logic */ }
-    void Chase() => agent.SetDestination(player.position);
-    void Patrol() { /* Patrol logic */ }
-}`;
-}
-
-function generateGodotCharacterController() {
-  return `extends CharacterBody3D
-
-@export var move_speed := 6.0
-@export var jump_velocity := 4.5
-
-var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
-
-func _physics_process(delta):
-    # Apply gravity
-    if not is_on_floor():
-        velocity.y -= gravity * delta
-
-    # Jump
-    if Input.is_action_just_pressed("ui_accept") and is_on_floor():
-        velocity.y = jump_velocity
-
-    # Movement
-    var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-    var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-    
-    if direction:
-        velocity.x = direction.x * move_speed
-        velocity.z = direction.z * move_speed
-    else:
-        velocity.x = move_toward(velocity.x, 0, move_speed)
-        velocity.z = move_toward(velocity.z, 0, move_speed)
-
-    move_and_slide()`;
-}
-
-function generateGodotEnemyAI() {
-  return `extends CharacterBody3D
-
-enum State { IDLE, PATROL, CHASE, ATTACK }
-
-@export var detect_range := 10.0
-@export var attack_range := 2.0
-
-var state := State.IDLE
-var player: Node3D
+var noise = FastNoiseLite.new()
+var chunks = {}
 
 func _ready():
-    player = get_tree().get_first_node_in_group("player")
+    setup_noise()
+    generate_world()
+    setup_lighting()
+    
+func setup_noise():
+    noise.seed = randi()
+    noise.frequency = ${complexity === 'simple' ? '0.01' : complexity === 'balanced' ? '0.02' : '0.04'}
+    noise.fractal_octaves = ${complexity === 'simple' ? '3' : complexity === 'balanced' ? '5' : '8'}
 
-func _physics_process(delta):
-    if not player: return
+func generate_world():
+    print("Generating ${world.name}...")
+    # Procedural generation logic here
+    # Biomes: ${world.biomes.join(', ')}
     
-    var dist = global_position.distance_to(player.global_position)
-    
-    if dist <= attack_range: state = State.ATTACK
-    elif dist <= detect_range: state = State.CHASE
-    else: state = State.PATROL
-    
-    match state:
-        State.PATROL: _patrol()
-        State.CHASE: _chase()
-        State.ATTACK: _attack()
+func setup_lighting():
+    # ${world.features.join(', ')}
+    var light = DirectionalLight3D.new()
+    light.shadow_enabled = true
+    add_child(light)
 
-func _chase():
-    # Chase logic here
-    pass`;
+# Features to implement:
+# - ${world.features.join('\n# - ')}
+`;
+  }
+  
+  if (engine === 'unity') {
+    return `using UnityEngine;
+
+// ${world.name} Generator
+// Size: ${size} | Complexity: ${complexity}
+
+public class WorldGenerator : MonoBehaviour
+{
+    [Header("World Settings")]
+    public int worldSize = ${size === 'small' ? '256' : size === 'medium' ? '512' : '1024'};
+    public int chunkSize = 64;
+    
+    [Header("Noise Settings")]
+    public float noiseScale = ${complexity === 'simple' ? '0.01f' : complexity === 'balanced' ? '0.02f' : '0.04f'};
+    public int octaves = ${complexity === 'simple' ? '3' : complexity === 'balanced' ? '5' : '8'};
+    
+    void Start()
+    {
+        GenerateWorld();
+        SetupLighting();
+    }
+    
+    void GenerateWorld()
+    {
+        Debug.Log("Generating ${world.name}...");
+        // Biomes: ${world.biomes.join(', ')}
+        
+        // TODO: Implement procedural mesh generation
+        // TODO: Implement biome system
+        // TODO: Implement object placement
+    }
+    
+    void SetupLighting()
+    {
+        // ${world.features.join(', ')}
+        var light = gameObject.AddComponent<Light>();
+        light.type = LightType.Directional;
+        light.shadows = LightShadows.Soft;
+    }
+}
+`;
+  }
+  
+  return `// ${world.name} World Template
+// Engine: ${engine}
+// Size: ${size}
+// Complexity: ${complexity}
+// Biomes: ${world.biomes.join(', ')}
+// Features: ${world.features.join(', ')}
+
+// TODO: Implement world generation for ${engine}
+`;
 }
 
 function generatePlaceholder(engine, assetType) {
-  return `// ${assetType} — ${engine}
-// This template will be generated by AI.
-// Connect your AI provider in Settings → AI Providers
-// to enable automatic code generation for ${engine}.
-
-/*
-Asset: ${assetType}
-Description: Custom game asset
-Provider: Dedicated AI Task Routing (category: 'coding')
-*/
-
-// TODO: Implement ${assetType} for ${engine}`;
+  const asset = ASSET_TYPES.find(a => a.id === assetType);
+  return `// ${asset?.label || 'Game Asset'}
+// Engine: ${engine}
+// Complexity: ${asset?.complexity || 'unknown'}
+//
+// TODO: Implement ${asset?.desc || 'asset'}
+//
+// This is a placeholder. Connect an AI provider to generate
+// production-ready code.`;
 }
-
-function extractFeaturesFromCode(code) {
-  const features = [];
-  
-  if (code.includes('Move') || code.includes('move')) {
-    features.push({ name: 'Movement System', description: 'Character locomotion and physics' });
-  }
-  if (code.includes('Jump') || code.includes('jump')) {
-    features.push({ name: 'Jump Mechanics', description: 'Jumping with gravity and ground detection' });
-  }
-  if (code.includes('AI') || code.includes('State')) {
-    features.push({ name: 'AI State Machine', description: 'Behavioral state management' });
-  }
-  if (code.includes('Attack') || code.includes('Damage')) {
-    features.push({ name: 'Combat System', description: 'Attack and damage handling' });
-  }
-  if (code.includes('Inventory') || code.includes('Item')) {
-    features.push({ name: 'Inventory', description: 'Item collection and management' });
-  }
-  
-  return features;
-}
-
-function parseDesignResponse(response) {
-  const lines = response.split('\n');
-  const logicFlow = [];
-  const features = [];
-  
-  let currentSection = null;
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    
-    if (trimmed.toLowerCase().includes('logic') || trimmed.toLowerCase().includes('flow')) {
-      currentSection = 'logic';
-      continue;
-    }
-    if (trimmed.toLowerCase().includes('feature')) {
-      currentSection = 'features';
-      continue;
-    }
-    
-    if (trimmed.startsWith('-') || trimmed.startsWith('•') || /^\d+\./.test(trimmed)) {
-      const content = trimmed.replace(/^[-•\d.\s]+/, '');
-      
-      if (currentSection === 'logic' && content) {
-        logicFlow.push(content);
-      } else if (currentSection === 'features' && content) {
-        features.push({ name: content, description: '' });
-      }
-    }
-  }
-  
-  return { logicFlow, features };
-}
-
-// Additional templates (placeholders for brevity)
-function generateUnrealInventory() { return '// Unreal Inventory System\n// Full implementation would be here'; }
-function generateUnrealCombat() { return '// Unreal Combat System\n// Full implementation would be here'; }
-function generateUnityInventory() { return '// Unity Inventory System\n// Full implementation would be here'; }
-function generateUnityCombat() { return '// Unity Combat System\n// Full implementation would be here'; }
-function generateGodotInventory() { return '// Godot Inventory System\n// Full implementation would be here'; }
-function generateGodotCombat() { return '// Godot Combat System\n// Full implementation would be here'; }
