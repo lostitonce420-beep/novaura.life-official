@@ -12,18 +12,18 @@ const PLANS = [
     id: 'free',
     name: 'Free',
     price: 0,
-    description: 'For casual users',
-    features: ['4K context window', '3 builder prompts/day', '3 projects', 'Community support'],
-    limits: { context: '4K', calls: 3, projects: 3 },
+    description: 'Try before you buy',
+    features: ['4K context', '5 builder prompts total', '3 projects', 'Community support'],
+    limits: { context: '4K', calls: 5, projects: 3 },
     color: 'gray',
   },
   {
     id: 'starter',
     name: 'Starter',
-    price: 9.99,
-    priceId: 'price_starter', // Stripe price ID
-    description: 'For individual developers',
-    features: ['8K context window', '10 builder prompts/day', '10 projects', 'Priority support', 'Custom domain'],
+    price: 19.99,
+    priceId: 'price_starter',
+    description: 'For hobbyists',
+    features: ['8K context', '10 builder prompts/mo', '10 projects', 'Email support', 'Custom domain'],
     limits: { context: '8K', calls: 10, projects: 10 },
     color: 'cyan',
     popular: false,
@@ -31,32 +31,32 @@ const PLANS = [
   {
     id: 'builder',
     name: 'Builder',
-    price: 17.99,
+    price: 49.99,
     priceId: 'price_builder',
     description: 'For serious builders',
-    features: ['16K context window', '25 builder prompts/day', 'Unlimited projects', 'Priority AI queue', '3 custom domains', 'API access'],
-    limits: { context: '16K', calls: 25, projects: '∞' },
+    features: ['16K context', '30 builder prompts/mo', 'Unlimited projects', 'Priority support', '3 custom domains'],
+    limits: { context: '16K', calls: 30, projects: '∞' },
     color: 'purple',
     popular: true,
   },
   {
     id: 'pro',
     name: 'Pro',
-    price: 29.99,
+    price: 99.99,
     priceId: 'price_pro',
     description: 'For power users',
-    features: ['32K context window', '50 builder prompts/day', 'Unlimited projects', '10 custom domains', 'Advanced analytics'],
-    limits: { context: '32K', calls: 50, projects: '∞' },
+    features: ['32K context', '75 builder prompts/mo', 'Unlimited projects', '10 custom domains', 'Analytics'],
+    limits: { context: '32K', calls: 75, projects: '∞' },
     color: 'pink',
     popular: false,
   },
   {
     id: 'pro_plus',
-    name: 'Pro+',
-    price: 49.99,
+    name: 'Pro+ BYOK',
+    price: 29.99,
     priceId: 'price_pro_plus',
-    description: 'Bring Your Own Key',
-    features: ['128K context', 'Unlimited prompts', 'BYOK support', 'Unlimited domains', 'Secrets manager', 'White-label'],
+    description: 'Bring Your Own API Key',
+    features: ['128K context', 'Unlimited prompts', 'BYOK support', 'Unlimited domains', 'Secrets manager', 'Best value'],
     limits: { context: '128K', calls: '∞', projects: '∞' },
     color: 'amber',
     popular: false,
@@ -291,6 +291,25 @@ export default function BillingWindow() {
               </motion.div>
             );
           })}
+        </div>
+
+        {/* BYOK Explanation */}
+        <div className="mt-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+          <h3 className="font-medium text-amber-400 mb-2 flex items-center gap-2">
+            <Zap className="w-5 h-5" />
+            Why are limits so low?
+          </h3>
+          <p className="text-sm text-white/70 mb-2">
+            Each builder prompt runs <strong>9 AI passes</strong> (architect → coder → reviewer → tester → debugger → etc.)
+          </p>
+          <p className="text-sm text-white/70 mb-2">
+            With Claude 3.5 at ~$0.40/call, that's <strong>~$3.60 per prompt</strong>.
+          </p>
+          <p className="text-sm text-white/70">
+            <strong>Pro+ BYOK:</strong> Bring your own API keys from OpenAI/Anthropic/Google. 
+            Pay providers directly (~$3-4/prompt), use NovAura's OS for just $29.99/mo. 
+            <span className="text-amber-400">Unlimited usage, best value.</span>
+          </p>
         </div>
 
         {/* Payment Method */}
