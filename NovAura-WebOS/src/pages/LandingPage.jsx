@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
 import { 
   Search, Image, Sparkles, Mail, LayoutGrid, Monitor, 
   ShoppingBag, Globe, Shield, Loader2, X, Zap, Database
@@ -30,11 +31,11 @@ export default function LandingPage({ onLaunchOS }) {
 
     try {
       if (searchType === 'web') {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const response = await fetch(`${BACKEND_URL}/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         setResults(data);
       } else if (searchType === 'ai') {
-        const response = await fetch('/api/ai/chat', {
+        const response = await fetch(`${BACKEND_URL}/ai/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: query, provider: 'gemini' })
@@ -52,7 +53,7 @@ export default function LandingPage({ onLaunchOS }) {
   const handleStaffVerify = async (e) => {
     e.preventDefault();
     if (staffCode.trim() === STAFF_GATE_CODE) {
-      window.location.href = '/staff-login';
+      window.location.href = 'https://www.novaura.life';
     } else {
       toast.error('Invalid access code');
     }
@@ -91,7 +92,7 @@ export default function LandingPage({ onLaunchOS }) {
 
           {/* Platform */}
           <button
-            onClick={() => window.location.href = 'https://platform.novaura.life'}
+            onClick={() => window.location.href = window.location.origin + '/platform'}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <LayoutGrid className="w-4 h-4" style={{ color: '#4285f4' }} />
@@ -100,7 +101,7 @@ export default function LandingPage({ onLaunchOS }) {
 
           {/* Market */}
           <button
-            onClick={() => window.location.href = 'https://market.novaura.life'}
+            onClick={() => window.location.href = window.location.origin + '/market'}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4" style={{ color: '#fbbc05' }} />
@@ -109,7 +110,7 @@ export default function LandingPage({ onLaunchOS }) {
 
           {/* NovaLow */}
           <button
-            onClick={() => window.location.href = 'https://novalow.novaura.life'}
+            onClick={() => window.location.href = window.location.origin + '/novalow'}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <Globe className="w-4 h-4" style={{ color: '#34a853' }} />
