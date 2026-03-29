@@ -13,53 +13,31 @@ const PLANS = [
     name: 'Free',
     price: 0,
     description: 'Try before you buy',
-    features: ['4K context', '5 builder prompts total', '3 projects', 'Community support'],
-    limits: { context: '4K', calls: 5, projects: 3 },
+    features: ['4K context', '20 builder prompts/month', '3 projects', 'Community support'],
+    limits: { context: '4K', calls: 20, projects: 3 },
     color: 'gray',
   },
   {
     id: 'starter',
     name: 'Starter',
-    price: 19.99,
+    price: 17.99,
     priceId: 'price_starter',
     description: 'For hobbyists',
-    features: ['8K context', '10 builder prompts/mo', '10 projects', 'Email support', 'Custom domain'],
-    limits: { context: '8K', calls: 10, projects: 10 },
+    features: ['8K context', '30 builder prompts/month', '10 projects', 'Email support', '1 custom domain'],
+    limits: { context: '8K', calls: 30, projects: 10 },
     color: 'cyan',
     popular: false,
   },
   {
-    id: 'builder',
-    name: 'Builder',
-    price: 49.99,
-    priceId: 'price_builder',
-    description: 'For serious builders',
-    features: ['16K context', '30 builder prompts/mo', 'Unlimited projects', 'Priority support', '3 custom domains'],
-    limits: { context: '16K', calls: 30, projects: '∞' },
-    color: 'purple',
-    popular: true,
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: 99.99,
-    priceId: 'price_pro',
-    description: 'For power users',
-    features: ['32K context', '75 builder prompts/mo', 'Unlimited projects', '10 custom domains', 'Analytics'],
-    limits: { context: '32K', calls: 75, projects: '∞' },
-    color: 'pink',
-    popular: false,
-  },
-  {
-    id: 'pro_plus',
-    name: 'Pro+ BYOK',
+    id: 'pro_byok',
+    name: 'Pro BYOK',
     price: 29.99,
-    priceId: 'price_pro_plus',
-    description: 'Bring Your Own API Key',
-    features: ['128K context', 'Unlimited prompts', 'BYOK support', 'Unlimited domains', 'Secrets manager', 'Best value'],
-    limits: { context: '128K', calls: '∞', projects: '∞' },
+    priceId: 'price_pro_byok',
+    description: '100 hosted + unlimited BYOK',
+    features: ['16K context', '100 hosted prompts/mo', 'BYOK for unlimited', 'Unlimited projects', '5 custom domains', 'Priority support'],
+    limits: { context: '16K', calls: 100, projects: '∞' },
     color: 'amber',
-    popular: false,
+    popular: true,
   },
 ];
 
@@ -297,18 +275,21 @@ export default function BillingWindow() {
         <div className="mt-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
           <h3 className="font-medium text-amber-400 mb-2 flex items-center gap-2">
             <Zap className="w-5 h-5" />
-            Why are limits so low?
+            How does BYOK work?
           </h3>
           <p className="text-sm text-white/70 mb-2">
-            Each builder prompt runs <strong>9 AI passes</strong> (architect → coder → reviewer → tester → debugger → etc.)
+            Each builder prompt runs <strong>9 AI passes</strong> (architect → coder → reviewer → etc.)
           </p>
           <p className="text-sm text-white/70 mb-2">
             With Claude 3.5 at ~$0.40/call, that's <strong>~$3.60 per prompt</strong>.
           </p>
+          <p className="text-sm text-white/70 mb-2">
+            <strong>Pro BYOK ($29.99):</strong> Get 100 hosted prompts included. 
+            After that, add your own API keys from OpenAI/Anthropic/Google for <strong>unlimited usage</strong>.
+          </p>
           <p className="text-sm text-white/70">
-            <strong>Pro+ BYOK:</strong> Bring your own API keys from OpenAI/Anthropic/Google. 
-            Pay providers directly (~$3-4/prompt), use NovAura's OS for just $29.99/mo. 
-            <span className="text-amber-400">Unlimited usage, best value.</span>
+            You pay providers directly (~$3-4/prompt), we provide the OS + 9-pass pipeline.
+            <span className="text-amber-400"> Best value for serious builders!</span>
           </p>
         </div>
 

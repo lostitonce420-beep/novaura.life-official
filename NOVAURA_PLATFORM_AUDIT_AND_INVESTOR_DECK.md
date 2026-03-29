@@ -245,52 +245,46 @@ User on novaura.life (Firebase)
 - 1,000 domains/month @ $10 avg = $10,000/month
 - 10,000 domains/month @ $10 avg = $100,000/month
 
-## 2. Premium Subscriptions (Realistic AI Costs)
+## 2. Premium Subscriptions (Hybrid Hosted + BYOK Model)
 
 **The Reality:** Claude 3.5 = ~$0.40/call, Gemini 3.1 Pro = ~$0.30/call
 9 passes per prompt = **$2.70-3.60 per user prompt!**
 
 **Tier Structure:**
 
-| Tier | Price | Prompts/Month | Est. Cost* | Margin | Key Feature |
-|------|-------|---------------|------------|--------|-------------|
-| **Free** | $0 | 5 total | ~$18 | -$18 | Trial only |
-| **Starter** | $19.99/mo | 10/mo | ~$36 | -$16 | Loss leader |
-| **Builder** ⭐ | $49.99/mo | 30/mo | ~$108 | -$58 | Popular |
-| **Pro** | $99.99/mo | 75/mo | ~$270 | -$170 | Power users |
-| **Pro+ (BYOK)** | $29.99/mo | Unlimited | $0 | **+$30** | **Sustainable** |
+| Tier | Price | Hosted Prompts | BYOK | Key Feature |
+|------|-------|----------------|------|-------------|
+| **Free** | $0 | 20/month | ❌ | Trial/learning |
+| **Starter** | $17.99/mo | 30/month | ❌ | Hobbyists |
+| **Pro BYOK** ⭐ | $29.99/mo | 100/month | ✅ Unlimited | **Best Value** |
+| **Enterprise** | Custom | Custom | ✅ | White-label |
 
-*Cost assumes $3.00 avg per 9-pass prompt (Claude/Gemini Pro)
+**Cost Breakdown:**
+- Free: 20 × $3 = $60 cost, $0 revenue = **-$60** (acquisition)
+- Starter: 30 × $3 = $90 cost, $18 revenue = **-$72** (loss leader)
+- Pro: 100 × $3 = $300 cost, $30 revenue = **-$270**... 
+  **BUT** users switch to BYOK after 100 prompts!
 
-**The Only Sustainable Model: BYOK**
-
-With real AI costs ($3+ per prompt), hosted tiers are **loss leaders**. The only profitable tier is **BYOK (Bring Your Own Key)**:
+**The Hybrid BYOK Model:**
 
 ```
-Pro+ BYOK: $29.99/month
-- User brings OpenAI/Gemini/Claude API key
-- User pays $0.40 per API call directly to provider
-- NovAura provides: OS + 9-pass pipeline + UI
-- NovAura cost: $0
-- NovAura profit: $29.99
+Pro BYOK: $29.99/month
+├── First 100 prompts: Hosted on NovAura's keys (~$300 cost)
+├── After 100 prompts: User brings own API key
+├── Unlimited usage: User pays ~$3/prompt to provider
+└── NovAura provides: OS + pipeline + UI = $30/mo profit
 ```
 
-**Why BYOK Saves the Business:**
-- Hosted AI at $3/prompt × 30 prompts = $90 cost, charge $50 = **-$40 loss**
-- BYOK at $0 cost, charge $30 = **+$30 profit**
-- Heavy users (who cost the most) are incentivized to BYOK
-- Light users subsidize their own usage
+**Why This Works:**
+1. **Light users** (<100 prompts): NovAura eats the cost, user gets convenience
+2. **Heavy users** (>100 prompts): Switch to BYOK, NovAura becomes profitable
+3. **Power users**: Immediately BYOK, never hit the 100 cap
+4. **The $29.99 price** is justified by "unlimited with BYOK"
 
-**Alternative: Cheaper Model Routing**
-- Free/Starter: Use Gemini Flash ($0.02/call) = $0.18/prompt
-- Builder+: Use Claude only for complex tasks
-- Route 80% of calls to cheaper models
-
-**Realistic Free Tier:**
-- 5 prompts TOTAL (not per day)
-- Resets monthly
-- Just enough to taste the product
-- Forces upgrade or BYOK quickly
+**Conversion Funnel:**
+- Free (20) → Starter (30) → Pro BYOK (100+unlimited)
+- Users naturally grow into BYOK as they scale
+- Heavy users subsidize light users through monthly fee
 
 ## 3. Compute & API Usage
 
