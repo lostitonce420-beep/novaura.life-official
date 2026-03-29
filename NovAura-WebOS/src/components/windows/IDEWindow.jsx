@@ -29,16 +29,34 @@ const ACTIVITY_ITEMS = [
 
 // ── Template picker ─────────────────────────────────────────
 const TEMPLATES = [
-  { id: 'blank', name: 'Blank', desc: 'Empty project' },
-  { id: 'landing', name: 'Landing Page', desc: 'HTML/CSS/JS landing page' },
-  { id: 'react', name: 'React App', desc: 'React with JSX' },
-  { id: 'api', name: 'API Server', desc: 'Express.js REST API' },
-  { id: 'game', name: 'Canvas Game', desc: 'HTML5 canvas game' },
-  { id: 'python', name: 'Python', desc: 'Python 3 app (runs in browser)' },
-  { id: 'c_app', name: 'C Program', desc: 'C with GCC (cloud compiled)' },
-  { id: 'rust', name: 'Rust', desc: 'Rust program (cloud compiled)' },
-  { id: 'go_app', name: 'Go', desc: 'Go program (cloud compiled)' },
-  { id: 'java', name: 'Java', desc: 'Java program (cloud compiled)' },
+  // Frontend
+  { id: 'blank', name: 'Blank', desc: 'Empty project', category: 'Frontend' },
+  { id: 'landing', name: 'Landing Page', desc: 'HTML/CSS/JS landing page', category: 'Frontend' },
+  { id: 'portfolio', name: 'Portfolio', desc: 'Developer portfolio site', category: 'Frontend' },
+  { id: 'react', name: 'React App', desc: 'React with JSX', category: 'Frontend' },
+  { id: 'nextjs', name: 'Next.js', desc: 'Next.js App Router', category: 'Frontend' },
+  { id: 'vue', name: 'Vue 3', desc: 'Vue 3 + Vite', category: 'Frontend' },
+  { id: 'threejs', name: 'Three.js', desc: '3D scene with Three.js', category: 'Frontend' },
+  
+  // Applications
+  { id: 'todo_app', name: 'Todo App', desc: 'Todo list with localStorage', category: 'App' },
+  { id: 'chat_app', name: 'Chat App', desc: 'Real-time messaging UI', category: 'App' },
+  { id: 'weather_app', name: 'Weather App', desc: 'Weather dashboard', category: 'App' },
+  { id: 'snake_game', name: 'Snake Game', desc: 'Classic snake game', category: 'App' },
+  { id: 'blog', name: 'Blog', desc: 'Markdown blog', category: 'App' },
+  
+  // Backend & API
+  { id: 'api', name: 'API Server', desc: 'Express.js REST API', category: 'Backend' },
+  
+  // Games
+  { id: 'game', name: 'Canvas Game', desc: 'HTML5 canvas game template', category: 'Game' },
+  
+  // Languages
+  { id: 'python', name: 'Python', desc: 'Python 3 app (runs in browser)', category: 'Language' },
+  { id: 'c_app', name: 'C Program', desc: 'C with GCC (cloud compiled)', category: 'Language' },
+  { id: 'rust', name: 'Rust', desc: 'Rust program (cloud compiled)', category: 'Language' },
+  { id: 'go_app', name: 'Go', desc: 'Go program (cloud compiled)', category: 'Language' },
+  { id: 'java', name: 'Java', desc: 'Java program (cloud compiled)', category: 'Language' },
 ];
 
 // ── Search panel ────────────────────────────────────────────
@@ -119,22 +137,33 @@ function SettingsPanel() {
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
         </button>
         {showTemplates && (
-          <div className="mt-1 space-y-1">
-            {TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  if (confirm(`Load "${t.name}" template? This will replace your current project.`)) {
-                    loadTemplate(t.id);
-                    toast.success(`Loaded: ${t.name}`);
-                  }
-                }}
-                className="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-primary/10 text-gray-300 hover:text-primary transition-colors"
-              >
-                <div className="font-medium">{t.name}</div>
-                <div className="text-[10px] text-gray-500">{t.desc}</div>
-              </button>
-            ))}
+          <div className="mt-1 space-y-3 max-h-80 overflow-y-auto">
+            {['Frontend', 'App', 'Backend', 'Game', 'Language'].map(category => {
+              const categoryTemplates = TEMPLATES.filter(t => t.category === category);
+              if (categoryTemplates.length === 0) return null;
+              return (
+                <div key={category}>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{category}</div>
+                  <div className="space-y-1">
+                    {categoryTemplates.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          if (confirm(`Load "${t.name}" template? This will replace your current project.`)) {
+                            loadTemplate(t.id);
+                            toast.success(`Loaded: ${t.name}`);
+                          }
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-primary/10 text-gray-300 hover:text-primary transition-colors"
+                      >
+                        <div className="font-medium">{t.name}</div>
+                        <div className="text-[10px] text-gray-500">{t.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
