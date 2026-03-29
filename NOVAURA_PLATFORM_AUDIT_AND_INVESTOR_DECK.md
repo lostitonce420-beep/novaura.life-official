@@ -21,7 +21,7 @@
 
 | Metric | Value | Context |
 |--------|-------|---------|
-| **Total Source Code** | ~223,000 lines | Hand-written production code |
+| **Total Source Code** | ~230,000 lines | Hand-written production code |
 | **With Dependencies** | ~9.2 million lines | Enterprise-grade scale |
 | **Active Components** | 61+ applications | Full productivity suite |
 | **Game Components** | 3 major titles | Including full RPG (67K lines) |
@@ -32,8 +32,10 @@
 **Comparison:**
 - Windows 1.0: ~50,000 lines
 - macOS original: ~100,000 lines  
-- **NovAura: ~223,000 lines** (2x early macOS)
+- **NovAura: ~230,000 lines** (2.3x early macOS, approaching Windows 3.1)
 - Linux kernel: ~30,000,000 lines
+
+**🎉 Milestone: Approaching 250K lines!**
 
 ## Architecture Overview
 
