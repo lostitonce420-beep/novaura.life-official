@@ -243,18 +243,30 @@ User on novaura.life (Firebase)
 - 1,000 domains/month @ $10 avg = $10,000/month
 - 10,000 domains/month @ $10 avg = $100,000/month
 
-## 2. Premium Subscriptions
+## 2. Premium Subscriptions (Sustainable Tiering)
 
 **Tier Structure:**
 
-| Feature | Free | Standard | Premium |
-|---------|------|----------|---------|
-| AI Calls | 100/day | 500/day | Unlimited |
-| Storage | 1GB | 10GB | 100GB |
-| Deployments | 3 | 10 | Unlimited |
-| Custom Domains | ❌ | ✅ | ✅ |
-| Priority AI | ❌ | ❌ | ✅ |
-| **Price** | Free | $9/mo | $29/mo |
+| Tier | Price | AI Calls | Context | Projects | Custom Domains | Key Feature |
+|------|-------|----------|---------|----------|----------------|-------------|
+| **Free** | $0 | 7/day | 4K | 3 | ❌ | Try before you buy |
+| **Starter** | $14.99/mo | 50/day | 8K | 10 | 1 | Individual developers |
+| **Builder** ⭐ | $29.99/mo | 200/day | 16K | Unlimited | 3 | **Most Popular** |
+| **Pro (BYOK)** | $75/mo | Unlimited* | 128K | Unlimited | 10 | Bring Your Own API Key |
+
+*Pro tier unlimited calls only when user brings their own API keys. Platform credits capped at ~500-1000 calls/month for cost control.
+
+**BYOK (Bring Your Own Key) Model:**
+- Users supply their own OpenAI/Gemini/Claude API keys
+- NovAura provides the OS interface + orchestration
+- **Zero marginal cost** for AI inference on Pro tier
+- Sustainable even at $75/month
+
+**Why This Works:**
+- Free tier: Acquisition funnel (7 calls/day = try, not rely)
+- Starter ($15): Light users, cost-controlled
+- Builder ($30): Power users, 200 calls/day = ~6K calls/month
+- Pro ($75): Heavy users bring own keys = sustainable margins
 
 ## 3. Compute & API Usage
 
