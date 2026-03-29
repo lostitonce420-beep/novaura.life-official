@@ -64,6 +64,7 @@ const GameWindow = lazy(() => import('./windows/GameWindow'));
 */
     const LiveAIWindow = lazy(() => import('./windows/LiveAIWindow'));
     const WeatherWindow = lazy(() => import('./windows/WeatherWindow'));
+    const GildedCageGame = lazy(() => import('./games/GildedCageGame'));
     const CryptoWindow = lazy(() => import('./windows/CryptoWindow'));
     const CalculatorWindow = lazy(() => import('./windows/CalculatorWindow'));
 
@@ -132,6 +133,7 @@ const windowComponents = {
     'weather': WeatherWindow,
     'crypto': CryptoWindow,
     'calculator': CalculatorWindow,
+    'gilded-cage': GildedCageGame,
 };
 
 const defaultSizes = {
@@ -195,6 +197,7 @@ const defaultSizes = {
   'weather': { width: 480, height: 620 },
   'crypto': { width: 720, height: 600 },
   'calculator': { width: 360, height: 520 },
+  'gilded-cage': { width: 720, height: 580 },
 };
 
 // Get responsive size based on screen width

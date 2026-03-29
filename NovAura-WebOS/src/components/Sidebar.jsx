@@ -110,6 +110,7 @@ const APP_CATEGORIES = [
       { type: 'psychometrics', label: 'Psyche', icon: BrainCircuit },
       { type: 'games-arena', label: 'Games', icon: Gamepad2 },
       { type: 'aetherium-tcg', label: 'Aetherium', icon: Swords },
+      { type: 'gilded-cage', label: 'Gilded Cage', icon: Crown },
       { type: 'card-deck-creator', label: 'Deck Builder', icon: Layers },
     ],
   },
@@ -278,6 +279,7 @@ export function LeftSidebar({ windowCount = 0, onOpenWindow, className = '' }) {
 const GAMES = [
   { id: 'games-arena', title: 'Games Arena', desc: 'Chess, Checkers & more', icon: Gamepad2, accent: 'from-cyan-500 to-emerald-500', windowType: 'games-arena' },
   { id: 'aetherium-tcg', title: 'Aetherium TCG', desc: 'Trading Card Game', icon: Swords, accent: 'from-purple-500 to-cyan-500', windowType: 'aetherium-tcg' },
+  { id: 'gilded-cage', title: 'The Gilded Cage', desc: 'Steampunk RPG Adventure', icon: Crown, accent: 'from-amber-500 to-orange-600', windowType: 'gilded-cage' },
 ];
 
 const SOCIAL = [
