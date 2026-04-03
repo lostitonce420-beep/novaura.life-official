@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lightbulb, X, ChevronRight, Sparkles } from 'lucide-react';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 
 const TIPS = [
   {
@@ -118,7 +119,7 @@ export default function TipsWidget() {
 
   useEffect(() => {
     // Check if tips are disabled
-    const tipsDisabled = localStorage.getItem('novaura-tips-disabled');
+    const tipsDisabled = kernelStorage.getItem('novaura-tips-disabled');
     if (tipsDisabled === 'true') {
       setIsDismissed(true);
       return;
@@ -147,7 +148,7 @@ export default function TipsWidget() {
   const handleDismiss = () => {
     setIsVisible(false);
     setIsDismissed(true);
-    localStorage.setItem('novaura-tips-disabled', 'true');
+    kernelStorage.setItem('novaura-tips-disabled', 'true');
   };
 
   const handleNext = () => {

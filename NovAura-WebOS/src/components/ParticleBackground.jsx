@@ -293,8 +293,8 @@ export function getGoogleFontsUrl(fonts = ['default']) {
 // PARTICLE BACKGROUND COMPONENT
 // ============================================
 
-export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }) {
-  const { settings } = useGraphics();
+// Inner component that actually renders the canvas
+function ParticleBackgroundCanvas({ config = 'idle', theme = 'cosmic', settings }) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const particlesRef = useRef([]);
@@ -309,19 +309,6 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
   const starsRef = useRef([]);
   const sparksRef = useRef([]);
   const meshNodesRef = useRef([]);
-
-  // If particles disabled (low graphics), don't render
-  if (!settings.particles.enabled) {
-    return (
-      <div 
-        className="absolute inset-0 z-0"
-        style={{ 
-          background: THEME_CONFIGS[theme]?.background || '#0a0a0f',
-          pointerEvents: 'none'
-        }}
-      />
-    );
-  }
 
   // Update theme ref and recolor particles when prop changes
   useEffect(() => {
@@ -353,7 +340,7 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
     const particleCount = config === 'active' ? Math.floor(baseParticleCount * 1.4) : baseParticleCount;
     const microCount = config === 'active' ? Math.floor(baseMicroCount * 1.4) : baseMicroCount;
     
-    const baseSpeed = config === 'active' ? 2.5 : 1.2;
+    const baseSpeed = config === 'active' ? 2.0 : 0.8;
     const linkDistance = 150;
     const enableLinks = settings.particles.links;
     const enableColorCycling = settings.particles.colorCycling;
@@ -368,8 +355,9 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
     resize();
     window.addEventListener('resize', resize);
 
-    // Init main particles
-    if (particlesRef.current.length === 0) {
+    // Init main particles (reinitialize if count changed)
+    if (particlesRef.current.length !== particleCount) {
+      particlesRef.current = [];
       for (let i = 0; i < particleCount; i++) {
         const colorGroup = i % 20;
         const baseSize = (Math.random() * 3 + 1) * sizeMultiplier;
@@ -395,8 +383,9 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
       }
     }
 
-    // Init micro particles
-    if (microRef.current.length === 0) {
+    // Init micro particles (reinitialize if count changed)
+    if (microRef.current.length !== microCount) {
+      microRef.current = [];
       for (let i = 0; i < microCount; i++) {
         const colorGroup = i % 20;
         microRef.current.push({
@@ -422,9 +411,11 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
     }
 
     // STORMY: Init rain drops
-    if (themeConfig.hasRain && rainRef.current.length === 0) {
+    if (themeConfig.hasRain) {
       const rainCount = themeConfig.rainCount || 100;
-      for (let i = 0; i < rainCount; i++) {
+      if (rainRef.current.length !== rainCount) {
+        rainRef.current = [];
+        for (let i = 0; i < rainCount; i++) {
         rainRef.current.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
@@ -433,13 +424,16 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
           opacity: Math.random() * 0.4 + 0.1,
           width: Math.random() * 1 + 0.5,
         });
+        }
       }
     }
 
     // AURORA: Init stars
-    if (themeConfig.hasStars && starsRef.current.length === 0) {
+    if (themeConfig.hasStars) {
       const starCount = themeConfig.starCount || 150;
-      for (let i = 0; i < starCount; i++) {
+      if (starsRef.current.length !== starCount) {
+        starsRef.current = [];
+        for (let i = 0; i < starCount; i++) {
         starsRef.current.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height * 0.6, // Only in upper 60%
@@ -448,13 +442,16 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
           twinkleSpeed: Math.random() * 0.02 + 0.005,
           twinklePhase: Math.random() * Math.PI * 2,
         });
+        }
       }
     }
 
     // BLAZE: Init sparks
-    if (themeConfig.heatDistortion && sparksRef.current.length === 0) {
+    if (themeConfig.heatDistortion) {
       const sparkCount = themeConfig.sparkCount || 40;
-      for (let i = 0; i < sparkCount; i++) {
+      if (sparksRef.current.length !== sparkCount) {
+        sparksRef.current = [];
+        for (let i = 0; i < sparkCount; i++) {
         sparksRef.current.push({
           x: Math.random() * canvas.width,
           y: canvas.height + Math.random() * 100,
@@ -464,19 +461,23 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
           life: Math.random(),
           decay: Math.random() * 0.01 + 0.005,
         });
+        }
       }
     }
 
     // MESH WATER: Init mesh nodes
-    if (themeConfig.meshMode && meshNodesRef.current.length === 0) {
+    if (themeConfig.meshMode) {
       const rows = themeConfig.meshRows || 10;
       const cols = themeConfig.meshCols || 14;
-      const spacingX = canvas.width / (cols - 1);
-      const spacingY = canvas.height / (rows - 1);
-      
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          meshNodesRef.current.push({
+      const expectedNodes = rows * cols;
+      if (meshNodesRef.current.length !== expectedNodes) {
+        meshNodesRef.current = [];
+        const spacingX = canvas.width / (cols - 1);
+        const spacingY = canvas.height / (rows - 1);
+        
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            meshNodesRef.current.push({
             baseX: c * spacingX,
             baseY: r * spacingY,
             x: c * spacingX,
@@ -484,13 +485,15 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
             row: r,
             col: c,
             phase: (r + c) * 0.3,
-          });
+            });
+          }
         }
       }
     }
 
     // Init attractors
-    if (attractorsRef.current.length === 0) {
+    if (attractorsRef.current.length !== 4) {
+      attractorsRef.current = [];
       for (let i = 0; i < 4; i++) {
         let hue;
         if (theme === 'matrix') hue = [100, 120, 130, 140][i];
@@ -516,7 +519,8 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
     }
 
     // Init micro-attractors
-    if (microAttractorsRef.current.length === 0) {
+    if (microAttractorsRef.current.length !== 6) {
+      microAttractorsRef.current = [];
       for (let i = 0; i < 6; i++) {
         let hue;
         if (theme === 'matrix') hue = [100, 110, 120, 130, 140, 150][i];
@@ -1022,6 +1026,26 @@ export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }
       style={{ pointerEvents: 'none' }}
     />
   );
+}
+
+export default function ParticleBackground({ config = 'idle', theme = 'cosmic' }) {
+  const { settings, graphicsLevel } = useGraphics();
+
+  // If particles disabled (low graphics legacy), render static background
+  if (!settings.particles.enabled) {
+    return (
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: THEME_CONFIGS[theme]?.background || '#0a0a0f',
+          pointerEvents: 'none'
+        }}
+      />
+    );
+  }
+
+  // Force full remount when graphics level changes so particle counts reinitialize cleanly
+  return <ParticleBackgroundCanvas key={graphicsLevel} config={config} theme={theme} settings={settings} />;
 }
 
 // Export theme configs for use in other components

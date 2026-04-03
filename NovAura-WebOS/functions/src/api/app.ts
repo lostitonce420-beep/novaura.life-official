@@ -17,28 +17,33 @@ import musicRoutes from './routes/music';
 import searchRoutes from './routes/search';
 import stripeRoutes from './routes/stripe';
 import syncRoutes from './routes/sync';
+import assetsRoutes from './routes/assets';
+import ordersRoutes from './routes/orders';
+import royaltiesRoutes from './routes/royalties';
 
 const app = express();
 
-// CORS - Allow both Firebase and Replit deployments
+// CORS - Allow novaura.life and dev environments only
 app.use(cors({
   origin: [
-    'https://ecosystem.novaura.life',
-    'https://novaura-systems.web.app',
-    'https://novaura-systems.firebaseapp.com',
-    'https://novaura-o-s-63232239-3ee79.web.app',
-    'https://novaura-o-s-63232239-3ee79.firebaseapp.com',
-    'https://novaura.life',        // Firebase hosting (primary)
-    'https://www.novaura.life',    // Replit hosting (secondary)
-    'http://localhost:5173',       // Vite dev server
-    /\.repl\.co$/,                 // Any Replit deployment
-    /\.replit\.dev$/,              // New Replit domains
+    'https://novaura.life',
+    'https://www.novaura.life',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    /\.novaura\.life$/,
   ],
   credentials: true
 }));
 
-// Body parsing
-app.use(express.json());
+// ─── Stripe webhook MUST receive raw body for signature verification ──────────
+// Register BEFORE express.json() so the raw buffer is preserved
+app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
+
+// All other routes use JSON body parsing
+app.use((req, res, next) => {
+  if (req.path === '/stripe/webhook') return next();
+  express.json()(req, res, next);
+});
 
 // Logging
 app.use((req, res, next) => {
@@ -57,6 +62,9 @@ app.use('/music', musicRoutes);
 app.use('/search', searchRoutes);
 app.use('/stripe', stripeRoutes);
 app.use('/sync', syncRoutes);
+app.use('/assets', assetsRoutes);
+app.use('/orders', ordersRoutes);
+app.use('/royalties', royaltiesRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

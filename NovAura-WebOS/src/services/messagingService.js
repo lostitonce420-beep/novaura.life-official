@@ -8,6 +8,7 @@
 
 import { messaging, isFirebaseConfigured } from '../config/firebase';
 import { getToken, onMessage } from 'firebase/messaging';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 
 const VAPID_KEY = import.meta.env.VITE_FCM_VAPID_KEY || '';
 
@@ -36,7 +37,7 @@ export async function requestNotificationPermission() {
     console.log('[NovAura FCM] Token acquired:', fcmToken?.slice(0, 20) + '...');
 
     // Store token for server-side targeting
-    localStorage.setItem('novaura_fcm_token', fcmToken);
+    kernelStorage.setItem('novaura_fcm_token', fcmToken);
 
     return fcmToken;
   } catch (err) {
@@ -49,7 +50,7 @@ export async function requestNotificationPermission() {
  * Get the current FCM token (or null if not registered).
  */
 export function getFCMToken() {
-  return fcmToken || localStorage.getItem('novaura_fcm_token');
+  return fcmToken || kernelStorage.getItem('novaura_fcm_token');
 }
 
 /**
@@ -79,10 +80,10 @@ export function onPushMessage(callback) {
     };
 
     // Store in local notification history
-    const history = JSON.parse(localStorage.getItem('novaura_notifications') || '[]');
+    const history = JSON.parse(kernelStorage.getItem('novaura_notifications') || '[]');
     history.unshift(notification);
     if (history.length > 100) history.length = 100;
-    localStorage.setItem('novaura_notifications', JSON.stringify(history));
+    kernelStorage.setItem('novaura_notifications', JSON.stringify(history));
 
     callback(notification);
   });
@@ -93,7 +94,7 @@ export function onPushMessage(callback) {
  */
 export function getNotificationHistory() {
   try {
-    return JSON.parse(localStorage.getItem('novaura_notifications') || '[]');
+    return JSON.parse(kernelStorage.getItem('novaura_notifications') || '[]');
   } catch {
     return [];
   }
@@ -107,7 +108,7 @@ export function markNotificationRead(notifId) {
   const notif = history.find(n => n.id === notifId);
   if (notif) {
     notif.read = true;
-    localStorage.setItem('novaura_notifications', JSON.stringify(history));
+    kernelStorage.setItem('novaura_notifications', JSON.stringify(history));
   }
 }
 
@@ -115,7 +116,7 @@ export function markNotificationRead(notifId) {
  * Clear all notifications.
  */
 export function clearNotifications() {
-  localStorage.setItem('novaura_notifications', '[]');
+  kernelStorage.setItem('novaura_notifications', '[]');
 }
 
 /**
@@ -138,15 +139,16 @@ export function showLocalNotification(title, body, options = {}) {
  * Subscribe to a topic (requires Cloud Functions backend).
  * Stores intent locally; backend subscribes token to topic.
  */
+export function subscribeToTopic(topic) {
   // Call Cloud Function to subscribe token to topic
   const token = getFCMToken();
   if (token) {
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
-    fetch(`${BACKEND_URL}/api/notifications/subscribe`, {
+    const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-systems.cloudfunctions.net/api').replace(/\/$/, '');
+    fetch(`${BACKEND_URL}/notifications/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('novaura-auth-token')}`
+        'Authorization': `Bearer ${kernelStorage.getItem('novaura-auth-token')}`
       },
       body: JSON.stringify({ token, topic })
     }).catch(err => console.error('[NovAura FCM] Topic subscription failed:', err));
@@ -156,7 +158,7 @@ export function showLocalNotification(title, body, options = {}) {
 
 export function getSubscribedTopics() {
   try {
-    return JSON.parse(localStorage.getItem('novaura_fcm_topics') || '[]');
+    return JSON.parse(kernelStorage.getItem('novaura_fcm_topics') || '[]');
   } catch {
     return [];
   }

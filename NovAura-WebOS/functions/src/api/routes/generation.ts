@@ -1,11 +1,79 @@
 /**
  * Image & Video Generation Routes
  * Multi-provider: PixAI, Vertex AI (Imagen), etc.
+ * 
+ * SECURITY: All routes require authentication
+ * Rate limiting applied per user
  */
 
 import { Router } from 'express';
+import * as admin from 'firebase-admin';
 
 const router = Router();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RATE LIMITING (In-memory - use Redis in production)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
+
+const rateLimits = new Map<string, RateLimitEntry>();
+
+// Rate limits per tier (generous limits - 10K/hour available)
+const RATE_LIMITS = {
+  free: { requests: 100, window: 3600000 },      // 100/hour
+  basic: { requests: 500, window: 3600000 },     // 500/hour
+  pro: { requests: 2000, window: 3600000 },      // 2000/hour
+  unlimited: { requests: 10000, window: 3600000 } // 10K/hour (full capacity)
+};
+
+function checkRateLimit(userId: string, tier: keyof typeof RATE_LIMITS = 'free'): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const limit = RATE_LIMITS[tier] || RATE_LIMITS.free;
+  const key = `${userId}:${tier}`;
+  
+  const entry = rateLimits.get(key);
+  
+  if (!entry || now > entry.resetTime) {
+    // Reset window
+    rateLimits.set(key, {
+      count: 1,
+      resetTime: now + limit.window
+    });
+    return { allowed: true, remaining: limit.requests - 1, resetIn: limit.window };
+  }
+  
+  if (entry.count >= limit.requests) {
+    return { allowed: false, remaining: 0, resetIn: entry.resetTime - now };
+  }
+  
+  entry.count++;
+  return { allowed: true, remaining: limit.requests - entry.count, resetIn: entry.resetTime - now };
+}
+
+// Authentication middleware
+async function requireAuth(req: any, res: any, next: any) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized - No token provided' });
+      return;
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    const decoded = await admin.auth().verifyIdToken(token);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Unauthorized - Invalid token' });
+  }
+}
+
+// Apply auth to all routes
+router.use(requireAuth);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PIXAI CONFIGURATION
@@ -65,8 +133,24 @@ router.post('/image', async (req, res) => {
       mode = 'standard'
     } = req.body;
 
+    // Get user info from auth
+    const userId = req.user?.uid;
+    const userTier = req.user?.tier || 'free';
+
     if (!prompt) {
       res.status(400).json({ error: 'Prompt required' });
+      return;
+    }
+
+    // Check rate limit
+    const rateLimit = checkRateLimit(userId, userTier);
+    if (!rateLimit.allowed) {
+      res.status(429).json({ 
+        error: 'Rate limit exceeded',
+        resetIn: Math.ceil(rateLimit.resetIn / 1000),
+        tier: userTier,
+        limit: RATE_LIMITS[userTier as keyof typeof RATE_LIMITS]?.requests
+      });
       return;
     }
 
@@ -107,12 +191,22 @@ router.post('/image', async (req, res) => {
 
     const data = await response.json();
     
+    // Add rate limit headers
+    res.setHeader('X-RateLimit-Limit', RATE_LIMITS[userTier as keyof typeof RATE_LIMITS]?.requests || 10);
+    res.setHeader('X-RateLimit-Remaining', rateLimit.remaining);
+    res.setHeader('X-RateLimit-Reset', Math.ceil(rateLimit.resetIn / 1000));
+    
     res.json({
       success: true,
       taskId: data.id,
       status: data.status,
       createdAt: data.createdAt,
-      message: 'Image generation started. Poll /generation/status/:taskId for results.'
+      message: 'Image generation started. Poll /generation/status/:taskId for results.',
+      rateLimit: {
+        remaining: rateLimit.remaining,
+        resetIn: Math.ceil(rateLimit.resetIn / 1000),
+        tier: userTier
+      }
     });
   } catch (err: any) {
     console.error('Image generation error:', err);

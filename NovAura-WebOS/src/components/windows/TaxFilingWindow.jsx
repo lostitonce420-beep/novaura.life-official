@@ -1,9 +1,11 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 import {
   FileText, Camera, Upload, ChevronRight, ChevronLeft, Check, Download,
   User, Users, DollarSign, Home, Calculator, Send, AlertCircle, Eye,
   Trash2, Plus, X, Building, Briefcase, Heart, Baby, Shield
 } from 'lucide-react';
+
 
 // ─── Tax Brackets 2025 ───
 const FED_BRACKETS = {
@@ -63,7 +65,7 @@ export default function TaxFilingWindow({ onAIChat }) {
   });
 
   const [saved, setSaved] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('tax_returns') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('tax_returns') || '[]'); } catch { return []; }
   });
 
   const updatePersonal = (key, val) => setPersonal(prev => ({ ...prev, [key]: val }));
@@ -142,7 +144,7 @@ export default function TaxFilingWindow({ onAIChat }) {
     const ret = { id: `return-${Date.now()}`, personal, income, deductionType, itemized, calc, createdAt: new Date().toISOString() };
     const updated = [...saved, ret];
     setSaved(updated);
-    localStorage.setItem('tax_returns', JSON.stringify(updated));
+    kernelStorage.setItem('tax_returns', JSON.stringify(updated));
   };
 
   const exportPDF = () => {

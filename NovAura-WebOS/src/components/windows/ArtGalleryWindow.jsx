@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Image, Search, Filter, Grid, List, Star, Download, Eye, Heart, ArrowLeft } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 // Demo gallery pieces — in production these come from backend/user uploads
 const DEMO_PIECES = [
@@ -28,7 +29,7 @@ export default function ArtGalleryWindow() {
   const [liked, setLiked] = useState(new Set());
   const [tab, setTab] = useState('community'); // community | mine
 
-  const customArt = (() => { try { return JSON.parse(localStorage.getItem('art_gallery_custom') || '[]'); } catch { return []; } })();
+  const customArt = (() => { try { return JSON.parse(kernelStorage.getItem('art_gallery_custom') || '[]'); } catch { return []; } })();
 
   const allPieces = tab === 'mine'
     ? customArt.map(a => ({ id: a.id, title: a.title, type: 'hand-drawn', tags: ['custom'], author: 'You', featured: false, likes: 0, art: '🎨', color: 'from-cyan-900/40 to-slate-900', dataUrl: a.dataUrl }))

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { User, Palette, Save, Download, Shuffle, Shirt, Smile, Scissors, Grid, Trash2 } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const SKIN_TONES = ['#FFDBB4','#EDB98A','#D08B5B','#AE5D29','#694D3D','#3B2219'];
 const HAIR_COLORS = ['#090806','#2C222B','#71635A','#B7A69E','#D6C4C2','#DEBC99','#B55239','#8D4A43','#CF3476','#4B0082','#00D9FF'];
@@ -27,7 +28,7 @@ export default function AvatarBuilderWindow() {
     name: 'My Avatar',
   });
   const [tab, setTab] = useState('face');
-  const [savedAvatars, setSavedAvatars] = useState(() => JSON.parse(localStorage.getItem('saved_avatars') || '[]'));
+  const [savedAvatars, setSavedAvatars] = useState(() => JSON.parse(kernelStorage.getItem('saved_avatars') || '[]'));
   const previewRef = useRef(null);
 
   const update = (field, value) => setAvatar(prev => ({ ...prev, [field]: value }));
@@ -43,9 +44,9 @@ export default function AvatarBuilderWindow() {
   };
 
   const saveAvatar = () => {
-    const saved = JSON.parse(localStorage.getItem('saved_avatars') || '[]');
+    const saved = JSON.parse(kernelStorage.getItem('saved_avatars') || '[]');
     saved.push({ ...avatar, id: `avatar-${Date.now()}`, createdAt: new Date().toISOString() });
-    localStorage.setItem('saved_avatars', JSON.stringify(saved));
+    kernelStorage.setItem('saved_avatars', JSON.stringify(saved));
     setSavedAvatars(saved);
   };
 
@@ -57,7 +58,7 @@ export default function AvatarBuilderWindow() {
 
   const deleteAvatar = (id) => {
     const updated = savedAvatars.filter(a => a.id !== id);
-    localStorage.setItem('saved_avatars', JSON.stringify(updated));
+    kernelStorage.setItem('saved_avatars', JSON.stringify(updated));
     setSavedAvatars(updated);
   };
 

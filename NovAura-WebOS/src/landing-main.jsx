@@ -16,8 +16,8 @@ function LandingApp() {
     <BrowserRouter>
       <LandingPage 
         onLaunchOS={() => {
-          // Redirect to OS subdomain
-          window.location.href = 'https://os.novaura.life';
+          // Redirect to OS
+          window.location.href = '/system';
         }}
         isAuthenticated={false}
       />

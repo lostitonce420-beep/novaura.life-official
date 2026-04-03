@@ -9,6 +9,7 @@ import useBuilderStore from './useBuilderStore';
 import { chatCloud, chatLocal, generateCode, resolveProvider, probeOllama, getProviderStatus } from '../../../services/aiService';
 import PipelinePanel from './PipelinePanel';
 import AIAdjusters from './AIAdjusters';
+import { kernelStorage } from '../../../kernel/kernelStorage.js';
 
 // ── Code block renderer with copy + apply ───────────────────
 function CodeBlock({ code, filename, language, onApply }) {
@@ -457,7 +458,7 @@ export default function AIPanel() {
       // Resolve provider — use explicit selection or fall back to smart routing
       let resolved;
       if (selectedProvider.type === 'auto') {
-        const llmConfig = JSON.parse(localStorage.getItem('llm_config') || '{}');
+        const llmConfig = JSON.parse(kernelStorage.getItem('llm_config') || '{}');
         resolved = resolveProvider('coding', llmConfig);
       } else if (selectedProvider.type === 'cloud') {
         resolved = { type: 'cloud', provider: selectedProvider.provider, model: selectedProvider.model };

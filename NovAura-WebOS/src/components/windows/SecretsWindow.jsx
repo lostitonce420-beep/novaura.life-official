@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Eye, EyeOff, Copy, Shield, Key, Lock, Unlock, AlertTriangle } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 // Simple XOR encryption (MVP only - use proper crypto in production)
 const encrypt = (text, key) => {
@@ -35,7 +36,7 @@ export default function SecretsWindow() {
 
   // Load secrets from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('novaura-secrets');
+    const stored = kernelStorage.getItem('novaura-secrets');
     if (stored) {
       try {
         setSecrets(JSON.parse(stored));
@@ -46,7 +47,7 @@ export default function SecretsWindow() {
   // Save secrets
   const saveSecrets = (updated) => {
     setSecrets(updated);
-    localStorage.setItem('novaura-secrets', JSON.stringify(updated));
+    kernelStorage.setItem('novaura-secrets', JSON.stringify(updated));
   };
 
   const addSecret = () => {

@@ -11,13 +11,17 @@ import {
   Monitor,
   Save,
   RotateCcw,
-  Cpu
+  Cpu,
+  Cloud,
+  Waves,
+  Flame
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { Switch } from '../ui/switch';
 import { toast } from 'sonner';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 // Available themes
 const THEMES = [
@@ -38,8 +42,48 @@ const THEMES = [
     particleColors: ['#60a5fa', '#fbbf24', '#f97316'],
   },
   {
-    id: 'light',
+    id: 'matrix',
+    name: 'Matrix',
+    description: 'Digital rain green code',
+    icon: Monitor,
+    preview: 'linear-gradient(135deg, #000a00 0%, #001400 100%)',
+    particleColors: ['#00ff00', '#00f500', '#39ff14'],
+  },
+  {
+    id: 'stormy',
+    name: 'Stormy',
+    description: 'Thunder clouds and rain',
+    icon: Cloud,
+    preview: 'linear-gradient(135deg, #0d1117 0%, #1a1f29 100%)',
+    particleColors: ['#64748b', '#60a5fa', '#a855f7'],
+  },
+  {
+    id: 'aurora',
     name: 'Aurora',
+    description: 'Dancing northern lights',
+    icon: Stars,
+    preview: 'linear-gradient(135deg, #0a0f1a 0%, #1a1f3a 100%)',
+    particleColors: ['#22d3ee', '#a855f7', '#4ade80'],
+  },
+  {
+    id: 'meshwater',
+    name: 'Mesh Water',
+    description: 'Calm ocean waves',
+    icon: Waves,
+    preview: 'linear-gradient(135deg, #0c1a2d 0%, #1a2d4a 100%)',
+    particleColors: ['#0ea5e9', '#22d3ee', '#67e8f9'],
+  },
+  {
+    id: 'blaze',
+    name: 'Blaze',
+    description: 'Golden flames and fire',
+    icon: Flame,
+    preview: 'linear-gradient(135deg, #1a0f05 0%, #2d1a0a 100%)',
+    particleColors: ['#fbbf24', '#f97316', '#ef4444'],
+  },
+  {
+    id: 'light',
+    name: 'Aurora Light',
     description: 'Soft warm tones - easy on eyes',
     icon: Sun,
     preview: 'linear-gradient(135deg, #f5f2ed 0%, #e8e5e0 100%)',
@@ -116,9 +160,9 @@ export default function PersonalizationWindow({ onThemeChange, onOpenWindow }) {
 
   // Load saved preferences
   useEffect(() => {
-    const savedTheme = localStorage.getItem('novaura-theme') || 'cosmic';
-    const savedApps = localStorage.getItem('novaura-taskbar-apps');
-    const savedAI = localStorage.getItem('llm_config');
+    const savedTheme = kernelStorage.getItem('novaura-theme') || 'cosmic';
+    const savedApps = kernelStorage.getItem('novaura-taskbar-apps');
+    const savedAI = kernelStorage.getItem('llm_config');
     
     setSelectedTheme(savedTheme);
     
@@ -180,9 +224,9 @@ export default function PersonalizationWindow({ onThemeChange, onOpenWindow }) {
   };
 
   const saveSettings = () => {
-    localStorage.setItem('novaura-theme', selectedTheme);
-    localStorage.setItem('novaura-taskbar-apps', JSON.stringify(taskbarApps));
-    localStorage.setItem('llm_config', JSON.stringify(llmConfig));
+    kernelStorage.setItem('novaura-theme', selectedTheme);
+    kernelStorage.setItem('novaura-taskbar-apps', JSON.stringify(taskbarApps));
+    kernelStorage.setItem('llm_config', JSON.stringify(llmConfig));
 
     // Apply theme
     document.documentElement.setAttribute('data-theme', selectedTheme);

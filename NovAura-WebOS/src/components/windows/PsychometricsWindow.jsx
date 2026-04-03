@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrainCircuit, ChevronRight, RotateCcw, Trophy, BarChart3, Lightbulb, MessageCircle, Puzzle, Palette } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const ASSESSMENTS = [
   {
@@ -101,14 +102,14 @@ const ARCHETYPES = {
 
 export default function PsychometricsWindow() {
   const [history, setHistory] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('psyche_history') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('psyche_history') || '[]'); } catch { return []; }
   });
   const [activeTest, setActiveTest] = useState(null);
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [result, setResult] = useState(null);
 
-  const saveHistory = (updated) => { setHistory(updated); localStorage.setItem('psyche_history', JSON.stringify(updated)); };
+  const saveHistory = (updated) => { setHistory(updated); kernelStorage.setItem('psyche_history', JSON.stringify(updated)); };
 
   const startTest = (test) => {
     setActiveTest(test);

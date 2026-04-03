@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Users, BookOpen, Sparkles, Send, Clock, Trophy, Plus, ArrowLeft, Zap, Upload } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const VIBES = [
   { id: 'peaceful', label: 'Peaceful', icon: '🌿', color: 'bg-green-900/30 border-green-800/30' },
@@ -23,7 +24,7 @@ const PROMPTS = [
 
 export default function CollaborativeWritingWindow() {
   const [sessions, setSessions] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('writing_sessions') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('writing_sessions') || '[]'); } catch { return []; }
   });
   const [activeSession, setActiveSession] = useState(null);
   const [input, setInput] = useState('');
@@ -35,7 +36,7 @@ export default function CollaborativeWritingWindow() {
 
   const saveSessions = (updated) => {
     setSessions(updated);
-    localStorage.setItem('writing_sessions', JSON.stringify(updated));
+    kernelStorage.setItem('writing_sessions', JSON.stringify(updated));
   };
 
   const createSession = () => {
@@ -88,9 +89,9 @@ export default function CollaborativeWritingWindow() {
       createdAt: activeSession.createdAt,
       updatedAt: new Date().toISOString(),
     };
-    const library = JSON.parse(localStorage.getItem('writing_library') || '[]');
+    const library = JSON.parse(kernelStorage.getItem('writing_library') || '[]');
     library.unshift(doc);
-    localStorage.setItem('writing_library', JSON.stringify(library));
+    kernelStorage.setItem('writing_library', JSON.stringify(library));
   };
 
   const randomPrompt = () => setPrompt(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);

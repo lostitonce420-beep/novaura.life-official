@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Delete, RotateCcw, Plus, Minus, X, Divide, Equal, Percent, History } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 function evaluate(expression) {
   try {
@@ -33,7 +34,7 @@ export default function CalculatorWindow() {
   const [expression, setExpression] = useState('');
   const [result, setResult] = useState('');
   const [history, setHistory] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('novaura_calc_history') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('novaura_calc_history') || '[]'); } catch { return []; }
   });
   const [showHistory, setShowHistory] = useState(false);
   const [parenDepth, setParenDepth] = useState(0);
@@ -42,7 +43,7 @@ export default function CalculatorWindow() {
     const entry = { expression: expr, result: res, timestamp: Date.now() };
     setHistory(prev => {
       const next = [entry, ...prev].slice(0, 50);
-      localStorage.setItem('novaura_calc_history', JSON.stringify(next));
+      kernelStorage.setItem('novaura_calc_history', JSON.stringify(next));
       return next;
     });
   }, []);

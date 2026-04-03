@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Heart, Users, User, ArrowLeft, Eye, Grid, SortAsc } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const COMMUNITY_AVATARS = [
   { id: 'av1', name: 'Cyber Punk', creator: 'NeonRider', style: 'Cyberpunk', emoji: '🤖', body: 'athletic', colors: ['#00ffcc', '#ff00ff', '#1a1a2e'], views: 342 },
@@ -26,18 +27,18 @@ export default function AvatarGalleryWindow() {
   const [bodyFilter, setBodyFilter] = useState('All');
   const [sortBy, setSortBy] = useState('popular');
   const [favorites, setFavorites] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('avatar_favorites') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('avatar_favorites') || '[]'); } catch { return []; }
   });
   const [selected, setSelected] = useState(null);
 
   const myAvatars = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('saved_avatars') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('saved_avatars') || '[]'); } catch { return []; }
   }, [tab]);
 
   const toggleFav = (id) => {
     const next = favorites.includes(id) ? favorites.filter(f => f !== id) : [...favorites, id];
     setFavorites(next);
-    localStorage.setItem('avatar_favorites', JSON.stringify(next));
+    kernelStorage.setItem('avatar_favorites', JSON.stringify(next));
   };
 
   const filtered = useMemo(() => {

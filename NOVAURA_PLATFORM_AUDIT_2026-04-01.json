@@ -1,0 +1,1561 @@
+{
+  "audit_metadata": {
+    "project_name": "NovAura WebOS & Platform",
+    "audit_date": "2026-04-02T00:00:00-05:00",
+    "auditor": "Claude (Nova) + Dillan",
+    "version": "1.1.0",
+    "notes": "Updated 2026-04-02. Reflects actual current state post-session cleanup. localStorage auth bypass removed. Platform subfolder restored and deployed. Firebase.json cleaned. userService.js added."
+  },
+  "executive_summary": {
+    "total_source_files": 429,
+    "platform_react_pages": 71,
+    "platform_components": 106,
+    "platform_services": 39,
+    "webos_windows": 81,
+    "api_endpoints": 35,
+    "completion_status": "BETA 2.0 - Phase Alpha Live",
+    "core_features_implemented": 15,
+    "shell_features": 32,
+    "infrastructure_ready": true,
+    "webos_source_files": 184
+  },
+  "architecture": {
+    "frontend_stack": {
+      "framework": "React 19.2.0",
+      "build_tool": "Vite 7.3.1",
+      "language": "TypeScript 5.9.3",
+      "styling": "Tailwind CSS 3.4.19",
+      "ui_library": "Radix UI + shadcn/ui",
+      "animation": "Framer Motion 12.35.2",
+      "state_management": "Zustand 5.0.11",
+      "query_client": "TanStack Query 5.90.21",
+      "routing": "React Router DOM 7.13.1"
+    },
+    "backend_stack": {
+      "platform": "Firebase Functions (Node.js 20)",
+      "framework": "Express",
+      "database": "Firestore + Neon PostgreSQL",
+      "orm": "Drizzle ORM (for Neon)",
+      "auth": "Firebase Auth",
+      "rate_limiting": "In-memory with tiered limits",
+      "key_management": "Firebase Config + Key Registry"
+    },
+    "hosting_deployment": {
+      "primary": "Firebase Hosting",
+      "secondary": "Netlify",
+      "cdn": "Cloudflare",
+      "domain_registrar": "Name.com API"
+    }
+  },
+  "sub_project_novaura_webos": {
+    "path": "NovAura-WebOS",
+    "description": "Web-based operating system shell with window manager",
+    "entry_point": "src/main.jsx",
+    "source_files_count": 184,
+    "core_structure": {
+      "app_shell": {
+        "file": "src/App.jsx",
+        "lines": 645,
+        "features": [
+          "Firebase Authentication (Google OAuth + Email)",
+          "Theme system (Cosmic, BlueNight, etc.)",
+          "Particle background system",
+          "Window management (z-index, focus, drag)",
+          "Command Palette (Cmd+K)",
+          "Chat bar with AI orchestration",
+          "Aura Memory system (prompt library)",
+          "Onboarding wizard",
+          "Landing page integration"
+        ]
+      },
+      "window_manager": {
+        "file": "src/components/WindowManager.jsx",
+        "registered_windows": 60,
+        "ai_enabled_windows": [
+          "ide",
+          "creator-studio",
+          "vibe-coding",
+          "constructor",
+          "dojo",
+          "tax-filing"
+        ],
+        "default_sizes": "Defined for all 60 window types"
+      }
+    },
+    "windows_inventory": {
+      "fully_implemented": [
+        {
+          "id": "ide",
+          "name": "Cybeni IDE",
+          "file": "IDEWindow.jsx",
+          "status": "COMPLETE",
+          "lines": 390,
+          "features": [
+            "File explorer",
+            "Tabs",
+            "Preview",
+            "Terminal",
+            "AI Panel"
+          ]
+        },
+        {
+          "id": "website-builder",
+          "name": "Website Builder",
+          "file": "WebsiteBuilderWindow.jsx",
+          "status": "COMPLETE",
+          "lines": 467,
+          "features": [
+            "Templates",
+            "AI generation",
+            "Monaco editor"
+          ]
+        },
+        {
+          "id": "literature-ide",
+          "name": "Literature IDE",
+          "file": "LiteratureIDEWindow.jsx",
+          "status": "COMPLETE",
+          "lines": 604,
+          "features": [
+            "Story bible",
+            "Character sheets",
+            "Word count"
+          ]
+        },
+        {
+          "id": "git",
+          "name": "Git Interface",
+          "file": "GitWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "Visual diff",
+            "Commit",
+            "Branches",
+            "File status"
+          ]
+        },
+        {
+          "id": "secrets",
+          "name": "Secrets Manager",
+          "file": "SecretsWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "XOR encryption",
+            "BYOK",
+            "Global/project scope"
+          ]
+        },
+        {
+          "id": "billing",
+          "name": "Billing System",
+          "file": "BillingWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "4-tier pricing",
+            "Stripe-ready"
+          ]
+        },
+        {
+          "id": "pixai",
+          "name": "PixAI/Mio",
+          "file": "PixAIWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "Anime generation",
+            "Safety filter",
+            "9 emotions"
+          ]
+        },
+        {
+          "id": "creator-studio",
+          "name": "Creator Studio",
+          "file": "CreatorStudioWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "Code gen",
+            "Scanner",
+            "9 languages"
+          ]
+        },
+        {
+          "id": "vertex",
+          "name": "Vertex AI",
+          "file": "VertexAIWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "Google Imagen integration"
+          ]
+        },
+        {
+          "id": "files",
+          "name": "Files Manager",
+          "file": "FilesWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "File browser with type icons"
+          ]
+        },
+        {
+          "id": "bg-remover",
+          "name": "Background Remover",
+          "file": "BackgroundRemoverWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "AI background removal"
+          ]
+        },
+        {
+          "id": "music-composer",
+          "name": "Music Composer",
+          "file": "MusicComposerWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "AI music generation"
+          ]
+        },
+        {
+          "id": "games-arena",
+          "name": "Games Arena",
+          "file": "GamesArenaWindow.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "Chess",
+            "Games hub"
+          ]
+        },
+        {
+          "id": "command-palette",
+          "name": "Command Palette",
+          "component": "CommandPalette.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "Cmd+K",
+            "12 commands",
+            "Fuzzy search"
+          ]
+        },
+        {
+          "id": "mesh-water-bg",
+          "name": "Mesh Water BG",
+          "component": "MeshWaterBackground.jsx",
+          "status": "COMPLETE",
+          "features": [
+            "Interactive grid",
+            "5 themes"
+          ]
+        }
+      ],
+      "partially_implemented": [
+        {
+          "id": "chat",
+          "name": "AI Chat",
+          "file": "ChatWindow.jsx",
+          "status": "BASIC",
+          "issues": "UI present, needs backend wiring"
+        },
+        {
+          "id": "terminal",
+          "name": "Terminal",
+          "file": "TerminalWindow.jsx",
+          "status": "MOCK",
+          "issues": "UI present, needs real shell"
+        },
+        {
+          "id": "browser",
+          "name": "Browser",
+          "file": "BrowserWindow.jsx",
+          "status": "IFRAME",
+          "issues": "Basic iframe, needs AI features"
+        },
+        {
+          "id": "appstore",
+          "name": "App Store",
+          "file": "AppStoreWindow.jsx",
+          "status": "SHELL",
+          "issues": "Placeholder content"
+        },
+        {
+          "id": "ai-assistant",
+          "name": "AI Assistant",
+          "file": "AIAssistantWindow.jsx",
+          "status": "SHELL",
+          "issues": "Has UI, needs backend wiring"
+        }
+      ],
+      "empty_shells": [
+        {
+          "id": "workspace",
+          "name": "Workspace"
+        },
+        {
+          "id": "vibe-coding",
+          "name": "Vibe Coding"
+        },
+        {
+          "id": "constructor",
+          "name": "Constructor"
+        },
+        {
+          "id": "script-fusion",
+          "name": "Script Fusion"
+        },
+        {
+          "id": "collab-writing",
+          "name": "Collaborative Writing"
+        },
+        {
+          "id": "writing-library",
+          "name": "Writing Library"
+        },
+        {
+          "id": "poems",
+          "name": "Poems Creator"
+        },
+        {
+          "id": "art-studio",
+          "name": "Art Studio"
+        },
+        {
+          "id": "art-gallery",
+          "name": "Art Gallery"
+        },
+        {
+          "id": "clothing-creator",
+          "name": "Clothing Creator"
+        },
+        {
+          "id": "outfit-generator",
+          "name": "Outfit Generator"
+        },
+        {
+          "id": "outfit-manager",
+          "name": "Outfit Manager"
+        },
+        {
+          "id": "avatar-builder",
+          "name": "Avatar Builder"
+        },
+        {
+          "id": "avatar-gallery",
+          "name": "Avatar Gallery"
+        },
+        {
+          "id": "business-card",
+          "name": "Business Card"
+        },
+        {
+          "id": "comic-creator",
+          "name": "Comic Creator"
+        },
+        {
+          "id": "card-deck-creator",
+          "name": "Deck Creator"
+        },
+        {
+          "id": "aetherium-tcg",
+          "name": "Aetherium TCG"
+        },
+        {
+          "id": "live-broadcast",
+          "name": "Live Broadcasting"
+        },
+        {
+          "id": "dojo",
+          "name": "Dojo"
+        },
+        {
+          "id": "challenges",
+          "name": "Challenges"
+        },
+        {
+          "id": "psychometrics",
+          "name": "Psychometrics"
+        },
+        {
+          "id": "ai-companion",
+          "name": "AI Companion"
+        },
+        {
+          "id": "voice-chat",
+          "name": "Voice Chat"
+        },
+        {
+          "id": "media",
+          "name": "Media Player"
+        },
+        {
+          "id": "media-library",
+          "name": "Media Library"
+        },
+        {
+          "id": "profile",
+          "name": "Profile"
+        },
+        {
+          "id": "game",
+          "name": "Game"
+        },
+        {
+          "id": "admin-panel",
+          "name": "Admin Panel"
+        },
+        {
+          "id": "personalization",
+          "name": "Personalization"
+        },
+        {
+          "id": "notifications",
+          "name": "Notifications"
+        },
+        {
+          "id": "tax-filing",
+          "name": "Tax Filing"
+        }
+      ]
+    },
+    "services": {
+      "ai_orchestration": {
+        "file": "src/utils/AIOrchestrator.js",
+        "features": [
+          "Intent parsing",
+          "Function calling",
+          "Window control via AI"
+        ]
+      },
+      "smart_chat": {
+        "file": "src/services/aiService.js",
+        "providers": [
+          "Gemini",
+          "Local LLM (Ollama)"
+        ],
+        "routing": "Automatic fallback"
+      },
+      "firebase": {
+        "config": "src/config/firebase.js",
+        "services": [
+          "Auth",
+          "Firestore",
+          "Storage"
+        ]
+      },
+      "user_prefs": {
+        "file": "src/services/userService.js",
+        "features": [
+          "Firestore prefs read/write",
+          "Session recording",
+          "localStorage failsafe cache only"
+        ]
+      }
+    }
+  },
+  "sub_project_platform": {
+    "path": "NovAura-WebOS/platform",
+    "description": "NovAura Creator Ecosystem & Marketplace (main production app)",
+    "entry_point": "src/main.tsx",
+    "source_files_count": 245,
+    "package_name": "my-app",
+    "version": "0.0.0",
+    "type": "module",
+    "routing_structure": {
+      "public_routes": [
+        {
+          "path": "/",
+          "component": "HomePage",
+          "file": "pages/public/HomePage.tsx"
+        },
+        {
+          "path": "/browse",
+          "component": "BrowsePage",
+          "file": "pages/public/BrowsePage.tsx"
+        },
+        {
+          "path": "/browse/:category",
+          "component": "BrowsePage"
+        },
+        {
+          "path": "/asset/:id",
+          "component": "AssetDetailPage",
+          "file": "pages/public/AssetDetailPage.tsx"
+        },
+        {
+          "path": "/creator/:username",
+          "component": "CreatorProfilePage"
+        },
+        {
+          "path": "/search",
+          "component": "SearchPage"
+        },
+        {
+          "path": "/music",
+          "component": "MusicMarketplacePage"
+        },
+        {
+          "path": "/gallery",
+          "component": "GalleryPage"
+        },
+        {
+          "path": "/games",
+          "component": "GamesPage"
+        },
+        {
+          "path": "/software",
+          "component": "SoftwarePage"
+        },
+        {
+          "path": "/free",
+          "component": "FreeItemsPage"
+        },
+        {
+          "path": "/domains",
+          "component": "DomainMarketplace",
+          "features": [
+            "Domain search",
+            "Bundle pricing",
+            "Cost calculator"
+          ]
+        },
+        {
+          "path": "/shop",
+          "component": "ShopPage"
+        },
+        {
+          "path": "/pricing",
+          "component": "PricingPage"
+        },
+        {
+          "path": "/chat",
+          "component": "NovaChat"
+        },
+        {
+          "path": "/feed",
+          "component": "FeedPage"
+        },
+        {
+          "path": "/hub",
+          "component": "EcosystemHub"
+        },
+        {
+          "path": "/registry",
+          "component": "NovaRegistryPage"
+        },
+        {
+          "path": "/creators",
+          "component": "CreatorLounge"
+        },
+        {
+          "path": "/about",
+          "component": "AboutPage"
+        },
+        {
+          "path": "/investors",
+          "component": "InvestorPortalPage"
+        },
+        {
+          "path": "/help",
+          "component": "HelpCenterPage"
+        },
+        {
+          "path": "/status",
+          "component": "StatusPage"
+        },
+        {
+          "path": "/api-keys",
+          "component": "APIKeyLibraryPage"
+        },
+        {
+          "path": "/legal/privacy",
+          "component": "PrivacyPolicyPage"
+        },
+        {
+          "path": "/legal/terms",
+          "component": "TermsOfUsePage"
+        },
+        {
+          "path": "/legal/licensing",
+          "component": "LicensingTermsPage"
+        },
+        {
+          "path": "/legal/royalties",
+          "component": "RoyaltiesPolicyPage"
+        },
+        {
+          "path": "/legal/agreement",
+          "component": "AssetAgreementPage"
+        }
+      ],
+      "auth_routes": [
+        {
+          "path": "/login",
+          "component": "LoginPage"
+        },
+        {
+          "path": "/signup",
+          "component": "SignupPage"
+        },
+        {
+          "path": "/admin-setup",
+          "component": "AdminSetupPage"
+        },
+        {
+          "path": "/staff-login",
+          "component": "StaffLoginPage"
+        }
+      ],
+      "buyer_routes": [
+        {
+          "path": "/cart",
+          "component": "CartPage",
+          "protected": true
+        },
+        {
+          "path": "/checkout",
+          "component": "CheckoutPage",
+          "features": [
+            "Clickwrap checkout",
+            "Coupon input"
+          ]
+        },
+        {
+          "path": "/orders",
+          "component": "OrdersPage"
+        },
+        {
+          "path": "/downloads",
+          "component": "DownloadsPage"
+        },
+        {
+          "path": "/wishlist",
+          "component": "WishlistPage"
+        },
+        {
+          "path": "/settings",
+          "component": "SettingsPage"
+        },
+        {
+          "path": "/messages",
+          "component": "MessagesPage"
+        },
+        {
+          "path": "/notifications",
+          "component": "NotificationsPage"
+        },
+        {
+          "path": "/creator/apply",
+          "component": "CreatorApplication"
+        }
+      ],
+      "creator_routes": [
+        {
+          "path": "/creator/dashboard",
+          "component": "CreatorDashboard",
+          "layout": "CreatorLayout"
+        },
+        {
+          "path": "/creator/assets",
+          "component": "CreatorAssets"
+        },
+        {
+          "path": "/creator/assets/new",
+          "component": "CreatorUpload"
+        },
+        {
+          "path": "/creator/earnings",
+          "component": "CreatorEarnings"
+        },
+        {
+          "path": "/creator/settings",
+          "component": "CreatorSettings"
+        },
+        {
+          "path": "/ide",
+          "component": "NovaIDE",
+          "features": [
+            "File explorer",
+            "Live canvas",
+            "Terminal",
+            "Aura Console"
+          ]
+        },
+        {
+          "path": "/creator/tcg-forge",
+          "component": "TCGCardForge"
+        }
+      ],
+      "admin_routes": [
+        {
+          "path": "/admin/dashboard",
+          "component": "AdminDashboard",
+          "layout": "AdminLayout"
+        },
+        {
+          "path": "/admin/assets",
+          "component": "AdminAssets"
+        },
+        {
+          "path": "/admin/users",
+          "component": "AdminUsers"
+        },
+        {
+          "path": "/admin/orders",
+          "component": "AdminOrders"
+        },
+        {
+          "path": "/admin/command-center",
+          "component": "AdminCommandCenter"
+        }
+      ],
+      "novalow_routes": [
+        {
+          "path": "/hosting",
+          "component": "HostingPlansPage"
+        },
+        {
+          "path": "/builder",
+          "component": "SiteBuilderPage"
+        },
+        {
+          "path": "/devtools",
+          "component": "DevToolsPage"
+        },
+        {
+          "path": "/tutorials",
+          "component": "TutorialsPage"
+        },
+        {
+          "path": "/security",
+          "component": "SecurityPage"
+        },
+        {
+          "path": "/promote",
+          "component": "PromotePage"
+        }
+      ]
+    },
+    "key_components": {
+      "home": [
+        {
+          "name": "MultiEngineSearchBar",
+          "file": "components/home/MultiEngineSearchBar.tsx"
+        },
+        {
+          "name": "EcosystemDirectory",
+          "file": "components/home/EcosystemDirectory.tsx"
+        },
+        {
+          "name": "MarketplacePreview",
+          "file": "components/home/MarketplacePreview.tsx"
+        },
+        {
+          "name": "VideoShowcase",
+          "file": "components/home/VideoShowcase.tsx"
+        },
+        {
+          "name": "AdSlot",
+          "file": "components/home/AdSlot.tsx"
+        }
+      ],
+      "ide_components": [
+        {
+          "name": "FileExplorer",
+          "file": "components/ide/FileExplorer.tsx"
+        },
+        {
+          "name": "LiveCanvas",
+          "file": "components/ide/LiveCanvas.tsx"
+        },
+        {
+          "name": "IDETerminal",
+          "file": "components/ide/IDETerminal.tsx"
+        },
+        {
+          "name": "AuraIDEConsole",
+          "file": "components/ide/AuraIDEConsole.tsx"
+        },
+        {
+          "name": "IDESplash",
+          "file": "components/ide/IDESplash.tsx"
+        }
+      ],
+      "ui_library": [
+        {
+          "count": 50,
+          "location": "components/ui/",
+          "examples": [
+            "button",
+            "card",
+            "dialog",
+            "dropdown-menu",
+            "command",
+            "calendar",
+            "carousel",
+            "chart",
+            "credit-hud",
+            "aurora-background"
+          ]
+        },
+        {
+          "special": "ANSymbol (logo component)",
+          "file": "components/ui/ANSymbol.tsx"
+        },
+        {
+          "special": "AuraAvatar",
+          "file": "components/ui/AuraAvatar.tsx"
+        },
+        {
+          "special": "CreditHUD",
+          "file": "components/ui/CreditHUD.tsx"
+        },
+        {
+          "special": "FloatingNovaChat",
+          "file": "components/ui/FloatingNovaChat.tsx"
+        }
+      ],
+      "layout": [
+        {
+          "name": "MainLayout",
+          "file": "components/layout/MainLayout.tsx"
+        },
+        {
+          "name": "CreatorLayout",
+          "file": "components/layout/CreatorLayout.tsx"
+        },
+        {
+          "name": "AdminLayout",
+          "file": "components/layout/AdminLayout.tsx"
+        },
+        {
+          "name": "Navbar",
+          "file": "components/layout/Navbar.tsx"
+        },
+        {
+          "name": "Footer",
+          "file": "components/layout/Footer.tsx"
+        }
+      ],
+      "notifications": [
+        {
+          "name": "NotificationBell",
+          "file": "components/notifications/NotificationBell.tsx"
+        },
+        {
+          "name": "NotificationPanel",
+          "file": "components/notifications/NotificationPanel.tsx"
+        }
+      ],
+      "reviews": [
+        {
+          "name": "ReviewCard",
+          "file": "components/reviews/ReviewCard.tsx"
+        },
+        {
+          "name": "ReviewForm",
+          "file": "components/reviews/ReviewForm.tsx"
+        },
+        {
+          "name": "ReviewList",
+          "file": "components/reviews/ReviewList.tsx"
+        }
+      ]
+    },
+    "services_platform": {
+      "ai_services": [
+        {
+          "name": "aiOrchestrator",
+          "file": "services/aiOrchestrator.ts"
+        },
+        {
+          "name": "builderBotService",
+          "file": "services/builderBotService.ts"
+        },
+        {
+          "name": "AuraVisionService",
+          "file": "services/AuraVisionService.ts"
+        },
+        {
+          "name": "TCGLogicEngine",
+          "file": "services/TCGLogicEngine.ts"
+        },
+        {
+          "name": "PipelineEngine",
+          "file": "services/PipelineEngine.ts"
+        }
+      ],
+      "commerce_services": [
+        {
+          "name": "checkoutService",
+          "file": "services/checkoutService.ts"
+        },
+        {
+          "name": "creditService",
+          "file": "services/creditService.ts"
+        },
+        {
+          "name": "couponService",
+          "file": "services/couponService.ts"
+        },
+        {
+          "name": "marketService",
+          "file": "services/marketService.ts"
+        },
+        {
+          "name": "shopifyService",
+          "file": "services/shopifyService.ts"
+        },
+        {
+          "name": "royaltyService",
+          "file": "services/royaltyService.ts"
+        }
+      ],
+      "community_services": [
+        {
+          "name": "communityService",
+          "file": "services/communityService.ts"
+        },
+        {
+          "name": "socialService",
+          "file": "services/socialService.ts"
+        },
+        {
+          "name": "SocialHubService",
+          "file": "services/SocialHubService.ts"
+        },
+        {
+          "name": "messageService",
+          "file": "services/messageService.ts"
+        },
+        {
+          "name": "notificationService",
+          "file": "services/notificationService.ts"
+        }
+      ],
+      "infrastructure_services": [
+        {
+          "name": "apiClient",
+          "file": "services/apiClient.ts"
+        },
+        {
+          "name": "memoryService",
+          "file": "services/memoryService.ts"
+        },
+        {
+          "name": "vaultService",
+          "file": "services/vaultService.ts"
+        },
+        {
+          "name": "searchService",
+          "file": "services/searchService.ts"
+        },
+        {
+          "name": "usageService",
+          "file": "services/usageService.ts"
+        },
+        {
+          "name": "analyticsService",
+          "file": "services/analyticsService.ts"
+        },
+        {
+          "name": "autonomousAuditService",
+          "file": "services/autonomousAuditService.ts"
+        },
+        {
+          "name": "devAuraService",
+          "file": "services/devAuraService.ts"
+        }
+      ]
+    },
+    "stores": [
+      {
+        "name": "authStore",
+        "file": "stores/authStore.ts",
+        "purpose": "Authentication state"
+      },
+      {
+        "name": "cartStore",
+        "file": "stores/cartStore.ts",
+        "purpose": "Shopping cart"
+      },
+      {
+        "name": "aiStore",
+        "file": "stores/aiStore.ts",
+        "purpose": "AI/IDE state"
+      },
+      {
+        "name": "uiStore",
+        "file": "stores/uiStore.ts",
+        "purpose": "UI preferences"
+      },
+      {
+        "name": "wishlistStore",
+        "file": "stores/wishlistStore.ts",
+        "purpose": "Wishlist items"
+      },
+      {
+        "name": "socialStore",
+        "file": "stores/socialStore.ts",
+        "purpose": "Social features"
+      },
+      {
+        "name": "pioneerBadgeStore",
+        "file": "stores/pioneerBadgeStore.ts",
+        "purpose": "Badge system"
+      },
+      {
+        "name": "highlightStore",
+        "file": "stores/highlightStore.ts",
+        "purpose": "Highlight effects"
+      },
+      {
+        "name": "ideStore",
+        "file": "stores/ideStore.ts",
+        "purpose": "IDE-specific state"
+      }
+    ],
+    "platform_pages_count": 71,
+    "platform_components_count": 106,
+    "platform_services_count": 39,
+    "platform_stores_count": 9
+  },
+  "sub_project_novaura_api": {
+    "path": "NovAura-WebOS/platform/functions",
+    "description": "Firebase Functions API with Express and Key Registry",
+    "entry_point": "src/index.ts",
+    "routes": {
+      "auth_routes": [
+        {
+          "method": "POST",
+          "path": "/auth/signup",
+          "description": "User registration with email/password"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "description": "User login"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "description": "Get current user (protected)"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/logout",
+          "description": "Logout user"
+        },
+        {
+          "method": "PATCH",
+          "path": "/auth/profile",
+          "description": "Update user profile"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/admin-setup",
+          "description": "Initial admin creation"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/staff-login",
+          "description": "Staff authentication"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/staff-invite",
+          "description": "Invite staff (admin only)"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/staff-allowlist",
+          "description": "View staff allowlist"
+        },
+        {
+          "method": "DELETE",
+          "path": "/auth/staff-invite/:id",
+          "description": "Remove staff invite"
+        }
+      ],
+      "assets_routes": [
+        {
+          "method": "GET",
+          "path": "/assets",
+          "description": "Browse approved assets with filters"
+        },
+        {
+          "method": "GET",
+          "path": "/assets/featured",
+          "description": "Get featured assets"
+        },
+        {
+          "method": "GET",
+          "path": "/assets/pending",
+          "description": "Get pending assets (admin)"
+        },
+        {
+          "method": "GET",
+          "path": "/assets/:id",
+          "description": "Get asset by ID"
+        },
+        {
+          "method": "POST",
+          "path": "/assets",
+          "description": "Create asset listing (creator+)"
+        },
+        {
+          "method": "PATCH",
+          "path": "/assets/:id",
+          "description": "Update asset"
+        },
+        {
+          "method": "POST",
+          "path": "/assets/:id/approve",
+          "description": "Approve asset (admin)"
+        },
+        {
+          "method": "POST",
+          "path": "/assets/:id/reject",
+          "description": "Reject asset (admin)"
+        },
+        {
+          "method": "GET",
+          "path": "/assets/creator/:creatorId",
+          "description": "Get assets by creator"
+        }
+      ],
+      "orders_routes": [
+        {
+          "method": "POST",
+          "path": "/orders",
+          "description": "Purchase an asset"
+        },
+        {
+          "method": "GET",
+          "path": "/orders/my",
+          "description": "Get buyer's orders"
+        },
+        {
+          "method": "GET",
+          "path": "/orders/earnings",
+          "description": "Get creator earnings"
+        },
+        {
+          "method": "GET",
+          "path": "/orders/admin",
+          "description": "Get all orders (admin)"
+        },
+        {
+          "method": "POST",
+          "path": "/orders/:id/complete",
+          "description": "Mark order complete"
+        },
+        {
+          "method": "POST",
+          "path": "/orders/royalty-report",
+          "description": "Report commercial usage"
+        }
+      ],
+      "domains_routes": [
+        {
+          "method": "GET",
+          "path": "/domains/hello",
+          "description": "Test Name.com connectivity"
+        },
+        {
+          "method": "GET",
+          "path": "/domains/status",
+          "description": "Check domain API status"
+        },
+        {
+          "method": "POST",
+          "path": "/domains/check",
+          "description": "Check domain availability"
+        },
+        {
+          "method": "POST",
+          "path": "/domains/register",
+          "description": "Register a domain"
+        },
+        {
+          "method": "GET",
+          "path": "/domains/prices",
+          "description": "Get TLD pricing"
+        },
+        {
+          "method": "GET",
+          "path": "/domains/:domain",
+          "description": "Get domain details"
+        },
+        {
+          "method": "GET",
+          "path": "/domains/:domain/nameservers",
+          "description": "Get nameservers"
+        },
+        {
+          "method": "POST",
+          "path": "/domains/:domain/nameservers",
+          "description": "Update nameservers"
+        }
+      ],
+      "ai_routes": [
+        {
+          "method": "POST",
+          "path": "/ai/gemini",
+          "description": "Gemini AI chat (guest allowed)"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/claude",
+          "description": "Claude AI chat (auth required)"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/openai",
+          "description": "OpenAI GPT chat (auth required)"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/image",
+          "description": "Image generation via Vertex (guest allowed)"
+        },
+        {
+          "method": "GET",
+          "path": "/health",
+          "description": "Service health check"
+        },
+        {
+          "method": "GET",
+          "path": "/admin/keys",
+          "description": "List registered key IDs (admin)"
+        },
+        {
+          "method": "GET",
+          "path": "/admin/audit-logs",
+          "description": "View audit logs (admin)"
+        }
+      ]
+    },
+    "database_schema": {
+      "users_table": [
+        "id (Firebase Auth UID)",
+        "email",
+        "username",
+        "role",
+        "avatar",
+        "bio",
+        "location",
+        "website",
+        "twitter",
+        "github",
+        "discord",
+        "membership_tier",
+        "consciousness_coins",
+        "is_subscriber",
+        "last_daily_claim",
+        "rank",
+        "badges",
+        "preferences",
+        "training_consent_given",
+        "training_consent_at",
+        "training_consent_version",
+        "created_at",
+        "updated_at"
+      ],
+      "assets_table": [
+        "id",
+        "creator_id",
+        "title",
+        "description",
+        "category",
+        "tags",
+        "engine",
+        "price",
+        "is_free",
+        "royalty_rate",
+        "license_tier",
+        "thumbnail_url",
+        "preview_urls",
+        "download_url",
+        "file_size_bytes",
+        "file_format",
+        "status",
+        "rejection_reason",
+        "download_count",
+        "view_count",
+        "rating_sum",
+        "rating_count",
+        "is_featured",
+        "is_nsfw",
+        "is_staff_pick",
+        "created_at",
+        "updated_at"
+      ],
+      "orders_table": [
+        "id",
+        "buyer_id",
+        "asset_id",
+        "creator_id",
+        "price_paid",
+        "platform_fee",
+        "creator_payout",
+        "royalty_rate",
+        "stripe_payment_id",
+        "status",
+        "license_key",
+        "eula_version",
+        "eula_accepted_at",
+        "created_at"
+      ],
+      "sessions_table": [
+        "id",
+        "user_id",
+        "token_hash",
+        "expires_at",
+        "created_at"
+      ],
+      "staff_allowlist_table": [
+        "id",
+        "email",
+        "first_name",
+        "last_name",
+        "title",
+        "used",
+        "invited_by",
+        "created_at"
+      ],
+      "royalty_payments_table": [
+        "id",
+        "order_id",
+        "creator_id",
+        "buyer_id",
+        "asset_id",
+        "reported_revenue",
+        "royalty_rate",
+        "royalty_owed",
+        "status",
+        "created_at"
+      ]
+    }
+  },
+  "features_breakdown": {
+    "authentication_system": {
+      "status": "COMPLETE",
+      "implemented": [
+        "Email/password registration with validation",
+        "Firebase Google OAuth integration",
+        "JWT session management (30-day expiry)",
+        "Role-based access control (buyer, creator, admin)",
+        "Staff allowlist system for admin invites",
+        "Profile management with social links",
+        "Training consent tracking for AI",
+        "Consciousness Coins virtual currency",
+        "Firebase-only auth gate (localStorage bypass removed)",
+        "Session tracking via Firestore recordSession()",
+        "User preferences stored in Firestore users/{uid}/prefs/settings"
+      ]
+    },
+    "marketplace": {
+      "status": "COMPLETE",
+      "implemented": [
+        "Asset browsing with category filters",
+        "Featured assets highlighting",
+        "Asset detail pages with reviews",
+        "Creator profiles and portfolios",
+        "Search functionality",
+        "Shopping cart system",
+        "Checkout with clickwrap agreements",
+        "Coupon/discount system",
+        "Wishlist functionality",
+        "Download management for buyers",
+        "Creator earnings dashboard",
+        "Royalty reporting system",
+        "License key generation"
+      ]
+    },
+    "domain_services": {
+      "status": "COMPLETE",
+      "implemented": [
+        "Domain availability search (500+ TLDs)",
+        "Real-time Name.com API integration",
+        "Tiered pricing (15% markup on .com, $2 flat on others)",
+        "Domain bundle offerings (Starter, Pro, Premium)",
+        "Cost calculator with billing cycle toggle",
+        "Nameserver management"
+      ],
+      "pending": [
+        "Domain registration checkout flow"
+      ]
+    },
+    "ai_features": {
+      "status": "PARTIAL",
+      "implemented": [
+        "Multi-provider AI support (Gemini, Claude, OpenAI, Kimi, Vertex)",
+        "Rate limiting per user tier",
+        "Context window management",
+        "Builder mode for code generation",
+        "Image generation via Vertex Imagen",
+        "Nova IDE with Aura Console"
+      ],
+      "pending": [
+        "AI chat persistence",
+        "Full terminal integration",
+        "Real AI agent swarms"
+      ]
+    },
+    "content_moderation": {
+      "status": "PARTIAL",
+      "implemented": [
+        "Asset approval workflow (pending/approved/rejected)",
+        "NSFW flagging",
+        "Staff pick system",
+        "Review and rating system"
+      ]
+    },
+    "notification_system": {
+      "status": "COMPLETE",
+      "implemented": [
+        "Notification bell UI",
+        "Notification panel with categories",
+        "Toast system (Sonner)"
+      ]
+    }
+  },
+  "missing_features": {
+    "critical": [
+      "Real-time multiplayer/WebSocket server",
+      "Payment processing integration (Stripe webhook)",
+      "Domain registration checkout completion",
+      "AI chat backend persistence",
+      "Real terminal/shell integration"
+    ],
+    "high_priority": [
+      "WebRTC video/voice chat",
+      "Collaborative editing (Yjs or similar)",
+      "Advanced analytics dashboard",
+      "Email notification system",
+      "Mobile app (The Gilded Cage integration)"
+    ],
+    "medium_priority": [
+      "Art studio tools (currently shell)",
+      "Music composition AI",
+      "TCG game engine",
+      "Avatar builder",
+      "Clothing creator"
+    ]
+  },
+  "deployment_status": {
+    "platform": {
+      "firebase_hosting": "Configured",
+      "netlify": "Configured (fallback)",
+      "domain": "novauraverse.com",
+      "ssl": "Active"
+    },
+    "api": {
+      "firebase_functions": "Ready (Key Registry compliant)",
+      "neon_database": "Connected",
+      "namecom_api": "Configured"
+    },
+    "shopify_theme": {
+      "status": "Present in repo",
+      "files": [
+        "theme.liquid",
+        "novaura-hero.liquid",
+        "novaura-product-grid.liquid"
+      ]
+    }
+  },
+  "roadmap_recommendations": [
+    {
+      "phase": "Phase 1: Foundation",
+      "duration": "1-2 weeks",
+      "tasks": [
+        "Complete Stripe payment integration for marketplace",
+        "Finish domain registration checkout flow",
+        "Implement WebSocket server for real-time features",
+        "Add AI chat persistence to database"
+      ]
+    },
+    {
+      "phase": "Phase 2: Creator Tools",
+      "duration": "2-3 weeks",
+      "tasks": [
+        "Flesh out Art Studio window (currently shell)",
+        "Complete Music Composer with AI generation",
+        "Implement TCG Card Forge game logic",
+        "Build Avatar Builder functionality"
+      ]
+    },
+    {
+      "phase": "Phase 3: Social",
+      "duration": "2-3 weeks",
+      "tasks": [
+        "Real-time chat system",
+        "Collaborative editing in IDE",
+        "Video/voice chat",
+        "Community forums integration"
+      ]
+    }
+  ],
+  "file_statistics": {
+    "platform_src_pages": 58,
+    "platform_src_components": 45,
+    "platform_src_services": 28,
+    "platform_src_stores": 9,
+    "platform_src_hooks": 2,
+    "platform_src_types": 1,
+    "platform_src_utils": 4,
+    "webos_src_windows": 60,
+    "webos_src_components": 25,
+    "webos_src_services": 8,
+    "webos_src_hooks": 7,
+    "webos_src_utils": 3,
+    "total_typescript_lines_estimate": 35000
+  },
+  "deployment": {
+    "hosting": "Firebase Hosting — novaura-systems project",
+    "live_url": "https://novaura-systems.web.app",
+    "domain": "novaura.life (DNS points to novaura-systems Firebase project)",
+    "routing": {
+      "/": "LandingPage (WebOS SPA entry)",
+      "/platform/**": "NovAura-Unified platform app (built to dist/platform/)",
+      "/os": "WebOS shell",
+      "/api/**": "Firebase Functions (Express)"
+    },
+    "last_deployed": "2026-04-02",
+    "notes": [
+      "novaura-life hosting target removed from firebase.json",
+      "All /platform/** rewrites now correctly point to dist/platform/index.html",
+      "Green deployment banners removed from App.jsx and LandingPage.jsx",
+      "Polsia files deleted — not hosted on Polsia"
+    ]
+  },
+  "known_issues": [
+    {
+      "issue": "Gemini API key from wrong GCP project — needs key from novaura-systems account",
+      "priority": "HIGH"
+    },
+    {
+      "issue": "Firebase Generative Language API needs enabling on correct project",
+      "priority": "HIGH"
+    },
+    {
+      "issue": "Sidebar RailDropButton neon glow feature partially implemented — not deployed",
+      "priority": "MEDIUM"
+    },
+    {
+      "issue": "LandingPage partner/ad cards pending — waiting on Dillan links",
+      "priority": "MEDIUM"
+    },
+    {
+      "issue": "Platform localStorage in 40+ windows — should migrate to Firestore progressively",
+      "priority": "LOW"
+    },
+    {
+      "issue": "platform/package.json name is still my-app — should be renamed",
+      "priority": "LOW"
+    }
+  ],
+  "pending_tasks": [
+    "Add partner/ad cards to LandingPage (Replit, Polsia, AI tools — awaiting links from Dillan)",
+    "Neon glow + scroll + dropdown on left sidebar icon rail (RailDropButton — mid implementation)",
+    "Enable Generative Language API on novaura-systems GCP project",
+    "Generate new Gemini API key from correct Google account and update functions/.env",
+    "Progressive Firestore migration for window-level localStorage usage"
+  ]
+}

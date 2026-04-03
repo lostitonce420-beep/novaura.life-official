@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 
 // Onboarding steps configuration
 const ONBOARDING_STEPS = [
@@ -110,13 +111,13 @@ export default function OnboardingWizard({ onComplete, onSkip }) {
 
   useEffect(() => {
     // Check if user has completed onboarding
-    const hasCompleted = localStorage.getItem('novaura-onboarding-complete');
+    const hasCompleted = kernelStorage.getItem('novaura-onboarding-complete');
     if (hasCompleted) {
       setIsVisible(false);
     }
 
     // Load progress
-    const savedProgress = localStorage.getItem('novaura-checklist');
+    const savedProgress = kernelStorage.getItem('novaura-checklist');
     if (savedProgress) {
       setChecklist(JSON.parse(savedProgress));
     }
@@ -139,8 +140,8 @@ export default function OnboardingWizard({ onComplete, onSkip }) {
   };
 
   const finishOnboarding = () => {
-    localStorage.setItem('novaura-onboarding-complete', 'true');
-    localStorage.setItem('novaura-checklist', JSON.stringify(checklist));
+    kernelStorage.setItem('novaura-onboarding-complete', 'true');
+    kernelStorage.setItem('novaura-checklist', JSON.stringify(checklist));
     
     toast.success('Welcome to Novaura! 🎉', {
       description: 'You\'re all set to start building amazing things.',
@@ -154,7 +155,7 @@ export default function OnboardingWizard({ onComplete, onSkip }) {
   };
 
   const handleSkip = () => {
-    localStorage.setItem('novaura-onboarding-complete', 'true');
+    kernelStorage.setItem('novaura-onboarding-complete', 'true');
     setIsVisible(false);
     if (onSkip) onSkip();
   };
@@ -164,7 +165,7 @@ export default function OnboardingWizard({ onComplete, onSkip }) {
       item.id === id ? { ...item, completed: true } : item
     );
     setChecklist(updated);
-    localStorage.setItem('novaura-checklist', JSON.stringify(updated));
+    kernelStorage.setItem('novaura-checklist', JSON.stringify(updated));
     
     const item = checklist.find(i => i.id === id);
     if (item && !item.completed) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dumbbell, Star, Flame, Trophy, Check, ChevronRight, RotateCcw, Copy, Zap } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const CATEGORIES = ['All', 'Algorithms', 'Data Structures', 'Web Dev', 'Game Dev', 'Creative'];
 
@@ -86,7 +87,7 @@ const XP_LEVELS = [0, 50, 120, 220, 350, 520, 750, 1050, 1450, 2000];
 
 export default function ChallengesWindow() {
   const [profile, setProfile] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('challenges_profile') || 'null') || { xp: 0, completed: [], streak: 0, lastDay: null }; }
+    try { return JSON.parse(kernelStorage.getItem('challenges_profile') || 'null') || { xp: 0, completed: [], streak: 0, lastDay: null }; }
     catch { return { xp: 0, completed: [], streak: 0, lastDay: null }; }
   });
   const [cat, setCat] = useState('All');
@@ -95,7 +96,7 @@ export default function ChallengesWindow() {
   const [showHint, setShowHint] = useState(false);
   const [result, setResult] = useState(null); // 'pass' | 'fail' | null
 
-  const save = (p) => { setProfile(p); localStorage.setItem('challenges_profile', JSON.stringify(p)); };
+  const save = (p) => { setProfile(p); kernelStorage.setItem('challenges_profile', JSON.stringify(p)); };
 
   const level = XP_LEVELS.findIndex(x => profile.xp < x);
   const currentLevel = level === -1 ? XP_LEVELS.length : level;

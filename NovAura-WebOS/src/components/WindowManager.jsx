@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import TouchFriendlyWindow from './TouchFriendlyWindow';
+import KernelErrorBoundary from '../kernel/KernelErrorBoundary.jsx';
 
 // ── Lazy load all windows to prevent build crashes & improve performance ────
 const IDEWindow = lazy(() => import('./windows/IDEWindow'));
@@ -31,6 +32,7 @@ const GameWindow = lazy(() => import('./windows/GameWindow'));
     const WritingLibraryWindow = lazy(() => import('./windows/WritingLibraryWindow'));
     const ScriptFusionWindow = lazy(() => import('./windows/ScriptFusionWindow'));
     const ConstructorWindow = lazy(() => import('./windows/ConstructorWindow'));
+const LivingAvatarCreator = lazy(() => import('./windows/LivingAvatarCreator'));
     const CreatorStudioWindow = lazy(() => import('./windows/CreatorStudioWindow'));
     const VibeCodingWindow = lazy(() => import('./windows/VibeCodingWindow'));
     const WorkspaceWindow = lazy(() => import('./windows/WorkspaceWindow'));
@@ -43,7 +45,7 @@ const GameWindow = lazy(() => import('./windows/GameWindow'));
     const NotificationsWindow = lazy(() => import('./windows/NotificationsWindow'));
     const AvatarGalleryWindow = lazy(() => import('./windows/AvatarGalleryWindow'));
     const OutfitManagerWindow = lazy(() => import('./windows/OutfitManagerWindow'));
-    const CardDeckCreatorWindow = lazy(() => import('./windows/CardDeckCreatorWindow'));
+    const InventoryWindow = lazy(() => import('./windows/InventoryWindow'));
     const TaxFilingWindow = lazy(() => import('./windows/TaxFilingWindow'));
     const AdminPanelWindow = lazy(() => import('./windows/AdminPanelWindow'));
     const PersonalizationWindow = lazy(() => import('./windows/PersonalizationWindow'));
@@ -58,8 +60,8 @@ const GameWindow = lazy(() => import('./windows/GameWindow'));
     const NovaConciergeWindow = lazy(() => import('./windows/NovaConciergeWindow'));
 */
     const GraphicsSettingsWindow = lazy(() => import('./windows/GraphicsSettingsWindow'));
-/*
     const SocialNetworkWindow = lazy(() => import('./windows/SocialNetworkWindow'));
+/*
     const ImagenWindow = lazy(() => import('./windows/ImagenWindow'));
 */
     const LiveAIWindow = lazy(() => import('./windows/LiveAIWindow'));
@@ -98,6 +100,7 @@ const windowComponents = {
     'writing-library': WritingLibraryWindow,
     'script-fusion': ScriptFusionWindow,
     'constructor': ConstructorWindow,
+    'avatar-creator': LivingAvatarCreator,
     'creator-studio': CreatorStudioWindow,
     'vibe-coding': VibeCodingWindow,
     'workspace': WorkspaceWindow,
@@ -110,7 +113,7 @@ const windowComponents = {
     'notifications': NotificationsWindow,
     'avatar-gallery': AvatarGalleryWindow,
     'outfit-manager': OutfitManagerWindow,
-    'card-deck-creator': CardDeckCreatorWindow,
+    'inventory': InventoryWindow,
     'tax-filing': TaxFilingWindow,
     'admin-panel': AdminPanelWindow,
     'personalization': PersonalizationWindow,
@@ -125,8 +128,8 @@ const windowComponents = {
     'nova-concierge': NovaConciergeWindow,
 */
     'graphics-settings': GraphicsSettingsWindow,
-/*
     'social': SocialNetworkWindow,
+/*
     'imagen': ImagenWindow,
 */
     'live-ai': LiveAIWindow,
@@ -179,7 +182,7 @@ const defaultSizes = {
   // 'model-personalities' removed
   'avatar-gallery': { width: 650, height: 520 },
   'outfit-manager': { width: 600, height: 520 },
-  'card-deck-creator': { width: 800, height: 560 },
+  'inventory': { width: 860, height: 600 },
   'tax-filing': { width: 680, height: 600 },
   'admin-panel': { width: 900, height: 620 },
   'personalization': { width: 700, height: 560 },
@@ -266,16 +269,18 @@ export default function WindowManager({ windows, onClose, onFocus, onOpenWindow,
             onClose={() => onClose(window.id)}
             onFocus={() => onFocus(window.id)}
           >
-            <Suspense fallback={
-              <div className="flex h-full items-center justify-center bg-black/40 backdrop-blur-md">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-12 h-12 rounded-full border-t-2 border-primary animate-spin" />
-                  <span className="text-xs text-primary/60 font-medium">Reifying {window.title}...</span>
+            <KernelErrorBoundary windowId={window.id} windowType={window.type}>
+              <Suspense fallback={
+                <div className="flex h-full items-center justify-center bg-black/40 backdrop-blur-md">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 rounded-full border-t-2 border-primary animate-spin" />
+                    <span className="text-xs text-primary/60 font-medium">Reifying {window.title}...</span>
+                  </div>
                 </div>
-              </div>
-            }>
-              <Component {...window.props} {...extraProps} />
-            </Suspense>
+              }>
+                <Component {...window.props} {...extraProps} />
+              </Suspense>
+            </KernelErrorBoundary>
           </TouchFriendlyWindow>
         );
       })}

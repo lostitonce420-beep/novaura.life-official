@@ -1,3 +1,4 @@
+import { kernelStorage } from '../kernel/kernelStorage.js';
 /**
  * NovAura File Storage Service
  * Local storage via IndexedDB + GitHub + Google Drive integrations
@@ -220,9 +221,9 @@ export async function saveFile(name, content, mimeType, destPath = '/', source =
 // ────────────────────────────────────────────
 const GH_API = 'https://api.github.com';
 
-export function getGitHubToken() { return localStorage.getItem('novaura_github_token') || ''; }
+export function getGitHubToken() { return kernelStorage.getItem('novaura_github_token') || ''; }
 export function setGitHubToken(token) {
-  token ? localStorage.setItem('novaura_github_token', token) : localStorage.removeItem('novaura_github_token');
+  token ? kernelStorage.setItem('novaura_github_token', token) : kernelStorage.removeItem('novaura_github_token');
 }
 
 function ghHeaders() {

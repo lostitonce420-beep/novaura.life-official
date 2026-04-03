@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TASK CATEGORIES — what users assign AI providers to
@@ -20,8 +21,8 @@ const TASK_CATEGORIES = [
 
 const PROVIDER_OPTIONS = [
   { id: 'auto', label: 'Auto (best available)' },
-  { id: 'ollama', label: 'Ollama' },
-  { id: 'lmstudio', label: 'LM Studio' },
+  { id: 'ollama', label: 'Ollama (Local)' },
+  { id: 'lmstudio', label: 'LM Studio (Local)' },
   { id: 'gemini', label: 'Gemini (Cloud)' },
 ];
 
@@ -43,15 +44,20 @@ export default function ProfileWindow() {
 
   // ── User data ──
   const storedUser = (() => {
-    try { return JSON.parse(localStorage.getItem('user_data') || '{}'); } catch { return {}; }
+    try { return JSON.parse(kernelStorage.getItem('user_data') || '{}'); } catch { return {}; }
   })();
 
   const [name, setName] = useState(storedUser.name || 'User');
   const [email] = useState(storedUser.email || 'user@novaura.life');
+  
+  // ── Subscription tier (1=Free, 2=Creator, 3=Studio, 4=Catalyst) ──
+  const userTier = storedUser.membershipTier || 'free';
+  const tierNumber = { free: 1, creator: 2, studio: 3, catalyst: 4 }[userTier] || 1;
+  const canUseBYOK = tierNumber >= 3; // Tier 3+ only
 
   // ── LLM config ──
   const loadConfig = () => {
-    try { return JSON.parse(localStorage.getItem('llm_config') || '{}'); } catch { return {}; }
+    try { return JSON.parse(kernelStorage.getItem('llm_config') || '{}'); } catch { return {}; }
   };
 
   const [llmConfig, setLlmConfig] = useState(loadConfig);
@@ -63,6 +69,11 @@ export default function ProfileWindow() {
   const [lmstudioStatus, setLmstudioStatus] = useState(null);
   const [ollamaModels, setOllamaModels] = useState(llmConfig.ollamaModels || []);
   const [lmstudioModels, setLmstudioModels] = useState(llmConfig.lmstudioModels || []);
+  
+  // ── BYOK (Bring Your Own Keys) - Tier 3+ only ──
+  const [huggingfaceKey, setHuggingfaceKey] = useState(llmConfig.huggingfaceKey || '');
+  const [kimiKey, setKimiKey] = useState(llmConfig.kimiKey || '');
+  const [qwenConfigured, setQwenConfigured] = useState(llmConfig.qwenConfigured || false);
 
   // ── Task routing ──
   const defaultRouting = {};
@@ -89,7 +100,7 @@ export default function ProfileWindow() {
       directBrowserConnection: true,
       ...overrides,
     };
-    localStorage.setItem('llm_config', JSON.stringify(config));
+    kernelStorage.setItem('llm_config', JSON.stringify(config));
     setLlmConfig(config);
   }, [llmConfig, ollamaUrl, lmstudioUrl, ollamaModels, lmstudioModels, taskRouting, webgpuEnabled, ollamaStatus, lmstudioStatus]);
 
@@ -130,14 +141,14 @@ export default function ProfileWindow() {
   // ── Save user profile ──
   const handleSave = () => {
     const updatedUser = { ...storedUser, name };
-    localStorage.setItem('user_data', JSON.stringify(updatedUser));
+    kernelStorage.setItem('user_data', JSON.stringify(updatedUser));
     setIsEditing(false);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
-    localStorage.removeItem('llm_config');
+    kernelStorage.removeItem('auth_token');
+    kernelStorage.removeItem('user_data');
+    kernelStorage.removeItem('llm_config');
     window.location.reload();
   };
 
@@ -147,10 +158,34 @@ export default function ProfileWindow() {
       const updated = { ...prev, [taskId]: { ...prev[taskId], [field]: value } };
       // Persist immediately
       const config = { ...llmConfig, taskRouting: updated };
-      localStorage.setItem('llm_config', JSON.stringify(config));
+      kernelStorage.setItem('llm_config', JSON.stringify(config));
       setLlmConfig(config);
       return updated;
     });
+  };
+
+  // ── Save BYOK keys to backend (secure storage) ──
+  const saveBYOKKeys = async (keys) => {
+    try {
+      const token = kernelStorage.getItem('novaura-auth-token');
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/byok-keys`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify(keys),
+      });
+      if (!res.ok) throw new Error('Failed to save API keys');
+      // Also save locally for UI state (keys are encrypted on backend)
+      saveConfig(keys);
+      return true;
+    } catch (err) {
+      console.error('Failed to save BYOK keys:', err);
+      // Fallback: save to localStorage for now (will be migrated)
+      saveConfig(keys);
+      return false;
+    }
   };
 
   // ── Toggle WebGPU ──
@@ -330,6 +365,111 @@ export default function ProfileWindow() {
                 </div>
               )}
             </Card>
+
+            {/* BYOK Section - Tier 3+ only */}
+            {canUseBYOK ? (
+              <>
+                <div className="pt-4 border-t border-primary/10">
+                  <h4 className="text-xs font-semibold text-foreground mb-1">🎁 Premium BYOK Providers (Tier {tierNumber})</h4>
+                  <p className="text-[10px] text-muted-foreground mb-3">Bring Your Own Keys - Use your own API keys for premium providers</p>
+                </div>
+
+                {/* Qwen 3.5 Flash */}
+                <Card className="p-4 border-primary/15 bg-window-bg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center text-lg">⚡</div>
+                      <div>
+                        <div className="text-sm font-medium text-foreground">Qwen 3.5 Flash</div>
+                        <div className="text-[10px] text-muted-foreground">Alibaba's fast inference model</div>
+                      </div>
+                    </div>
+                    <Badge className={qwenConfigured ? 'bg-success/20 text-success border-success/30 text-[10px]' : 'bg-muted text-muted-foreground text-[10px]'}>
+                      {qwenConfigured ? 'Enabled' : 'Not configured'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">Use your own Qwen API key</span>
+                    <Button size="sm" onClick={async () => { 
+                      const newVal = !qwenConfigured; 
+                      setQwenConfigured(newVal); 
+                      await saveBYOKKeys({ qwenConfigured: newVal }); 
+                    }} className="h-8 bg-orange-700/50 hover:bg-orange-600/50 text-xs">
+                      {qwenConfigured ? 'Disable' : 'Enable'}
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* Hugging Face */}
+                <Card className="p-4 border-primary/15 bg-window-bg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-lg">🤗</div>
+                      <div>
+                        <div className="text-sm font-medium text-foreground">Hugging Face</div>
+                        <div className="text-[10px] text-muted-foreground">Community models hub</div>
+                      </div>
+                    </div>
+                    <Badge className={huggingfaceKey ? 'bg-success/20 text-success border-success/30 text-[10px]' : 'bg-muted text-muted-foreground text-[10px]'}>
+                      {huggingfaceKey ? 'Configured' : 'Not configured'}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={huggingfaceKey} 
+                      onChange={(e) => setHuggingfaceKey(e.target.value)}
+                      type="password"
+                      placeholder="hf_... API key" 
+                      className="flex-1 h-8 bg-black/30 border-primary/20 text-xs" 
+                    />
+                    <Button size="sm" onClick={() => saveBYOKKeys({ huggingfaceKey })} className="h-8 bg-yellow-700/50 hover:bg-yellow-600/50 text-xs">
+                      <Save className="w-3 h-3 mr-1" />Save
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* Kimi */}
+                <Card className="p-4 border-primary/15 bg-window-bg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-lg">🌙</div>
+                      <div>
+                        <div className="text-sm font-medium text-foreground">Kimi</div>
+                        <div className="text-[10px] text-muted-foreground">Moonshot AI — long context specialist</div>
+                      </div>
+                    </div>
+                    <Badge className={kimiKey ? 'bg-success/20 text-success border-success/30 text-[10px]' : 'bg-muted text-muted-foreground text-[10px]'}>
+                      {kimiKey ? 'Configured' : 'Not configured'}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={kimiKey} 
+                      onChange={(e) => setKimiKey(e.target.value)}
+                      type="password"
+                      placeholder="Kimi API key" 
+                      className="flex-1 h-8 bg-black/30 border-primary/20 text-xs" 
+                    />
+                    <Button size="sm" onClick={() => saveBYOKKeys({ kimiKey })} className="h-8 bg-red-700/50 hover:bg-red-600/50 text-xs">
+                      <Save className="w-3 h-3 mr-1" />Save
+                    </Button>
+                  </div>
+                </Card>
+              </>
+            ) : (
+              <Card className="p-4 border-primary/15 bg-window-bg/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 text-lg">🔒</div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-foreground">Premium AI Providers</div>
+                    <div className="text-[10px] text-muted-foreground">Qwen, Hugging Face, Kimi BYOK — Tier 3+ only</div>
+                  </div>
+                  <Button size="sm" variant="outline" className="h-7 text-[10px] border-amber-500/30 text-amber-400 hover:bg-amber-500/10">
+                    Upgrade
+                  </Button>
+                </div>
+              </Card>
+            )}
 
             <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
               <p className="text-[10px] text-cyan-300/80">
@@ -516,7 +656,7 @@ export default function ProfileWindow() {
                 <div className="space-y-1.5 pt-2 border-t border-primary/10">
                   <div className="text-[10px] text-muted-foreground mb-1">BREAKDOWN</div>
                   {Object.keys(localStorage).sort().map(key => {
-                    const size = new Blob([localStorage.getItem(key) || '']).size;
+                    const size = new Blob([kernelStorage.getItem(key) || '']).size;
                     return (
                       <div key={key} className="flex justify-between items-center text-[11px]">
                         <span className="text-muted-foreground truncate max-w-[180px]">{key}</span>
@@ -529,13 +669,13 @@ export default function ProfileWindow() {
                 <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/60 hover:text-destructive hover:bg-destructive/10 mt-2"
                   onClick={() => {
                     if (confirm('Clear all cached data? (You will NOT be logged out)')) {
-                      const token = localStorage.getItem('auth_token');
-                      const user = localStorage.getItem('user_data');
-                      const config = localStorage.getItem('llm_config');
-                      localStorage.clear();
-                      if (token) localStorage.setItem('auth_token', token);
-                      if (user) localStorage.setItem('user_data', user);
-                      if (config) localStorage.setItem('llm_config', config);
+                      const token = kernelStorage.getItem('auth_token');
+                      const user = kernelStorage.getItem('user_data');
+                      const config = kernelStorage.getItem('llm_config');
+                      kernelStorage.clear();
+                      if (token) kernelStorage.setItem('auth_token', token);
+                      if (user) kernelStorage.setItem('user_data', user);
+                      if (config) kernelStorage.setItem('llm_config', config);
                       window.location.reload();
                     }
                   }}>

@@ -39,6 +39,7 @@ sysinfo = "0.30"
 open = "5.0"
 dirs = "5.0"
 lazy_static = "1.4"
+regex = "1.10"
 
 [features]
 default = ["custom-protocol"]

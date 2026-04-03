@@ -1,12 +1,32 @@
 import { Request, Response, NextFunction } from 'express';
 
-const TIER_LIMITS: Record<string, { builderCalls: number; chatMessages: number; contextWindow: number; windowMs: number }> = {
-  free:       { builderCalls: 7,        chatMessages: 50,       contextWindow: 4096,   windowMs: 86400000 },
-  starter:    { builderCalls: 50,       chatMessages: Infinity, contextWindow: 8192,   windowMs: 86400000 },
-  builder:    { builderCalls: 200,      chatMessages: Infinity, contextWindow: 16384,  windowMs: 86400000 },
-  pro:        { builderCalls: Infinity, chatMessages: Infinity, contextWindow: 128000, windowMs: 86400000 },
-  studio:     { builderCalls: Infinity, chatMessages: Infinity, contextWindow: 200000, windowMs: 86400000 },
-  enterprise: { builderCalls: Infinity, chatMessages: Infinity, contextWindow: 200000, windowMs: 86400000 },
+// NovAura Authentic Tiers - NO UNLIMITED (to prevent $20K bills)
+// All tiers have hard caps on builder calls and chat messages
+const TIER_LIMITS: Record<string, { 
+  builderCalls: number;  // per month (hard cap)
+  chatMessages: number;  // per day (hard cap)
+  contextWindow: number; 
+  windowMs: number;
+  projects: number;
+  customDomains: number;
+}> = {
+  // Free tier - very limited to prevent abuse
+  free:          { builderCalls: 7,    chatMessages: 20,   contextWindow: 4096,   windowMs: 86400000, projects: 3,  customDomains: 0 },
+  
+  // Spark - starter tier
+  spark:         { builderCalls: 30,   chatMessages: 50,   contextWindow: 8192,   windowMs: 86400000, projects: 10, customDomains: 1 },
+  
+  // Emergent - growing users
+  emergent:      { builderCalls: 100,  chatMessages: 150,  contextWindow: 16384,  windowMs: 86400000, projects: 50, customDomains: 3 },
+  
+  // Catalyst - best value (still capped!)
+  catalyst:      { builderCalls: 250,  chatMessages: 400,  contextWindow: 32768,  windowMs: 86400000, projects: 100, customDomains: 10 },
+  
+  // Nova - high usage but NOT unlimited (max ~$500/month in API costs)
+  nova:          { builderCalls: 500,  chatMessages: 1000, contextWindow: 128000, windowMs: 86400000, projects: 500, customDomains: 100 },
+  
+  // Catalytic Crew - enterprise (max ~$2000/month in API costs)
+  'catalytic-crew': { builderCalls: 2000, chatMessages: 5000, contextWindow: 200000, windowMs: 86400000, projects: 9999, customDomains: 9999 },
 };
 
 interface RateLimitEntry {
@@ -41,9 +61,9 @@ export function getRateLimitStatus(userId: string, tier: string, type: 'builder'
 
   const used = type === 'builder' ? entry.builderCalls : entry.chatMessages;
   const limit = type === 'builder' ? limits.builderCalls : limits.chatMessages;
-  const remaining = Math.max(0, (limit === Infinity ? 999999 : limit) - used);
+  const remaining = Math.max(0, limit - used);
 
-  return { allowed: limit === Infinity || used < limit, remaining, resetAt: entry.resetAt, limit: limit === Infinity ? -1 : limit, tier };
+  return { allowed: used < limit, remaining, resetAt: entry.resetAt, limit, tier };
 }
 
 export function checkRateLimit(userId: string, tier: string, type: 'builder' | 'chat'): RateLimitResult {
@@ -55,22 +75,18 @@ export function checkRateLimit(userId: string, tier: string, type: 'builder' | '
     entry = { builderCalls: 0, chatMessages: 0, resetAt: now + limits.windowMs };
   }
 
-  if (tier === 'pro' || tier === 'studio' || tier === 'enterprise') {
-    return { allowed: true, remaining: -1, resetAt: entry.resetAt, limit: -1, tier };
-  }
-
   const used = type === 'builder' ? entry.builderCalls : entry.chatMessages;
   const limit = type === 'builder' ? limits.builderCalls : limits.chatMessages;
 
-  if (limit !== Infinity && used >= limit) {
-    return { allowed: false, remaining: 0, resetAt: entry.resetAt, limit: limit === Infinity ? -1 : limit, tier };
+  if (used >= limit) {
+    return { allowed: false, remaining: 0, resetAt: entry.resetAt, limit, tier };
   }
 
   if (type === 'builder') entry.builderCalls++;
   else entry.chatMessages++;
   rateStore.set(userId, entry);
 
-  return { allowed: true, remaining: (limit === Infinity ? 999999 : limit) - (used + 1), resetAt: entry.resetAt, limit: limit === Infinity ? -1 : limit, tier };
+  return { allowed: true, remaining: limit - (used + 1), resetAt: entry.resetAt, limit, tier };
 }
 
 export function getUserUsage(userId: string) {
@@ -93,9 +109,9 @@ export function rateLimitMiddleware(type: 'builder' | 'chat') {
       res.status(429).json({
         error: 'Rate limit exceeded',
         message: type === 'builder'
-          ? `You've used all ${result.limit} builder calls today. Upgrade for more!`
-          : 'Chat message limit reached.',
-        upgrade_url: '/upgrade',
+          ? `You've used all ${result.limit} builder calls this period. Upgrade for more!`
+          : `Daily ${result.limit} chat limit reached.`,
+        upgrade_url: '/billing',
         reset_at: new Date(result.resetAt).toISOString(),
       });
       return;
@@ -112,10 +128,6 @@ export function limitContextWindow(
   const limits = getTierLimits(tier);
   const maxTokens = limits.contextWindow;
 
-  if (tier === 'pro' || tier === 'studio' || tier === 'enterprise') {
-    return messages.map(m => ({ role: m.role, content: m.content }));
-  }
-
   let totalTokens = 0;
   const result: Array<{ role: string; content: string }> = [];
 
@@ -124,7 +136,7 @@ export function limitContextWindow(
     const tokens = msg.tokens || estimateTokens(msg.content);
     if (totalTokens + tokens > maxTokens) {
       if (tier === 'free' && result.length > 0) {
-        result.unshift({ role: 'system', content: '[Earlier conversation summarized due to context limit. Upgrade to Pro for full context.]' });
+        result.unshift({ role: 'system', content: '[Earlier conversation summarized due to context limit. Upgrade to unlock full context.]' });
       }
       break;
     }

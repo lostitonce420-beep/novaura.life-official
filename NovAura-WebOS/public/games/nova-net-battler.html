@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Net Battler - Aura Corp</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050508;
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      background: radial-gradient(ellipse at center, #0a0e1a 0%, #020204 100%);
+      border: 2px solid #00d4ff;
+      box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+    }
+    .ui-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 20px;
+    }
+    .hp-bar {
+      width: 240px; height: 18px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .hp-fill { height: 100%; transition: width 0.2s; }
+    .hp-player { background: linear-gradient(90deg, #00d4ff, #0099cc); }
+    .hp-enemy { background: linear-gradient(90deg, #ff3366, #cc0033); }
+    .controls-hint {
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 1px;
+    }
+    .controls-hint span { color: #00d4ff; margin: 0 6px; }
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: auto;
+      backdrop-filter: blur(4px);
+    }
+    .overlay h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 48px;
+      background: linear-gradient(90deg, #00d4ff, #ff00aa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    .btn {
+      padding: 14px 36px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      background: transparent;
+      border: 2px solid #00d4ff;
+      color: #00d4ff;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .btn:hover { background: #00d4ff; color: #000; box-shadow: 0 0 20px rgba(0,212,255,0.5); }
+    .chip-deck {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 10px;
+    }
+    .chip {
+      width: 60px; height: 80px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 6px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 11px; text-align: center; color: rgba(255,255,255,0.7);
+    }
+    .chip.active { border-color: #00d4ff; box-shadow: 0 0 15px rgba(0,212,255,0.4); color: #fff; }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="ui-layer">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-size:12px;color:#00d4ff;margin-bottom:4px;letter-spacing:2px;">OPERATOR</div>
+          <div class="hp-bar"><div id="hpPlayer" class="hp-fill hp-player" style="width:100%"></div></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;color:#ff3366;margin-bottom:4px;letter-spacing:2px;">VIRUS</div>
+          <div class="hp-bar"><div id="hpEnemy" class="hp-fill hp-enemy" style="width:100%"></div></div>
+        </div>
+      </div>
+
+      <div class="controls-hint">
+        <span>WASD / ARROWS</span> to move • <span>SPACE</span> to shoot • <span>1-5</span> chips
+      </div>
+    </div>
+
+    <div class="chip-deck" id="chipDeck"></div>
+
+    <div id="startOverlay" class="overlay">
+      <h1>NOVA NET BATTLER</h1>
+      <p style="color:rgba(255,255,255,0.6);margin-bottom:28px;letter-spacing:1px;">Grid-based flash-step combat</p>
+      <button class="btn" onclick="startGame()">Enter Battle</button>
+    </div>
+
+    <div id="gameOverOverlay" class="overlay" style="display:none;">
+      <h1 id="endTitle" style="font-size:36px;">BATTLE END</h1>
+      <p id="endMsg" style="color:rgba(255,255,255,0.6);margin-bottom:28px;"></p>
+      <button class="btn" onclick="resetGame()">Reboot</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Responsive canvas
+    function resize() {
+      const aspect = 16/10;
+      let w = window.innerWidth - 40;
+      let h = w / aspect;
+      if (h > window.innerHeight - 40) { h = window.innerHeight - 40; w = h * aspect; }
+      canvas.width = Math.floor(w); canvas.height = Math.floor(h);
+    }
+    window.addEventListener('resize', resize); resize();
+
+    // Game config
+    const COLS = 8, ROWS = 4;
+    let TILE_W, TILE_H;
+    let gameRunning = false;
+    let lastTime = 0;
+
+    const player = {
+      x: 0, y: 1, // grid coords
+      hp: 1000, maxHp: 1000,
+      color: '#00d4ff',
+      flashTime: 0,
+      invulnerable: 0,
+      charge: 0,
+      lastMove: 0
+    };
+
+    const enemy = {
+      x: 6, y: 1,
+      hp: 800, maxHp: 800,
+      color: '#ff3366',
+      flashTime: 0,
+      invulnerable: 0,
+      lastMove: 0,
+      state: 'idle', // idle, telegraph, attack
+      stateTimer: 0,
+      nextMove: { x: 6, y: 1 }
+    };
+
+    const bullets = [];
+    const particles = [];
+    const chips = [
+      { name: 'Buster', key: '1', damage: 40, type: 'shot', color: '#ffcc00' },
+      { name: 'Cannon', key: '2', damage: 120, type: 'shot', color: '#ff6600' },
+      { name: 'Sword', key: '3', damage: 200, type: 'sword', color: '#ccff00' },
+      { name: 'Bomb', key: '4', damage: 150, type: 'bomb', color: '#ff0066' },
+      { name: 'Heal', key: '5', damage: -150, type: 'heal', color: '#00ff99' },
+    ];
+    let activeChipIndex = 0;
+
+    // Input
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.key >= '1' && e.key <= '5') activeChipIndex = parseInt(e.key) - 1;
+      if (gameRunning) updateChipUI();
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    function updateChipUI() {
+      const deck = document.getElementById('chipDeck');
+      deck.innerHTML = '';
+      chips.forEach((c, i) => {
+        const el = document.createElement('div');
+        el.className = 'chip' + (i === activeChipIndex ? ' active' : '');
+        el.innerHTML = `<div style="font-size:16px;font-weight:700;color:${c.color};">${c.key}</div><div style="margin-top:4px;">${c.name}</div>`;
+        deck.appendChild(el);
+      });
+    }
+    updateChipUI();
+
+    function worldPos(gx, gy) {
+      const marginX = canvas.width * 0.12;
+      const marginY = canvas.height * 0.18;
+      const fieldW = canvas.width - marginX * 2;
+      const fieldH = canvas.height - marginY * 2;
+      TILE_W = fieldW / COLS; TILE_H = fieldH / ROWS;
+      return { x: marginX + gx * TILE_W + TILE_W / 2, y: marginY + gy * TILE_H + TILE_H / 2 };
+    }
+
+    function spawnDust(gx, gy, color) {
+      const pos = worldPos(gx, gy);
+      for (let i = 0; i < 12; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 3 + 1;
+        particles.push({
+          x: pos.x, y: pos.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0, decay: Math.random() * 0.03 + 0.02,
+          color: color || 'rgba(255,255,255,0.4)',
+          size: Math.random() * 4 + 2
+        });
+      }
+    }
+
+    function spawnSpark(gx, gy, color) {
+      const pos = worldPos(gx, gy);
+      for (let i = 0; i < 8; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 5 + 2;
+        particles.push({
+          x: pos.x, y: pos.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0, decay: Math.random() * 0.04 + 0.03,
+          color: color,
+          size: Math.random() * 3 + 1
+        });
+      }
+    }
+
+    function moveEntity(ent, nx, ny, isPlayer) {
+      if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) return;
+      // Players on left 3 cols, enemy on right 3 cols (col 5+), middle 2 cols are neutral
+      if (isPlayer && nx > 4) return;
+      if (!isPlayer && nx < 3) return;
+      ent.flashTime = 0.15;
+      spawnDust(ent.x, ent.y, isPlayer ? '#00d4ff' : '#ff3366');
+      ent.x = nx; ent.y = ny;
+      spawnDust(ent.x, ent.y, isPlayer ? '#00d4ff' : '#ff3366');
+    }
+
+    function fire(ent, isPlayer) {
+      const chip = chips[activeChipIndex];
+      if (chip.type === 'heal') {
+        ent.hp = Math.min(ent.maxHp, ent.hp - chip.damage);
+        spawnSpark(ent.x, ent.y, chip.color);
+        return;
+      }
+      if (chip.type === 'sword') {
+        // Hit adjacent in facing direction
+        const dx = isPlayer ? 1 : -1;
+        for (let dy = -1; dy <= 1; dy++) {
+          const tx = ent.x + dx, ty = ent.y + dy;
+          const target = isPlayer ? enemy : player;
+          if (target.x === tx && target.y === ty && target.invulnerable <= 0) {
+            target.hp -= chip.damage;
+            target.invulnerable = 0.4;
+            spawnSpark(target.x, target.y, chip.color);
+          }
+        }
+        return;
+      }
+      if (chip.type === 'bomb') {
+        // Lob to enemy approximate position
+        const target = isPlayer ? enemy : player;
+        bullets.push({
+          sx: ent.x, sy: ent.y,
+          tx: target.x, ty: target.y,
+          progress: 0, speed: 3,
+          damage: chip.damage, color: chip.color,
+          radius: 1.5, isPlayer: isPlayer,
+          type: 'bomb'
+        });
+        return;
+      }
+      // Normal shot
+      bullets.push({
+        sx: ent.x, sy: ent.y,
+        dx: isPlayer ? 1 : -1, dy: 0,
+        damage: chip.damage, color: chip.color,
+        radius: 0.3, isPlayer: isPlayer,
+        type: 'shot',
+        x: ent.x, y: ent.y
+      });
+    }
+
+    function update(dt) {
+      const now = performance.now() / 1000;
+
+      // Player movement
+      player.lastMove -= dt; player.invulnerable -= dt; player.flashTime -= dt;
+      if (player.lastMove <= 0) {
+        let mx = 0, my = 0;
+        if (keys['KeyW'] || keys['ArrowUp']) my = -1;
+        else if (keys['KeyS'] || keys['ArrowDown']) my = 1;
+        else if (keys['KeyA'] || keys['ArrowLeft']) mx = -1;
+        else if (keys['KeyD'] || keys['ArrowRight']) mx = 1;
+        if (mx !== 0 || my !== 0) {
+          moveEntity(player, player.x + mx, player.y + my, true);
+          player.lastMove = 0.22;
+        }
+      }
+
+      // Player shoot
+      if (keys['Space']) {
+        if (player.charge <= 0) {
+          fire(player, true);
+          player.charge = (chips[activeChipIndex].type === 'shot' ? 0.35 : 0.8);
+        }
+      }
+      player.charge -= dt;
+      if (player.charge < 0) player.charge = 0;
+
+      // Enemy AI
+      enemy.lastMove -= dt; enemy.invulnerable -= dt; enemy.flashTime -= dt; enemy.stateTimer -= dt;
+      if (enemy.hp > 0) {
+        if (enemy.stateTimer <= 0) {
+          if (enemy.state === 'idle') {
+            enemy.state = 'telegraph';
+            enemy.stateTimer = 0.8;
+            // Pick move target closer to player
+            const dx = player.x - enemy.x;
+            const dy = player.y - enemy.y;
+            let tx = enemy.x, ty = enemy.y;
+            if (Math.abs(dx) > 1) tx += dx > 0 ? 1 : -1;
+            else if (Math.abs(dy) > 0) ty += dy > 0 ? 1 : -1;
+            else tx -= 1; // back up
+            enemy.nextMove.x = Math.max(3, Math.min(COLS - 1, tx));
+            enemy.nextMove.y = Math.max(0, Math.min(ROWS - 1, ty));
+          } else if (enemy.state === 'telegraph') {
+            enemy.state = 'attack';
+            enemy.stateTimer = 0.6;
+            moveEntity(enemy, enemy.nextMove.x, enemy.nextMove.y, false);
+            // Attack if aligned
+            if (enemy.y === player.y && enemy.x > player.x) {
+              setTimeout(() => { if (gameRunning && enemy.hp > 0) fire(enemy, false); }, 150);
+            }
+          } else if (enemy.state === 'attack') {
+            enemy.state = 'idle';
+            enemy.stateTimer = 0.5 + Math.random() * 0.5;
+          }
+        }
+      }
+
+      // Bullets
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        if (b.type === 'bomb') {
+          b.progress += b.speed * dt;
+          if (b.progress >= 1) {
+            // Explode radius
+            const target = b.isPlayer ? enemy : player;
+            const dist = Math.hypot(target.x - b.tx, target.y - b.ty);
+            if (dist <= b.radius && target.invulnerable <= 0) {
+              target.hp -= b.damage; target.invulnerable = 0.3; spawnSpark(target.x, target.y, b.color);
+            }
+            spawnSpark(b.tx, b.ty, b.color);
+            bullets.splice(i, 1); continue;
+          }
+          b.x = b.sx + (b.tx - b.sx) * b.progress;
+          b.y = b.sy + (b.ty - b.sy) * b.progress - Math.sin(b.progress * Math.PI) * 1.5;
+        } else {
+          b.x += b.dx * b.speed * dt;
+          const target = b.isPlayer ? enemy : player;
+          if (Math.abs(b.x - target.x) < 0.4 && Math.abs(b.y - target.y) < 0.4 && target.invulnerable <= 0) {
+            target.hp -= b.damage; target.invulnerable = 0.3; spawnSpark(target.x, target.y, b.color);
+            bullets.splice(i, 1); continue;
+          }
+          if (b.x < -1 || b.x > COLS + 1) bullets.splice(i, 1);
+        }
+      }
+
+      // Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt * 20; p.y += p.vy * dt * 20;
+        p.life -= p.decay;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // UI update
+      document.getElementById('hpPlayer').style.width = Math.max(0, player.hp / player.maxHp * 100) + '%';
+      document.getElementById('hpEnemy').style.width = Math.max(0, enemy.hp / enemy.maxHp * 100) + '%';
+
+      if (player.hp <= 0 || enemy.hp <= 0) endGame();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid
+      const marginX = canvas.width * 0.12;
+      const marginY = canvas.height * 0.18;
+      const fieldW = canvas.width - marginX * 2;
+      const fieldH = canvas.height - marginY * 2;
+      TILE_W = fieldW / COLS; TILE_H = fieldH / ROWS;
+
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          const px = marginX + x * TILE_W;
+          const py = marginY + y * TILE_H;
+          // Player side (blue tint) / Enemy side (red tint)
+          const isPlayerSide = x < 3;
+          const isEnemySide = x > 4;
+          ctx.fillStyle = isPlayerSide ? 'rgba(0,212,255,0.06)' : isEnemySide ? 'rgba(255,51,102,0.06)' : 'rgba(255,255,255,0.02)';
+          ctx.fillRect(px + 2, py + 2, TILE_W - 4, TILE_H - 4);
+          ctx.strokeStyle = isPlayerSide ? 'rgba(0,212,255,0.15)' : isEnemySide ? 'rgba(255,51,102,0.15)' : 'rgba(255,255,255,0.08)';
+          ctx.strokeRect(px + 2, py + 2, TILE_W - 4, TILE_H - 4);
+        }
+      }
+
+      // Draw entities
+      function drawEntity(ent, isPlayer) {
+        const pos = worldPos(ent.x, ent.y);
+        const size = Math.min(TILE_W, TILE_H) * 0.55;
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+        if (ent.flashTime > 0) {
+          ctx.globalAlpha = 0.3 + Math.random() * 0.4;
+          ctx.scale(1.3, 0.7);
+        }
+        // Body
+        ctx.fillStyle = ent.color;
+        ctx.shadowColor = ent.color; ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Direction indicator
+        ctx.fillStyle = '#fff';
+        const dirX = isPlayer ? size * 0.25 : -size * 0.25;
+        ctx.beginPath();
+        ctx.arc(dirX, -size * 0.1, size * 0.12, 0, Math.PI * 2);
+        ctx.arc(dirX, size * 0.1, size * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawEntity(player, true);
+      if (enemy.hp > 0) drawEntity(enemy, false);
+
+      // Draw enemy telegraph
+      if (enemy.state === 'telegraph' && enemy.hp > 0) {
+        const pos = worldPos(enemy.nextMove.x, enemy.nextMove.y);
+        ctx.strokeStyle = 'rgba(255,51,102,0.6)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, TILE_W * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
+      }
+
+      // Draw bullets
+      bullets.forEach(b => {
+        const pos = worldPos(b.x, b.y);
+        ctx.save();
+        ctx.fillStyle = b.color;
+        ctx.shadowColor = b.color; ctx.shadowBlur = 10;
+        ctx.beginPath();
+        if (b.type === 'bomb') {
+          const r = TILE_W * 0.15 * (1 + Math.sin(performance.now() / 50) * 0.2);
+          ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+        } else {
+          ctx.arc(pos.x, pos.y, TILE_W * 0.1, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Draw particles
+      particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    function loop() {
+      if (!gameRunning) return;
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function startGame() {
+      document.getElementById('startOverlay').style.display = 'none';
+      gameRunning = true; lastTime = performance.now();
+      loop();
+    }
+
+    function endGame() {
+      gameRunning = false;
+      const won = enemy.hp <= 0;
+      document.getElementById('endTitle').innerText = won ? 'VICTORY' : 'DEFEAT';
+      document.getElementById('endTitle').style.background = won ? 'linear-gradient(90deg,#00ff99,#00d4ff)' : 'linear-gradient(90deg,#ff3366,#ff6600)';
+      document.getElementById('endTitle').style.webkitBackgroundClip = 'text';
+      document.getElementById('endTitle').style.webkitTextFillColor = 'transparent';
+      document.getElementById('endMsg').innerText = won ? 'The virus has been deleted.' : 'Operator status: critical.';
+      document.getElementById('gameOverOverlay').style.display = 'flex';
+    }
+
+    function resetGame() {
+      player.hp = player.maxHp; player.x = 0; player.y = 1; player.charge = 0;
+      enemy.hp = enemy.maxHp; enemy.x = 6; enemy.y = 1; enemy.state = 'idle'; enemy.stateTimer = 0;
+      bullets.length = 0; particles.length = 0;
+      document.getElementById('gameOverOverlay').style.display = 'none';
+      gameRunning = true; lastTime = performance.now();
+      loop();
+    }
+  </script>
+</body>
+</html>

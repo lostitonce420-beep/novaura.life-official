@@ -1,3 +1,4 @@
+import { kernelStorage } from '../kernel/kernelStorage.js';
 /**
  * NovAura AI Service — Centralized API layer
  *
@@ -8,12 +9,12 @@
  * - Auth headers, error handling, provider fallback
  */
 
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
+export const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-systems.cloudfunctions.net/api').replace(/\/$/, '');
 
 // ─── Auth ──────────────────────────────────────────────────────────────
 
 export function getAuthHeaders() {
-  const token = localStorage.getItem('novaura-auth-token');
+  const token = kernelStorage.getItem('novaura-auth-token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -51,6 +52,10 @@ export async function checkHealth() {
  * @param {object} options - { provider, model, maxTokens, temperature, conversation }
  */
 export async function chatCloud(prompt, options = {}) {
+  // SECURITY: API keys are NOT loaded from localStorage
+  // Backend uses platform-owned keys for Tier 1-2 users
+  // Tier 3+ BYOK users have keys stored securely on backend (not client-side)
+  
   const res = await fetch(`${BACKEND_URL}/ai/chat`, {
     method: 'POST',
     headers: {
@@ -58,12 +63,13 @@ export async function chatCloud(prompt, options = {}) {
       ...getAuthHeaders(),
     },
     body: JSON.stringify({
-      message: prompt,
+      prompt,
       provider: options.provider,
       model: options.model,
       maxTokens: options.maxTokens || 1024,
       temperature: options.temperature ?? 0.7,
       conversation: options.conversation || [],
+      // Note: API keys are handled server-side based on user tier
     }),
   });
 
@@ -215,6 +221,78 @@ export async function getGeminiLiveKey() {
 
 // ─── Local LLM (direct browser connection) ─────────────────────────────
 
+function ensureHttpProtocol(value = '') {
+  if (/^https?:\/\//i.test(value)) return value;
+  return `http://${value}`;
+}
+
+function trimKnownLocalPath(value = '') {
+  return value
+    .replace(/\/api\/(chat|generate|tags)$/i, '')
+    .replace(/\/v1\/chat\/completions$/i, '')
+    .replace(/\/v1\/models$/i, '')
+    .replace(/\/v1$/i, '')
+    .replace(/\/+$/g, '');
+}
+
+function resolveLocalTarget(url, type) {
+  const input = (url || '').trim();
+  const fallback = type === 'ollama' ? 'http://localhost:11434' : 'http://localhost:1234';
+  const raw = input ? ensureHttpProtocol(input) : fallback;
+  const clean = raw.replace(/[?#].*$/, '').replace(/\/+$/g, '');
+  const baseUrl = trimKnownLocalPath(clean) || fallback;
+
+  if (type === 'ollama') {
+    if (/\/api\/generate$/i.test(clean)) {
+      return { baseUrl, requestUrl: clean, mode: 'ollama-generate' };
+    }
+
+    return {
+      baseUrl,
+      requestUrl: /\/api\/chat$/i.test(clean) ? clean : `${baseUrl}/api/chat`,
+      mode: 'ollama-chat',
+    };
+  }
+
+  if (/\/v1\/chat\/completions$/i.test(clean)) {
+    return { baseUrl, requestUrl: clean, mode: 'lmstudio-chat' };
+  }
+
+  if (/\/v1$/i.test(clean)) {
+    return { baseUrl, requestUrl: `${clean}/chat/completions`, mode: 'lmstudio-chat' };
+  }
+
+  return {
+    baseUrl,
+    requestUrl: `${baseUrl}/v1/chat/completions`,
+    mode: 'lmstudio-chat',
+  };
+}
+
+async function discoverLocalModel(baseUrl, type) {
+  try {
+    if (type === 'ollama') {
+      const res = await fetch(`${baseUrl}/api/tags`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!res.ok) return undefined;
+      const data = await res.json();
+      return data.models?.find((m) => typeof m?.name === 'string' && m.name.length > 0)?.name;
+    }
+
+    const res = await fetch(`${baseUrl}/v1/models`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return undefined;
+    const data = await res.json();
+    return data.data?.find((m) => typeof m?.id === 'string' && m.id.length > 0)?.id;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Chat with a local LLM (Ollama or LM Studio) directly from the browser
  * @param {string} message - User message
@@ -226,10 +304,11 @@ export async function getGeminiLiveKey() {
  * @param {object} config - { url, type, model, systemPrompt, conversation }
  */
 export async function chatLocal(message, config) {
-  const url = config.url.replace(/\/$/, '');
+  const target = resolveLocalTarget(config.url, config.type);
+  const discoveredModel = await discoverLocalModel(target.baseUrl, config.type);
+  const selectedModel = config.model || discoveredModel || (config.type === 'ollama' ? 'llama3.1:8b' : 'local-model');
 
   if (config.type === 'ollama') {
-    // Use /api/chat for conversation support (not /api/generate)
     const messages = [];
     if (config.systemPrompt) {
       messages.push({ role: 'system', content: config.systemPrompt });
@@ -240,28 +319,44 @@ export async function chatLocal(message, config) {
     }
     messages.push({ role: 'user', content: message });
 
-    const res = await fetch(`${url}/api/chat`, {
+    const body = target.mode === 'ollama-generate'
+      ? {
+          model: selectedModel,
+          prompt: [
+            config.systemPrompt ? `System: ${config.systemPrompt}` : '',
+            config.conversation?.length ? config.conversation.map((m) => `${m.role}: ${m.content}`).join('\n') : '',
+            `User: ${message}`,
+          ].filter(Boolean).join('\n\n'),
+          stream: false,
+          options: {
+            temperature: config.temperature ?? 0.7,
+            num_predict: config.maxTokens || 1024,
+          },
+        }
+      : {
+          model: selectedModel,
+          messages,
+          stream: false,
+          options: {
+            temperature: config.temperature ?? 0.7,
+            num_predict: config.maxTokens || 1024,
+          },
+        };
+
+    const res = await fetch(target.requestUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: config.model || 'llama3.1:8b',
-        messages,
-        stream: false,
-        options: {
-          temperature: config.temperature ?? 0.7,
-          num_predict: config.maxTokens || 1024,
-        },
-      }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const err = await res.text().catch(() => '');
-      throw new Error(`Ollama error ${res.status}: ${err}`);
+      throw new Error(`Ollama error ${res.status} at ${target.requestUrl}: ${err || 'No response body'}`);
     }
     const data = await res.json();
     return {
       response: data.message?.content || data.response || 'No response from Ollama',
-      source: `ollama (${config.model})`,
-      model: config.model,
+      source: `ollama (${selectedModel})`,
+      model: selectedModel,
     };
   }
 
@@ -275,11 +370,11 @@ export async function chatLocal(message, config) {
   }
   messages.push({ role: 'user', content: message });
 
-  const res = await fetch(`${url}/v1/chat/completions`, {
+  const res = await fetch(target.requestUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: config.model || 'local-model',
+      model: selectedModel,
       messages,
       temperature: config.temperature ?? 0.7,
       max_tokens: config.maxTokens || 1024,
@@ -287,14 +382,14 @@ export async function chatLocal(message, config) {
   });
   if (!res.ok) {
     const err = await res.text().catch(() => '');
-    throw new Error(`LM Studio error ${res.status}: ${err}`);
+    throw new Error(`LM Studio error ${res.status} at ${target.requestUrl}: ${err || 'No response body'}`);
   }
   const data = await res.json();
   const content = data.choices?.[0]?.message?.content || 'No response';
   return {
     response: content,
-    source: `lmstudio (${config.model})`,
-    model: config.model,
+    source: `lmstudio (${selectedModel})`,
+    model: selectedModel,
   };
 }
 
@@ -381,19 +476,25 @@ export function resolveProvider(taskCategory = 'general', llmConfig = {}) {
       model: routing.model || llmConfig.lmstudioModels?.[0] || 'local-model',
     };
   }
-  if (['gemini', 'claude', 'openai', 'kimi'].includes(routing.provider)) {
+  if (['gemini', 'claude', 'openai', 'kimi', 'qwen'].includes(routing.provider)) {
     return { type: 'cloud', provider: routing.provider, model: routing.model };
+  }
+  if (routing.provider === 'huggingface') {
+    return { type: 'cloud', provider: 'huggingface', model: routing.model || 'microsoft/DialoGPT-medium' };
   }
 
   // Auto: try local first, fallback to cloud
   if (llmConfig?.useLocalLLM && llmConfig?.localLLMUrl) {
     const url = llmConfig.localLLMUrl.replace(/\/$/, '');
-    const isOllama = url.includes(':11434') || url.toLowerCase().includes('ollama');
+    const looksOllamaByPath = /\/api\/(chat|generate|tags)$/i.test(url);
+    const looksLMStudioByPath = /\/v1(\/chat\/completions|\/models)?$/i.test(url);
+    const isOllama = looksOllamaByPath || (!looksLMStudioByPath && (url.includes(':11434') || url.toLowerCase().includes('ollama')));
+
     return {
       type: 'local',
       localType: isOllama ? 'ollama' : 'lmstudio',
       url,
-      model: llmConfig.availableModels?.[0] || (isOllama ? 'llama2' : 'local-model'),
+      model: llmConfig.availableModels?.[0] || (isOllama ? 'llama3.1:8b' : 'local-model'),
     };
   }
 

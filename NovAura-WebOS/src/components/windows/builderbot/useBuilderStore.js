@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { kernelStorage } from '../../../kernel/kernelStorage.js';
 
 // ── Storage keys ────────────────────────────────────────────
 const STORAGE_PROJECT = 'novaura_builder_project';
@@ -159,7 +160,7 @@ function defaultCodeLibraries() {
 
 function loadCodeLibraries() {
   try {
-    const raw = localStorage.getItem(STORAGE_CODE_LIBRARIES);
+    const raw = kernelStorage.getItem(STORAGE_CODE_LIBRARIES);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return defaultCodeLibraries();
@@ -177,7 +178,7 @@ function defaultAIConfig() {
 
 function loadAIConfig() {
   try {
-    const raw = localStorage.getItem(STORAGE_AI_CONFIG);
+    const raw = kernelStorage.getItem(STORAGE_AI_CONFIG);
     if (raw) return { ...defaultAIConfig(), ...JSON.parse(raw) };
   } catch { /* ignore */ }
   return defaultAIConfig();
@@ -185,7 +186,7 @@ function loadAIConfig() {
 
 function loadPromptLibrary() {
   try {
-    const raw = localStorage.getItem(STORAGE_PROMPT_LIBRARY);
+    const raw = kernelStorage.getItem(STORAGE_PROMPT_LIBRARY);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return [];
@@ -193,7 +194,7 @@ function loadPromptLibrary() {
 
 function loadAuraHistory() {
   try {
-    const raw = localStorage.getItem(STORAGE_AURA_HISTORY);
+    const raw = kernelStorage.getItem(STORAGE_AURA_HISTORY);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return [];
@@ -202,7 +203,7 @@ function loadAuraHistory() {
 // ── Persistence ─────────────────────────────────────────────
 function loadProject() {
   try {
-    const raw = localStorage.getItem(STORAGE_PROJECT);
+    const raw = kernelStorage.getItem(STORAGE_PROJECT);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return defaultProject();
@@ -210,7 +211,7 @@ function loadProject() {
 
 function loadPersonas() {
   try {
-    const raw = localStorage.getItem(STORAGE_PERSONAS);
+    const raw = kernelStorage.getItem(STORAGE_PERSONAS);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return defaultPersonas();
@@ -218,7 +219,7 @@ function loadPersonas() {
 
 function loadRules() {
   try {
-    const raw = localStorage.getItem(STORAGE_RULES);
+    const raw = kernelStorage.getItem(STORAGE_RULES);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return defaultRules();
@@ -267,7 +268,7 @@ const useBuilderStore = create((set, get) => {
     // ── Persist helper ──
     _persist() {
       const { projectName, tree } = get();
-      localStorage.setItem(STORAGE_PROJECT, JSON.stringify({ name: projectName, tree }));
+      kernelStorage.setItem(STORAGE_PROJECT, JSON.stringify({ name: projectName, tree }));
     },
 
     // ── Project actions ──
@@ -362,24 +363,24 @@ const useBuilderStore = create((set, get) => {
       set((s) => ({
         personas: s.personas.map((p) => ({ ...p, active: p.id === personaId })),
       }));
-      localStorage.setItem(STORAGE_PERSONAS, JSON.stringify(get().personas));
+      kernelStorage.setItem(STORAGE_PERSONAS, JSON.stringify(get().personas));
     },
 
     addPersona(persona) {
       set((s) => ({ personas: [...s.personas, { ...persona, id: uid() }] }));
-      localStorage.setItem(STORAGE_PERSONAS, JSON.stringify(get().personas));
+      kernelStorage.setItem(STORAGE_PERSONAS, JSON.stringify(get().personas));
     },
 
     updatePersona(id, updates) {
       set((s) => ({
         personas: s.personas.map((p) => (p.id === id ? { ...p, ...updates } : p)),
       }));
-      localStorage.setItem(STORAGE_PERSONAS, JSON.stringify(get().personas));
+      kernelStorage.setItem(STORAGE_PERSONAS, JSON.stringify(get().personas));
     },
 
     removePersona(id) {
       set((s) => ({ personas: s.personas.filter((p) => p.id !== id) }));
-      localStorage.setItem(STORAGE_PERSONAS, JSON.stringify(get().personas));
+      kernelStorage.setItem(STORAGE_PERSONAS, JSON.stringify(get().personas));
     },
 
     setPreprompt(text) {
@@ -390,17 +391,17 @@ const useBuilderStore = create((set, get) => {
       set((s) => ({
         rules: s.rules.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)),
       }));
-      localStorage.setItem(STORAGE_RULES, JSON.stringify(get().rules));
+      kernelStorage.setItem(STORAGE_RULES, JSON.stringify(get().rules));
     },
 
     addRule(rule) {
       set((s) => ({ rules: [...s.rules, { ...rule, id: uid() }] }));
-      localStorage.setItem(STORAGE_RULES, JSON.stringify(get().rules));
+      kernelStorage.setItem(STORAGE_RULES, JSON.stringify(get().rules));
     },
 
     removeRule(id) {
       set((s) => ({ rules: s.rules.filter((r) => r.id !== id) }));
-      localStorage.setItem(STORAGE_RULES, JSON.stringify(get().rules));
+      kernelStorage.setItem(STORAGE_RULES, JSON.stringify(get().rules));
     },
 
     addChatMessage(msg) {
@@ -417,21 +418,21 @@ const useBuilderStore = create((set, get) => {
 
     setAIConfig(config) {
       set({ aiConfig: config });
-      localStorage.setItem(STORAGE_AI_CONFIG, JSON.stringify(config));
+      kernelStorage.setItem(STORAGE_AI_CONFIG, JSON.stringify(config));
     },
 
     // ── Aura History & Prompt Library ──
     addAuraMessage(message) {
       set((s) => {
         const newHistory = [...s.auraHistory, { ...message, id: Date.now().toString() }];
-        localStorage.setItem(STORAGE_AURA_HISTORY, JSON.stringify(newHistory));
+        kernelStorage.setItem(STORAGE_AURA_HISTORY, JSON.stringify(newHistory));
         return { auraHistory: newHistory };
       });
     },
 
     clearAuraHistory() {
       set({ auraHistory: [] });
-      localStorage.removeItem(STORAGE_AURA_HISTORY);
+      kernelStorage.removeItem(STORAGE_AURA_HISTORY);
     },
 
     savePrompt(prompt) {
@@ -441,7 +442,7 @@ const useBuilderStore = create((set, get) => {
         if (exists) return {};
         
         const newLibrary = [...s.promptLibrary, prompt];
-        localStorage.setItem(STORAGE_PROMPT_LIBRARY, JSON.stringify(newLibrary));
+        kernelStorage.setItem(STORAGE_PROMPT_LIBRARY, JSON.stringify(newLibrary));
         return { promptLibrary: newLibrary };
       });
     },
@@ -449,7 +450,7 @@ const useBuilderStore = create((set, get) => {
     deletePrompt(promptId) {
       set((s) => {
         const newLibrary = s.promptLibrary.filter(p => p.id !== promptId);
-        localStorage.setItem(STORAGE_PROMPT_LIBRARY, JSON.stringify(newLibrary));
+        kernelStorage.setItem(STORAGE_PROMPT_LIBRARY, JSON.stringify(newLibrary));
         return { promptLibrary: newLibrary };
       });
     },
@@ -459,7 +460,7 @@ const useBuilderStore = create((set, get) => {
         const newLibrary = s.promptLibrary.map(p => 
           p.id === promptId ? { ...p, usageCount: (p.usageCount || 0) + 1 } : p
         );
-        localStorage.setItem(STORAGE_PROMPT_LIBRARY, JSON.stringify(newLibrary));
+        kernelStorage.setItem(STORAGE_PROMPT_LIBRARY, JSON.stringify(newLibrary));
         return { promptLibrary: newLibrary };
       });
     },
@@ -667,7 +668,7 @@ const useBuilderStore = create((set, get) => {
             id: 'root', name: 'todo-app', type: 'folder', expanded: true,
             children: [
               { id: uid(), name: 'index.html', type: 'file', content: '<!DOCTYPE html>\n<html>\n<head>\n  <title>Todo App</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    body {\n      font-family: system-ui;\n      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n      min-height: 100vh;\n      padding: 2rem;\n    }\n    .container {\n      max-width: 500px;\n      margin: 0 auto;\n      background: white;\n      border-radius: 16px;\n      padding: 2rem;\n      box-shadow: 0 20px 60px rgba(0,0,0,0.3);\n    }\n    h1 { text-align: center; color: #333; margin-bottom: 1.5rem; }\n    .input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }\n    #todo-input { flex: 1; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }\n    #add-btn { padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }\n    #add-btn:hover { background: #5a67d8; }\n    .filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; justify-content: center; }\n    .filter { padding: 0.5rem 1rem; background: #f0f0f0; border: none; border-radius: 20px; cursor: pointer; }\n    .filter.active { background: #667eea; color: white; }\n    #todo-list { list-style: none; }\n    .todo-item {\n      display: flex; align-items: center;\n      padding: 1rem;\n      background: #f8f9fa;\n      border-radius: 8px;\n      margin-bottom: 0.5rem;\n    }\n    .todo-item.completed { opacity: 0.6; }\n    .todo-item.completed span { text-decoration: line-through; }\n    .todo-item input[type=\"checkbox\"] { margin-right: 1rem; width: 20px; height: 20px; }\n    .todo-item span { flex: 1; }\n    .delete-btn {\n      background: #ff6b6b; color: white;\n      border: none; padding: 0.5rem 1rem;\n      border-radius: 6px; cursor: pointer;\n    }\n    .stats { text-align: center; color: #666; margin-top: 1rem; font-size: 0.9rem; }\n  </style>\n</head>\n<body>\n  <div class="container">\n    <h1>✅ Todo List</h1>\n    <div class="input-group">\n      <input type="text" id="todo-input" placeholder="What needs to be done?" />\n      <button id="add-btn">Add</button>\n    </div>\n    <div class="filters">\n      <button class="filter active" data-filter="all">All</button>\n      <button class="filter" data-filter="active">Active</button>\n      <button class="filter" data-filter="completed">Completed</button>\n    </div>\n    <ul id="todo-list"></ul>\n    <div class="stats"><span id="stats">0 items left</span></div>\n  </div>\n  <script src="todo.js"></script>\n</body>\n</html>\n' },
-              { id: uid(), name: 'todo.js', type: 'file', content: "let todos = JSON.parse(localStorage.getItem('todos') || '[]');\nlet filter = 'all';\n\nconst todoInput = document.getElementById('todo-input');\nconst addBtn = document.getElementById('add-btn');\nconst todoList = document.getElementById('todo-list');\nconst stats = document.getElementById('stats');\nconst filterBtns = document.querySelectorAll('.filter');\n\nfunction save() {\n  localStorage.setItem('todos', JSON.stringify(todos));\n  render();\n}\n\nfunction render() {\n  todoList.innerHTML = '';\n  \n  const filtered = todos.filter(t => {\n    if (filter === 'active') return !t.completed;\n    if (filter === 'completed') return t.completed;\n    return true;\n  });\n  \n  filtered.forEach((todo, index) => {\n    const li = document.createElement('li');\n    li.className = 'todo-item ' + (todo.completed ? 'completed' : '');\n    li.innerHTML = `\n      <input type=\"checkbox\" ${todo.completed ? 'checked' : ''} onchange=\"toggle(${index})\" />\n      <span>${escapeHtml(todo.text)}</span>\n      <button class=\"delete-btn\" onclick=\"remove(${index})\">Delete</button>\n    `;\n    todoList.appendChild(li);\n  });\n  \n  const active = todos.filter(t => !t.completed).length;\n  stats.textContent = `${active} item${active !== 1 ? 's' : ''} left`;\n}\n\nfunction escapeHtml(text) {\n  const div = document.createElement('div');\n  div.textContent = text;\n  return div.innerHTML;\n}\n\nfunction add() {\n  const text = todoInput.value.trim();\n  if (!text) return;\n  todos.push({ text, completed: false, id: Date.now() });\n  todoInput.value = '';\n  save();\n}\n\nfunction toggle(index) {\n  todos[index].completed = !todos[index].completed;\n  save();\n}\n\nfunction remove(index) {\n  todos.splice(index, 1);\n  save();\n}\n\n// Event listeners\naddBtn.addEventListener('click', add);\ntodoInput.addEventListener('keypress', e => { if (e.key === 'Enter') add(); });\n\nfilterBtns.forEach(btn => {\n  btn.addEventListener('click', () => {\n    filterBtns.forEach(b => b.classList.remove('active'));\n    btn.classList.add('active');\n    filter = btn.dataset.filter;\n    render();\n  });\n});\n\n// Initial render\nrender();\n" },
+              { id: uid(), name: 'todo.js', type: 'file', content: "let todos = JSON.parse(kernelStorage.getItem('todos') || '[]');\nlet filter = 'all';\n\nconst todoInput = document.getElementById('todo-input');\nconst addBtn = document.getElementById('add-btn');\nconst todoList = document.getElementById('todo-list');\nconst stats = document.getElementById('stats');\nconst filterBtns = document.querySelectorAll('.filter');\n\nfunction save() {\n  kernelStorage.setItem('todos', JSON.stringify(todos));\n  render();\n}\n\nfunction render() {\n  todoList.innerHTML = '';\n  \n  const filtered = todos.filter(t => {\n    if (filter === 'active') return !t.completed;\n    if (filter === 'completed') return t.completed;\n    return true;\n  });\n  \n  filtered.forEach((todo, index) => {\n    const li = document.createElement('li');\n    li.className = 'todo-item ' + (todo.completed ? 'completed' : '');\n    li.innerHTML = `\n      <input type=\"checkbox\" ${todo.completed ? 'checked' : ''} onchange=\"toggle(${index})\" />\n      <span>${escapeHtml(todo.text)}</span>\n      <button class=\"delete-btn\" onclick=\"remove(${index})\">Delete</button>\n    `;\n    todoList.appendChild(li);\n  });\n  \n  const active = todos.filter(t => !t.completed).length;\n  stats.textContent = `${active} item${active !== 1 ? 's' : ''} left`;\n}\n\nfunction escapeHtml(text) {\n  const div = document.createElement('div');\n  div.textContent = text;\n  return div.innerHTML;\n}\n\nfunction add() {\n  const text = todoInput.value.trim();\n  if (!text) return;\n  todos.push({ text, completed: false, id: Date.now() });\n  todoInput.value = '';\n  save();\n}\n\nfunction toggle(index) {\n  todos[index].completed = !todos[index].completed;\n  save();\n}\n\nfunction remove(index) {\n  todos.splice(index, 1);\n  save();\n}\n\n// Event listeners\naddBtn.addEventListener('click', add);\ntodoInput.addEventListener('keypress', e => { if (e.key === 'Enter') add(); });\n\nfilterBtns.forEach(btn => {\n  btn.addEventListener('click', () => {\n    filterBtns.forEach(b => b.classList.remove('active'));\n    btn.classList.add('active');\n    filter = btn.dataset.filter;\n    render();\n  });\n});\n\n// Initial render\nrender();\n" },
             ],
           },
         },

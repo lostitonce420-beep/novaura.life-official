@@ -8,9 +8,10 @@ import {
 
 import { db, auth } from '../../config/firebase';
 import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy, limit } from 'firebase/firestore';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const OWNER_EMAILS = ['the.lost.catalyst@gmail.com', 'Dillan.Copeland@Novauraverse.com', 'admin@novaura.life'];
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-systems.cloudfunctions.net/api').replace(/\/$/, '');
 
 const ROLES = [
   { id: 'admin', label: 'Admin', color: 'text-red-400 bg-red-500/20', desc: 'Full platform control' },
@@ -56,11 +57,11 @@ export default function AdminPanelWindow() {
   const [staffInviteTitle, setStaffInviteTitle] = useState('');
   const [staffList, setStaffList] = useState([]);
   const [actionLog, setActionLog] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('admin_action_log') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('admin_action_log') || '[]'); } catch { return []; }
   });
 
   const currentUser = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('user_data') || '{}'); } catch { return {}; }
+    try { return JSON.parse(kernelStorage.getItem('user_data') || '{}'); } catch { return {}; }
   }, []);
 
   const isOwner = OWNER_EMAILS.includes(currentUser?.email);
@@ -70,7 +71,7 @@ export default function AdminPanelWindow() {
     const entry = { id: `log-${Date.now()}`, action, by: currentUser?.username || 'Admin', at: new Date().toISOString() };
     const updated = [entry, ...actionLog].slice(0, 100);
     setActionLog(updated);
-    localStorage.setItem('admin_action_log', JSON.stringify(updated));
+    kernelStorage.setItem('admin_action_log', JSON.stringify(updated));
   };
 
   // Real-time synchronization with Firestore
@@ -107,9 +108,9 @@ export default function AdminPanelWindow() {
 
   // Staff list from legacy backend (optional)
   useEffect(() => {
-    const token = localStorage.getItem('novaura-auth-token');
+    const token = kernelStorage.getItem('novaura-auth-token');
     if (!token) return;
-    fetch(`${BACKEND_URL}/api/auth/staff-allowlist`, {
+    fetch(`${BACKEND_URL}/auth/staff-allowlist`, {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => r.ok ? r.json() : null).then(data => {
       if (data?.allowlist) setStaffList(data.allowlist);
@@ -174,9 +175,9 @@ export default function AdminPanelWindow() {
 
   const inviteStaff = () => {
     if (!staffInviteEmail.trim()) return;
-    const token = localStorage.getItem('auth_token');
+    const token = kernelStorage.getItem('auth_token');
     if (token) {
-      fetch(`${BACKEND_URL}/api/auth/staff-invite`, {
+      fetch(`${BACKEND_URL}/auth/staff-invite`, {
         method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: staffInviteEmail, firstName: 'Staff', lastName: 'Member', title: staffInviteTitle || 'Team Member' })
       }).then(r => r.json()).then(data => {

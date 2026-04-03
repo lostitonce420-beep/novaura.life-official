@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Sparkles, TrendingUp, Brain, Star, Zap, Clock, Heart, BarChart3, ArrowRight } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const MODELS = [
   { id: 'nova', name: 'Nova', emoji: '✨', tagline: 'Creative powerhouse', tier: 'S', latency: 'fast', strengths: ['Creative writing', 'Brainstorming', 'Art direction'], bestFor: 'Creative tasks, storytelling, ideation', personality: 'Warm, imaginative, playful' },
@@ -21,7 +22,7 @@ export default function ModelPersonalitiesWindow() {
   const [tab, setTab] = useState('gallery');
   const [selectedId, setSelectedId] = useState(null);
   const [favorites, setFavorites] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('model_favorites') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('model_favorites') || '[]'); } catch { return []; }
   });
   // Recommend state
   const [taskType, setTaskType] = useState('creative');
@@ -35,7 +36,7 @@ export default function ModelPersonalitiesWindow() {
   const toggleFav = (id) => {
     const next = favorites.includes(id) ? favorites.filter(f => f !== id) : [...favorites, id];
     setFavorites(next);
-    localStorage.setItem('model_favorites', JSON.stringify(next));
+    kernelStorage.setItem('model_favorites', JSON.stringify(next));
   };
 
   const selected = MODELS.find(m => m.id === selectedId);

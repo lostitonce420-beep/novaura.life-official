@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 import {
   Cloud, Sun, CloudRain, CloudSnow, CloudLightning, Wind,
   Droplets, Eye, Thermometer, MapPin, RefreshCw, Search,
   Sunrise, Sunset, ArrowUp, ArrowDown, Loader2, CloudFog,
 } from 'lucide-react';
+
 
 const WMO_CODES = {
   0: { label: 'Clear sky', icon: Sun, color: 'text-yellow-400' },
@@ -80,7 +82,7 @@ export default function WeatherWindow() {
       const data = await fetchWeather(lat, lon);
       setWeather(data);
       setLocation({ lat, lon, name });
-      localStorage.setItem('novaura_weather_loc', JSON.stringify({ lat, lon, name }));
+      kernelStorage.setItem('novaura_weather_loc', JSON.stringify({ lat, lon, name }));
     } catch (err) {
       setError('Failed to load weather data');
     } finally {
@@ -89,7 +91,7 @@ export default function WeatherWindow() {
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem('novaura_weather_loc');
+    const saved = kernelStorage.getItem('novaura_weather_loc');
     if (saved) {
       try {
         const { lat, lon, name } = JSON.parse(saved);

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 
 const GraphicsContext = createContext();
 
@@ -11,11 +12,11 @@ export const GRAPHICS_LEVELS = {
 export const GRAPHICS_PRESETS = {
   [GRAPHICS_LEVELS.LOW]: {
     name: 'Low',
-    description: 'Static themes, no particles, minimal animations',
+    description: 'Lightweight particles for weaker devices',
     particles: {
-      enabled: false,
-      count: 0,
-      microCount: 0,
+      enabled: true,
+      count: 60,
+      microCount: 30,
       links: false,
       mouseInteraction: false,
       colorCycling: false
@@ -82,7 +83,7 @@ export const GRAPHICS_PRESETS = {
 
 export function GraphicsProvider({ children }) {
   const [graphicsLevel, setGraphicsLevel] = useState(() => {
-    const saved = localStorage.getItem('novaura-graphics-level');
+    const saved = kernelStorage.getItem('novaura-graphics-level');
     return saved || GRAPHICS_LEVELS.MEDIUM;
   });
 
@@ -106,7 +107,7 @@ export function GraphicsProvider({ children }) {
     
     if (hasWebGPU && cores >= 8 && memory >= 8 && !isTouch) {
       recommended = GRAPHICS_LEVELS.HIGH;
-    } else if (cores <= 4 || memory <= 4 || (isTouch && isHighRes)) {
+    } else if (cores < 4 || memory < 4) {
       recommended = GRAPHICS_LEVELS.LOW;
     } else {
       recommended = GRAPHICS_LEVELS.MEDIUM;
@@ -114,7 +115,7 @@ export function GraphicsProvider({ children }) {
     
     setDetectedLevel(recommended);
     
-    if (!localStorage.getItem('novaura-graphics-level')) {
+    if (!kernelStorage.getItem('novaura-graphics-level')) {
       setGraphicsLevel(recommended);
     }
     
@@ -123,7 +124,7 @@ export function GraphicsProvider({ children }) {
 
   const setLevel = useCallback((level) => {
     setGraphicsLevel(level);
-    localStorage.setItem('novaura-graphics-level', level);
+    kernelStorage.setItem('novaura-graphics-level', level);
   }, []);
 
   const settings = GRAPHICS_PRESETS[graphicsLevel] || GRAPHICS_PRESETS[GRAPHICS_LEVELS.MEDIUM];

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shirt, Palette, Save, Trash2, Eye, Download, Plus, Settings, Grid } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const TYPES = ['top','bottom','dress','shoes','hat','coat','accessory','full-body'];
 const CATEGORIES = ['casual','formal','athletic','fantasy','futuristic','historical','gothic'];
@@ -11,7 +12,7 @@ const TYPE_EMOJI = { top:'👕', bottom:'👖', dress:'👗', shoes:'👟', hat:
 
 export default function ClothingCreatorWindow() {
   const [items, setItems] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('clothing_items') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('clothing_items') || '[]'); } catch { return []; }
   });
   const [current, setCurrent] = useState({
     name: 'New Item', type: 'top', category: 'casual', baseColor: '#4ECDC4',
@@ -25,14 +26,14 @@ export default function ClothingCreatorWindow() {
     const item = { ...current, id: `item-${Date.now()}`, createdAt: new Date().toISOString() };
     const updated = [...items, item];
     setItems(updated);
-    localStorage.setItem('clothing_items', JSON.stringify(updated));
+    kernelStorage.setItem('clothing_items', JSON.stringify(updated));
     setCurrent({ ...current, name: 'New Item' });
   };
 
   const deleteItem = (id) => {
     const updated = items.filter(i => i.id !== id);
     setItems(updated);
-    localStorage.setItem('clothing_items', JSON.stringify(updated));
+    kernelStorage.setItem('clothing_items', JSON.stringify(updated));
   };
 
   const loadItem = (item) => {

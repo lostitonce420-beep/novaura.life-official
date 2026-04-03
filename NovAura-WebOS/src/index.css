@@ -157,6 +157,131 @@
         --shadow-window: 0 4px 24px hsl(40 15% 60% / 0.25), 0 0 0 1px hsl(150 25% 60% / 0.15);
     }
     
+    /* === MATRIX THEME === */
+    [data-theme="matrix"] {
+        --theme-name: 'matrix';
+        --background: 120 100% 2%;
+        --foreground: 120 100% 95%;
+        --primary: 120 100% 50%;
+        --primary-foreground: 0 0% 0%;
+        --primary-glow: 120 100% 55%;
+        --secondary: 110 100% 55%;
+        --secondary-foreground: 0 0% 0%;
+        --accent: 100 100% 55%;
+        --accent-foreground: 0 0% 0%;
+        --window-bg: 120 100% 3%;
+        --window-border: 120 100% 40%;
+        --window-header: 120 100% 2%;
+        --card: 120 100% 4%;
+        --muted: 120 50% 10%;
+        --border: 120 50% 15%;
+        --input: 120 50% 12%;
+        --ring: 120 100% 50%;
+        --shadow-glow-cyan: 0 0 30px hsl(120 100% 50% / 0.4), 0 0 60px hsl(120 100% 50% / 0.2);
+        --shadow-glow-purple: 0 0 30px hsl(110 100% 55% / 0.4), 0 0 60px hsl(110 100% 55% / 0.2);
+        --shadow-window: 0 8px 32px hsl(0 0% 0% / 0.9), 0 0 0 1px hsl(120 100% 40% / 0.3);
+    }
+    
+    /* === STORMY THEME === */
+    [data-theme="stormy"] {
+        --theme-name: 'stormy';
+        --background: 220 15% 8%;
+        --foreground: 210 20% 95%;
+        --primary: 215 25% 60%;
+        --primary-foreground: 220 15% 5%;
+        --primary-glow: 215 30% 65%;
+        --secondary: 260 30% 60%;
+        --secondary-foreground: 220 15% 5%;
+        --accent: 200 30% 55%;
+        --accent-foreground: 220 15% 5%;
+        --window-bg: 220 15% 7%;
+        --window-border: 215 25% 50%;
+        --window-header: 220 15% 6%;
+        --card: 220 15% 9%;
+        --muted: 220 12% 18%;
+        --border: 220 12% 20%;
+        --input: 220 12% 16%;
+        --ring: 215 25% 60%;
+        --shadow-glow-cyan: 0 0 25px hsl(215 25% 60% / 0.3), 0 0 50px hsl(215 25% 60% / 0.15);
+        --shadow-glow-purple: 0 0 25px hsl(260 30% 60% / 0.3), 0 0 50px hsl(260 30% 60% / 0.15);
+        --shadow-window: 0 8px 32px hsl(220 15% 3% / 0.9), 0 0 0 1px hsl(215 25% 50% / 0.25);
+    }
+    
+    /* === AURORA THEME === */
+    [data-theme="aurora"] {
+        --theme-name: 'aurora';
+        --background: 220 35% 8%;
+        --foreground: 190 80% 95%;
+        --primary: 190 80% 55%;
+        --primary-foreground: 220 35% 5%;
+        --primary-glow: 190 80% 65%;
+        --secondary: 270 60% 65%;
+        --secondary-foreground: 220 35% 5%;
+        --accent: 140 70% 55%;
+        --accent-foreground: 220 35% 5%;
+        --window-bg: 220 35% 7%;
+        --window-border: 190 80% 50%;
+        --window-header: 220 35% 6%;
+        --card: 220 35% 9%;
+        --muted: 220 30% 18%;
+        --border: 220 30% 22%;
+        --input: 220 30% 16%;
+        --ring: 190 80% 55%;
+        --shadow-glow-cyan: 0 0 35px hsl(190 80% 55% / 0.4), 0 0 70px hsl(190 80% 55% / 0.2);
+        --shadow-glow-purple: 0 0 35px hsl(270 60% 65% / 0.4), 0 0 70px hsl(270 60% 65% / 0.2);
+        --shadow-window: 0 8px 32px hsl(220 35% 3% / 0.9), 0 0 0 1px hsl(190 80% 50% / 0.3);
+    }
+    
+    /* === MESHWATER THEME === */
+    [data-theme="meshwater"] {
+        --theme-name: 'meshwater';
+        --background: 210 60% 12%;
+        --foreground: 195 80% 95%;
+        --primary: 195 90% 50%;
+        --primary-foreground: 210 60% 5%;
+        --primary-glow: 195 90% 60%;
+        --secondary: 175 80% 45%;
+        --secondary-foreground: 210 60% 5%;
+        --accent: 200 90% 55%;
+        --accent-foreground: 210 60% 5%;
+        --window-bg: 210 60% 10%;
+        --window-border: 195 90% 45%;
+        --window-header: 210 60% 8%;
+        --card: 210 60% 13%;
+        --muted: 210 50% 20%;
+        --border: 210 50% 25%;
+        --input: 210 50% 18%;
+        --ring: 195 90% 50%;
+        --shadow-glow-cyan: 0 0 30px hsl(195 90% 50% / 0.35), 0 0 60px hsl(195 90% 50% / 0.18);
+        --shadow-glow-purple: 0 0 30px hsl(175 80% 45% / 0.35), 0 0 60px hsl(175 80% 45% / 0.18);
+        --shadow-window: 0 8px 32px hsl(210 60% 5% / 0.9), 0 0 0 1px hsl(195 90% 45% / 0.28);
+    }
+    
+    /* === BLAZE THEME === */
+    [data-theme="blaze"] {
+        --theme-name: 'blaze';
+        --background: 25 60% 6%;
+        --foreground: 35 90% 95%;
+        --primary: 35 95% 55%;
+        --primary-foreground: 25 60% 5%;
+        --primary-glow: 35 95% 65%;
+        --secondary: 15 85% 55%;
+        --secondary-foreground: 25 60% 5%;
+        --accent: 0 80% 55%;
+        --accent-foreground: 25 60% 5%;
+        --window-bg: 25 60% 5%;
+        --window-border: 35 95% 45%;
+        --window-header: 25 60% 4%;
+        --card: 25 60% 7%;
+        --muted: 25 50% 18%;
+        --border: 25 50% 22%;
+        --input: 25 50% 16%;
+        --ring: 35 95% 55%;
+        --shadow-glow-cyan: 0 0 30px hsl(35 95% 55% / 0.4), 0 0 60px hsl(35 95% 55% / 0.2);
+        --shadow-glow-purple: 0 0 30px hsl(15 85% 55% / 0.4), 0 0 60px hsl(15 85% 55% / 0.2);
+        --shadow-window: 0 8px 32px hsl(25 60% 3% / 0.9), 0 0 0 1px hsl(35 95% 45% / 0.3);
+    }
+    
     * {
         @apply border-border;
     }

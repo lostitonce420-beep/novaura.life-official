@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Radio, Mic, MicOff, Volume2, VolumeX, Play, Square, Settings, Users, Clock, Wifi, Music } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const SHOW_TYPES = [
   { id: 'talkshow', label: 'Talk Show', icon: '🎙️', desc: 'Live discussions and interviews' },
@@ -21,7 +22,7 @@ export default function LiveBroadcastWindow() {
   const [listeners, setListeners] = useState(0);
   const [view, setView] = useState('setup'); // setup | live | episodes
   const [episodes, setEpisodes] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('broadcast_episodes') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('broadcast_episodes') || '[]'); } catch { return []; }
   });
   const timerRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -104,7 +105,7 @@ export default function LiveBroadcastWindow() {
     };
     const updated = [...episodes, episode];
     setEpisodes(updated);
-    localStorage.setItem('broadcast_episodes', JSON.stringify(updated));
+    kernelStorage.setItem('broadcast_episodes', JSON.stringify(updated));
 
     setIsLive(false);
     setAudioLevel(0);

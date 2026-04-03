@@ -6,11 +6,50 @@
 import { Router } from 'express';
 import * as admin from 'firebase-admin';
 
+import { secretService } from '../../services/secretService';
+
 const router = Router();
 
-// Google Custom Search API (you'll need to set this up)
-const GOOGLE_API_KEY = process.env.GOOGLE_SEARCH_API_KEY;
-const GOOGLE_CX = process.env.GOOGLE_SEARCH_CX; // Custom Search Engine ID
+function webFallbackResponse(query: string, reason = 'Search provider unavailable') {
+  return {
+    query,
+    results: [
+      {
+        title: `NovAura is more than search — explore the platform`,
+        url: 'https://novaura.life/platform/feed',
+        snippet: 'Search is temporarily degraded. Jump into the platform feed, creation tools, and app ecosystem while services recover.',
+        displayUrl: 'novaura.life'
+      },
+      {
+        title: `Search query captured: "${query}"`,
+        url: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+        snippet: 'External search fallback. Open this query directly while we revalidate provider keys.',
+        displayUrl: 'google.com'
+      }
+    ],
+    fallback: true,
+    message: reason,
+  };
+}
+
+function imageFallbackResponse(query: string, reason = 'Image search provider unavailable') {
+  return {
+    query,
+    images: [],
+    fallback: true,
+    message: reason,
+    externalSearchUrl: `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`,
+  };
+}
+
+/**
+ * Helper to get search credentials from Secret Manager or environment
+ */
+async function getSearchCredentials() {
+  const apiKey = await secretService.getSecret('GOOGLE_SEARCH_API_KEY');
+  const cx = await secretService.getSecret('GOOGLE_SEARCH_CX');
+  return { apiKey, cx };
+}
 
 /**
  * Web Search
@@ -25,18 +64,22 @@ router.get('/', async (req, res) => {
       return;
     }
 
-    // For now, return mock results or use Google API if configured
-    if (GOOGLE_API_KEY && GOOGLE_CX) {
+    const { apiKey, cx } = await getSearchCredentials();
+
+    if (apiKey && cx) {
       const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_CX}&q=${encodeURIComponent(q)}&start=${(Number(page) - 1) * 10 + 1}`
+        `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(q)}&start=${(Number(page) - 1) * 10 + 1}`
       );
-      
+
       if (!response.ok) {
-        throw new Error(`Google API error: ${response.status}`);
+        const detail = await response.text().catch(() => '');
+        console.warn(`[Search] Google API degraded (${response.status}): ${detail}`);
+        res.json(webFallbackResponse(q, `Search degraded (${response.status}) — fallback active`));
+        return;
       }
-      
+
       const data = await response.json();
-      
+
       res.json({
         query: q,
         results: data.items?.map((item: any) => ({
@@ -48,25 +91,15 @@ router.get('/', async (req, res) => {
         totalResults: data.searchInformation?.totalResults || 0,
         searchTime: data.searchInformation?.searchTime || 0
       });
+      return;
     } else {
-      // Mock results for development
-      res.json({
-        query: q,
-        results: [
-          {
-            title: `Results for "${q}" - NovAura Search`,
-            url: 'https://novaura.life',
-            snippet: 'Configure GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_CX to enable real search results.',
-            displayUrl: 'novaura.life'
-          }
-        ],
-        mock: true,
-        message: 'Real search requires Google API configuration'
-      });
+      res.json(webFallbackResponse(q, 'Search credentials missing — fallback active'));
+      return;
     }
   } catch (err: any) {
     console.error('Search error:', err);
-    res.status(500).json({ error: 'Search failed', detail: err.message });
+    const query = typeof req.query.q === 'string' ? req.query.q : '';
+    res.json(webFallbackResponse(query, `Search temporarily unavailable: ${err.message || 'unknown error'}`));
   }
 });
 
@@ -83,17 +116,22 @@ router.get('/images', async (req, res) => {
       return;
     }
 
-    if (GOOGLE_API_KEY && GOOGLE_CX) {
+    const { apiKey, cx } = await getSearchCredentials();
+
+    if (apiKey && cx) {
       const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_CX}&q=${encodeURIComponent(q)}&searchType=image&num=10`
+        `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(q)}&searchType=image&num=10`
       );
-      
+
       if (!response.ok) {
-        throw new Error(`Google API error: ${response.status}`);
+        const detail = await response.text().catch(() => '');
+        console.warn(`[Search] Google image API degraded (${response.status}): ${detail}`);
+        res.json(imageFallbackResponse(q, `Image search degraded (${response.status}) — fallback active`));
+        return;
       }
-      
+
       const data = await response.json();
-      
+
       res.json({
         query: q,
         images: data.items?.map((item: any) => ({
@@ -105,18 +143,15 @@ router.get('/images', async (req, res) => {
           height: item.image?.height
         })) || []
       });
+      return;
     } else {
-      // Mock image results
-      res.json({
-        query: q,
-        images: [],
-        mock: true,
-        message: 'Real image search requires Google API configuration'
-      });
+      res.json(imageFallbackResponse(q, 'Image search credentials missing — fallback active'));
+      return;
     }
   } catch (err: any) {
     console.error('Image search error:', err);
-    res.status(500).json({ error: 'Image search failed', detail: err.message });
+    const query = typeof req.query.q === 'string' ? req.query.q : '';
+    res.json(imageFallbackResponse(query, `Image search temporarily unavailable: ${err.message || 'unknown error'}`));
   }
 });
 

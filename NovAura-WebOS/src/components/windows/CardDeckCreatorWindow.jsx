@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Layers, Download, Save, Shuffle, Eye, ArrowLeft, Plus, Trash2, Grid } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const SUITS = [
   { id: 'hearts', name: 'Hearts', symbol: '♥', color: '#e74c3c' },
@@ -31,7 +32,7 @@ const THEMES = [
 
 export default function CardDeckCreatorWindow() {
   const [decks, setDecks] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('aetherium_decks') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('aetherium_decks') || '[]'); } catch { return []; }
   });
   const [theme, setTheme] = useState(THEMES[0]);
   const [deckName, setDeckName] = useState('My Deck');
@@ -40,7 +41,7 @@ export default function CardDeckCreatorWindow() {
   const [showBack, setShowBack] = useState(false);
   const [view, setView] = useState('editor'); // editor | saved
 
-  const saveDeck = (updated) => { setDecks(updated); localStorage.setItem('aetherium_decks', JSON.stringify(updated)); };
+  const saveDeck = (updated) => { setDecks(updated); kernelStorage.setItem('aetherium_decks', JSON.stringify(updated)); };
 
   const cards = useMemo(() => {
     const result = [];

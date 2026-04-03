@@ -17,6 +17,7 @@ import { Button } from '../ui/button';
 import { toast } from 'sonner';
 import { DomainAPI } from '../../services/apiCodex';
 import { useAuth } from '../../hooks/useAuth.jsx';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 // ── Nova Avatar Component ────────────────────────────────────────────────────
 function NovaAvatar({ mood, isThinking, size = 'normal' }) {
@@ -289,9 +290,9 @@ export default function NovaConciergeWindow() {
     setIsLoading(true);
     try {
       // Load from localStorage first (quick)
-      const savedWidgets = localStorage.getItem('novaura-widgets');
-      const savedActivities = localStorage.getItem('novaura-activities');
-      const savedStats = localStorage.getItem('novaura-stats');
+      const savedWidgets = kernelStorage.getItem('novaura-widgets');
+      const savedActivities = kernelStorage.getItem('novaura-activities');
+      const savedStats = kernelStorage.getItem('novaura-stats');
       
       if (savedWidgets) setWidgets(JSON.parse(savedWidgets));
       if (savedActivities) setActivities(JSON.parse(savedActivities));
@@ -310,7 +311,7 @@ export default function NovaConciergeWindow() {
   
   const saveWidgets = (newWidgets) => {
     setWidgets(newWidgets);
-    localStorage.setItem('novaura-widgets', JSON.stringify(newWidgets));
+    kernelStorage.setItem('novaura-widgets', JSON.stringify(newWidgets));
   };
   
   const addActivity = (action, result, type) => {
@@ -322,7 +323,7 @@ export default function NovaConciergeWindow() {
     };
     const updated = [newActivity, ...activities].slice(0, 20);
     setActivities(updated);
-    localStorage.setItem('novaura-activities', JSON.stringify(updated));
+    kernelStorage.setItem('novaura-activities', JSON.stringify(updated));
   };
   
   const handleCommand = async () => {
@@ -362,7 +363,7 @@ export default function NovaConciergeWindow() {
     // Update stats
     const newStats = { ...stats, domains: stats.domains + 1 };
     setStats(newStats);
-    localStorage.setItem('novaura-stats', JSON.stringify(newStats));
+    kernelStorage.setItem('novaura-stats', JSON.stringify(newStats));
   };
   
   return (
@@ -492,7 +493,7 @@ export default function NovaConciergeWindow() {
             <h3 className="text-xs font-medium text-gray-400">Recent Activity</h3>
             {activities.length > 0 && (
               <button 
-                onClick={() => { setActivities([]); localStorage.removeItem('novaura-activities'); }}
+                onClick={() => { setActivities([]); kernelStorage.removeItem('novaura-activities'); }}
                 className="text-[10px] text-gray-600 hover:text-gray-400"
               >
                 Clear

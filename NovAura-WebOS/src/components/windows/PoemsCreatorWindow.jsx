@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { BookOpen, Sparkles, Save, Trash2, Eye, Feather, PenTool } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const STYLES = [
   { id: 'free-verse', name: 'Free Verse', desc: 'No fixed structure', icon: '✨' },
@@ -45,7 +46,7 @@ export default function PoemsCreatorWindow() {
   const [poem, setPoem] = useState(createPoem());
   const [library, setLibrary] = useState(() => {
     try {
-      const stored = localStorage.getItem('poems_library');
+      const stored = kernelStorage.getItem('poems_library');
       return stored ? JSON.parse(stored) : [];
     } catch { return []; }
   });
@@ -54,7 +55,7 @@ export default function PoemsCreatorWindow() {
 
   const saveLibrary = (updated) => {
     setLibrary(updated);
-    localStorage.setItem('poems_library', JSON.stringify(updated));
+    kernelStorage.setItem('poems_library', JSON.stringify(updated));
   };
 
   const wordCount = poem.content.trim() ? poem.content.trim().split(/\s+/).length : 0;

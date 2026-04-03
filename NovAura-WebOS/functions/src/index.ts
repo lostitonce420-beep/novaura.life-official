@@ -8,6 +8,10 @@
  * Initialized with Service Account for God Mode access
  */
 
+// Load environment variables FIRST (before any other imports)
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 // MUST import init first — initializes Firebase Admin before any route modules
 import { admin } from './init';
 import * as functions from 'firebase-functions';
@@ -22,8 +26,11 @@ const messaging = admin.messaging();
 // EXPRESS API (Auth, AI, Domains)
 // ═══════════════════════════════════════════════════════════════
 
-// Export as Firebase HTTP Function
-export const api = functions.https.onRequest(apiApp);
+// Export as Firebase HTTP Function — with access to Stripe secrets
+export const api = functions.runWith({
+  timeoutSeconds: 120,
+  memory: '512MB'
+}).https.onRequest(apiApp);
 
 // ═══════════════════════════════════════════════════════════════
 // SOCIAL NETWORK FUNCTIONS

@@ -6,6 +6,7 @@ import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { checkHealth, probeOllama, buildTaskRouting } from '../services/aiService';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 
 // Common local LLM URLs
 const PRESET_URLS = [
@@ -167,7 +168,7 @@ export default function SetupPage({ onComplete }) {
         lmstudioModels: models,
       } : {}),
     };
-    localStorage.setItem('llm_config', JSON.stringify(config));
+    kernelStorage.setItem('llm_config', JSON.stringify(config));
     onComplete(config);
   };
 
@@ -412,7 +413,7 @@ export default function SetupPage({ onComplete }) {
                 directBrowserConnection: true,
                 availableModels: [],
               };
-              localStorage.setItem('llm_config', JSON.stringify(config));
+              kernelStorage.setItem('llm_config', JSON.stringify(config));
               onComplete(config);
             }}
             variant="ghost"
@@ -421,6 +422,26 @@ export default function SetupPage({ onComplete }) {
             Skip Setup (Dev Mode)
           </Button>
         )}
+
+        {/* Skip Setup - Always allow entry */}
+        <Button
+          onClick={() => {
+            const config = {
+              useLocalLLM: false,
+              localLLMUrl: null,
+              geminiConfigured: true, // Assume backend has AI
+              directBrowserConnection: true,
+              availableModels: [],
+              skippedSetup: true,
+            };
+            kernelStorage.setItem('llm_config', JSON.stringify(config));
+            onComplete(config);
+          }}
+          variant="ghost"
+          className="w-full mt-4 text-muted-foreground hover:text-primary"
+        >
+          Skip Setup & Use Cloud AI
+        </Button>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
           Your AI-powered desktop environment awaits

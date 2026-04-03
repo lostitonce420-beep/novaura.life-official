@@ -10,7 +10,7 @@ export default function GraphicsSettingsWindow() {
       id: GRAPHICS_LEVELS.LOW,
       name: 'Low',
       description: 'Maximum performance',
-      detail: 'Static themes, no particles, minimal animations. Best for older devices or maximum battery life.',
+      detail: 'Light particle effects (60 particles), minimal animations. Best for older devices or maximum battery life.',
       icon: Battery,
       color: 'text-green-400',
       bgColor: 'bg-green-500/20',

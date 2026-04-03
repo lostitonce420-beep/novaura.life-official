@@ -6,6 +6,7 @@ import {
 import { ScrollArea } from '../../ui/scroll-area';
 import axios from 'axios';
 import { BACKEND_URL } from '../../../services/aiService';
+import { kernelStorage } from '../../../kernel/kernelStorage.js';
 
 const AI_TOOLS = [
   { id: 'describe', label: 'Describe', icon: Eye, color: 'text-green-400',
@@ -79,7 +80,7 @@ export default function AIWritingPanel({ selectedText = '', storyBible = null, o
         }
       }
 
-      const token = localStorage.getItem('auth_token');
+      const token = kernelStorage.getItem('auth_token');
       const res = await axios.post(`${BACKEND_URL}/ai/chat`, {
         provider: 'gemini',
         prompt: `${systemCtx}\n\n---\n\n${prompt}`,

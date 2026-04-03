@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, RefreshCw, Heart, Save, ArrowLeft, Shirt } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const OCCASIONS = [
   { id: 'office', label: 'Office / Work', icon: '💼', vibe: 'Professional yet stylish' },
@@ -56,7 +57,7 @@ export default function OutfitGeneratorWindow() {
   const [currentOutfit, setCurrentOutfit] = useState(null);
   const [outfitIdx, setOutfitIdx] = useState(0);
   const [saved, setSaved] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('saved_outfits') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('saved_outfits') || '[]'); } catch { return []; }
   });
 
   const generate = (occasion) => {
@@ -79,7 +80,7 @@ export default function OutfitGeneratorWindow() {
     const entry = { ...currentOutfit, occasion: selectedOccasion.label, savedAt: new Date().toISOString() };
     const updated = [...saved, entry];
     setSaved(updated);
-    localStorage.setItem('saved_outfits', JSON.stringify(updated));
+    kernelStorage.setItem('saved_outfits', JSON.stringify(updated));
   };
 
   if (selectedOccasion && currentOutfit) {
@@ -118,7 +119,7 @@ export default function OutfitGeneratorWindow() {
           {/* My Wardrobe items */}
           {(() => {
             try {
-              const wardrobe = JSON.parse(localStorage.getItem('clothing_items') || '[]');
+              const wardrobe = JSON.parse(kernelStorage.getItem('clothing_items') || '[]');
               if (wardrobe.length === 0) return null;
               return (
                 <div className="p-3 bg-slate-900/30 rounded-lg border border-slate-800/50">

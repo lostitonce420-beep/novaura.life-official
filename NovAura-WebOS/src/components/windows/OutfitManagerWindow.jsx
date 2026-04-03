@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Shirt, Plus, Trash2, Copy, ArrowLeft, Shuffle, Tag, Sun, Snowflake, Cloud, Leaf, Star, Sparkles, Edit3 } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const OCCASIONS = ['casual', 'formal', 'sport', 'creative', 'party'];
 const SEASONS = ['spring', 'summer', 'fall', 'winter', 'all'];
@@ -8,10 +9,10 @@ const SEASON_EMOJI = { spring: '🌸', summer: '☀️', fall: '🍂', winter: '
 
 export default function OutfitManagerWindow() {
   const [outfits, setOutfits] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('managed_outfits') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('managed_outfits') || '[]'); } catch { return []; }
   });
   const [wardrobe] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('clothing_items') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('clothing_items') || '[]'); } catch { return []; }
   });
   const [view, setView] = useState('list'); // list | create | detail
   const [selectedOutfit, setSelectedOutfit] = useState(null);
@@ -22,7 +23,7 @@ export default function OutfitManagerWindow() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [filterCat, setFilterCat] = useState('all');
 
-  const save = (updated) => { setOutfits(updated); localStorage.setItem('managed_outfits', JSON.stringify(updated)); };
+  const save = (updated) => { setOutfits(updated); kernelStorage.setItem('managed_outfits', JSON.stringify(updated)); };
 
   const createOutfit = () => {
     if (!name.trim()) return;

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Layers, Shuffle, Sparkles, Eye, ExternalLink, Swords, Heart, Zap, Shield, SkullIcon, Package, Trophy, ArrowLeft, ChevronRight } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CARD DATABASE — Aetherium TCG: Chronicles of the Cogwork Realm
@@ -244,10 +245,10 @@ export default function AetheriumTCGWindow() {
   const [battle, setBattle] = useState(null);
   const [selectedNpc, setSelectedNpc] = useState(null);
   const [coins, setCoins] = useState(() => {
-    try { return parseInt(localStorage.getItem('aeth_coins')) || 500; } catch { return 500; }
+    try { return parseInt(kernelStorage.getItem('aeth_coins')) || 500; } catch { return 500; }
   });
   const [wins, setWins] = useState(() => {
-    try { return parseInt(localStorage.getItem('aeth_wins')) || 0; } catch { return 0; }
+    try { return parseInt(kernelStorage.getItem('aeth_wins')) || 0; } catch { return 0; }
   });
   const [hovered, setHovered] = useState(null);
   const [selectedHandCard, setSelectedHandCard] = useState(null);
@@ -256,8 +257,8 @@ export default function AetheriumTCGWindow() {
   const logRef = useRef(null);
 
   useEffect(() => {
-    localStorage.setItem('aeth_coins', coins);
-    localStorage.setItem('aeth_wins', wins);
+    kernelStorage.setItem('aeth_coins', coins);
+    kernelStorage.setItem('aeth_wins', wins);
   }, [coins, wins]);
 
   useEffect(() => {

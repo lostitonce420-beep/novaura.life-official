@@ -38,10 +38,22 @@ let app, auth, googleProvider, db, storage, functions, messaging, ai;
 if (isFirebaseConfigured) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   auth = getAuth(app);
+  
+  // Configure Google Provider with explicit scopes
   googleProvider = new GoogleAuthProvider();
+  googleProvider.addScope('email');
+  googleProvider.addScope('profile');
+  // Only prompt account selection if multiple accounts are available
+  googleProvider.setCustomParameters({
+    prompt: 'select_account'  // users can switch accounts; Firebase restores session automatically
+  });
+  
   db = getFirestore(app);
   storage = getStorage(app);
   functions = getFunctions(app);
+  
+  console.log('[NovAura] Firebase initialized with project:', firebaseConfig.projectId);
+  console.log('[NovAura] Auth domain:', firebaseConfig.authDomain);
 
   // Initialize Cloud Messaging (only in supported browsers)
   isMessagingSupported().then((supported) => {

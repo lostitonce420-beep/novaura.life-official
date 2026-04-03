@@ -6,14 +6,19 @@ import { Readable } from 'stream';
 const router = Router();
 const db = admin.firestore();
 
-// Initialize Drive API with service account
-const serviceAccount = require('../../service-account.json');
-const auth = new google.auth.GoogleAuth({
-  credentials: serviceAccount,
-  scopes: ['https://www.googleapis.com/auth/drive']
-});
-
-const drive = google.drive({ version: 'v3', auth });
+// Lazy initialization of Drive API (avoids deployment timeout)
+let drive: any = null;
+function getDrive(): any {
+  if (!drive) {
+    const serviceAccount = require('../../service-account.json');
+    const auth = new google.auth.GoogleAuth({
+      credentials: serviceAccount,
+      scopes: ['https://www.googleapis.com/auth/drive']
+    });
+    drive = google.drive({ version: 'v3', auth });
+  }
+  return drive;
+}
 
 // Extend Request type
 declare global {
@@ -60,7 +65,7 @@ router.post('/upload', verifyAuth, async (req: Request, res: Response): Promise<
 
     if (!userFolderId) {
       // Create user folder
-      const folder = await drive.files.create({
+      const folder = await getDrive().files.create({
         requestBody: {
           name: `NovAura-${userId.slice(0, 8)}`,
           mimeType: 'application/vnd.google-apps.folder',
@@ -80,7 +85,7 @@ router.post('/upload', verifyAuth, async (req: Request, res: Response): Promise<
       : Buffer.from(content, 'base64');
 
     // Upload file
-    const file = await drive.files.create({
+    const file = await getDrive().files.create({
       requestBody: {
         name: fileName,
         mimeType: mimeType || 'application/octet-stream',
@@ -141,7 +146,7 @@ router.get('/list', verifyAuth, async (req: Request, res: Response): Promise<voi
     }
 
     // List files in folder
-    const response = await drive.files.list({
+    const response = await getDrive().files.list({
       q: `'${userFolderId}' in parents and trashed = false`,
       pageSize: parseInt(limit as string),
       pageToken: (pageToken as string) || undefined,
@@ -176,13 +181,13 @@ router.get('/download/:fileId', verifyAuth, async (req: Request, res: Response):
     }
 
     // Get file metadata
-    const fileMeta = await drive.files.get({
+    const fileMeta = await getDrive().files.get({
       fileId,
       fields: 'name, mimeType'
     });
 
     // Download file
-    const response = await drive.files.get({
+    const response = await getDrive().files.get({
       fileId,
       alt: 'media'
     }, { responseType: 'stream' });
@@ -214,7 +219,7 @@ router.delete('/delete/:fileId', verifyAuth, async (req: Request, res: Response)
     }
 
     // Move to trash
-    await drive.files.update({
+    await getDrive().files.update({
       fileId,
       requestBody: { trashed: true }
     });
@@ -250,7 +255,7 @@ router.post('/share/:fileId', verifyAuth, async (req: Request, res: Response): P
     }
 
     // Create permission
-    const permission = await drive.permissions.create({
+    const permission = await getDrive().permissions.create({
       fileId,
       requestBody: {
         role,
@@ -284,7 +289,7 @@ router.post('/folder', verifyAuth, async (req: Request, res: Response): Promise<
     const userFolderDoc = await db.collection('drive_folders').doc(userId).get();
     const rootFolderId = userFolderDoc.exists ? userFolderDoc.data()?.folderId : null;
 
-    const folder = await drive.files.create({
+    const folder = await getDrive().files.create({
       requestBody: {
         name,
         mimeType: 'application/vnd.google-apps.folder',

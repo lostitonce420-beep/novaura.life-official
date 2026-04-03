@@ -1,29 +1,59 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { RotateCcw, Trophy, Zap, Users, Bot, Sparkles, Crown, Brain, Gamepad2, ChevronLeft } from 'lucide-react';
+import { RotateCcw, Trophy, Zap, Users, Bot, Sparkles, Crown, Brain, Gamepad2, ChevronLeft, Rocket, Sword } from 'lucide-react';
+import GildedCageGame from '../games/GildedCageGame';
 
 // ============================================================================
-// GAMES ARENA — Chess, Checkers, Tic-Tac-Toe
+// GAMES ARENA — Chess, Checkers, Tic-Tac-Toe, Nova Strike, Gilded Cage
 // ============================================================================
+
+// ─── Iframe Game Wrapper (for HTML canvas games) ─────────────────────────────
+
+function IframeGame({ src, onBack, title }) {
+  return (
+    <div className="h-full flex flex-col bg-black">
+      <div className="flex items-center gap-2 px-3 py-2 bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onClick={onBack} className="flex items-center gap-1 text-slate-400 hover:text-white text-sm transition-colors">
+          <ChevronLeft className="w-4 h-4" /> Back to Arena
+        </button>
+        <span className="text-slate-500 text-sm ml-2">{title}</span>
+      </div>
+      <iframe
+        src={src}
+        className="flex-1 w-full border-0"
+        title={title}
+        allow="autoplay"
+      />
+    </div>
+  );
+}
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
 
 function GameSelector({ onSelect }) {
   const games = [
+    { id: 'nova-strike', name: 'Nova Strike', icon: Rocket, color: 'cyan', desc: 'Galactica space shooter — 3 ships, talent tree, boss waves' },
+    { id: 'gilded-cage', name: 'The Gilded Cage', icon: Sword, color: 'gold', desc: 'Steampunk RPG adventure — heist the Governor\'s tower' },
     { id: 'chess', name: 'Chess', icon: Crown, color: 'emerald', desc: 'Full chess with castling, en passant & promotion' },
     { id: 'checkers', name: 'Checkers', icon: Gamepad2, color: 'amber', desc: 'Classic checkers with forced jumps & kings' },
     { id: 'tictactoe', name: 'Tic Tac Toe', icon: Brain, color: 'purple', desc: 'Minimax AI with 4 difficulty levels' },
   ];
-  const colorMap = { emerald: 'from-emerald-600 to-teal-600', amber: 'from-amber-600 to-orange-600', purple: 'from-purple-600 to-pink-600' };
+  const colorMap = {
+    cyan: 'from-cyan-600 to-blue-600',
+    gold: 'from-yellow-600 to-amber-700',
+    emerald: 'from-emerald-600 to-teal-600',
+    amber: 'from-amber-600 to-orange-600',
+    purple: 'from-purple-600 to-pink-600',
+  };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 gap-6">
+    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 gap-4 overflow-y-auto">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-white flex items-center justify-center gap-2 mb-1">
           <Gamepad2 className="w-7 h-7 text-cyan-400" /> Games Arena
         </h1>
         <p className="text-slate-400 text-sm">Choose your game</p>
       </div>
-      <div className="grid gap-4 w-full max-w-sm">
+      <div className="grid gap-3 w-full max-w-sm">
         {games.map(g => (
           <button key={g.id} onClick={() => onSelect(g.id)}
             className={`p-4 rounded-xl bg-gradient-to-r ${colorMap[g.color]} hover:brightness-110 transition-all flex items-center gap-4 text-left`}>
@@ -605,6 +635,20 @@ function Btn({ active, color, onClick, children, className = '' }) {
 export default function GamesArenaWindow() {
   const [game, setGame] = useState(null);
 
+  if (game === 'nova-strike') return <IframeGame src="/games/nova-strike.html" title="Nova Strike" onBack={() => setGame(null)} />;
+  if (game === 'gilded-cage') return (
+    <div className="h-full flex flex-col bg-slate-900">
+      <div className="flex items-center gap-2 px-3 py-2 bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onClick={() => setGame(null)} className="flex items-center gap-1 text-slate-400 hover:text-white text-sm transition-colors">
+          <ChevronLeft className="w-4 h-4" /> Back to Arena
+        </button>
+        <span className="text-slate-500 text-sm ml-2">The Gilded Cage</span>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <GildedCageGame />
+      </div>
+    </div>
+  );
   if (game === 'chess') return <Chess onBack={() => setGame(null)} />;
   if (game === 'checkers') return <Checkers onBack={() => setGame(null)} />;
   if (game === 'tictactoe') return <TicTacToe onBack={() => setGame(null)} />;

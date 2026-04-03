@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { BACKEND_URL } from '../../../services/aiService';
+import { kernelStorage } from '../../../kernel/kernelStorage.js';
 
 const SEVERITY_CONFIG = {
   error: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-400/10' },
@@ -31,7 +32,7 @@ export default function ProblemsPanel({ content = '', storyBible = null }) {
     }
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = kernelStorage.getItem('auth_token');
       const res = await axios.post(`${BACKEND_URL}/ai/chat`, {
         provider: 'gemini',
         prompt: `You are a manuscript editor. Analyze this text and return a JSON array of issues found. Each issue should have: "severity" (error, warning, info), "category" (spelling, grammar, continuity, pacing, style, plot), "message" (short description), "suggestion" (how to fix).${bibleCtx}

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { kernelStorage } from '../../../kernel/kernelStorage.js';
 
 // ── Storage ─────────────────────────────────────────────────
 const STORAGE_REPOS = 'novaura_repo_store';
@@ -6,7 +7,7 @@ const STORAGE_IMPORTED = 'novaura_imported_apps';
 
 function loadImported() {
   try {
-    const raw = localStorage.getItem(STORAGE_IMPORTED);
+    const raw = kernelStorage.getItem(STORAGE_IMPORTED);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return [];
@@ -58,7 +59,7 @@ const useRepoStore = create((set, get) => ({
 
   // ── Persist helper ──
   _persistImported() {
-    localStorage.setItem(STORAGE_IMPORTED, JSON.stringify(get().importedApps));
+    kernelStorage.setItem(STORAGE_IMPORTED, JSON.stringify(get().importedApps));
   },
 
   // ── Search actions ──

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Layout, Plus, Trash2, Type, MessageCircle, Zap, Image, Move, RotateCcw, Download, Palette } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 // ─── Comic Panel Layouts ────────────────────────────────────────────────────
 
@@ -79,7 +80,7 @@ function createPage(layoutId = '2x2') {
 
 function loadComicsLibrary() {
   try {
-    const stored = localStorage.getItem('comics_library');
+    const stored = kernelStorage.getItem('comics_library');
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -91,7 +92,7 @@ function loadComicsLibrary() {
 function saveComicsLibrary(updater, setPages) {
   setPages(prev => {
     const next = typeof updater === 'function' ? updater(prev) : updater;
-    try { localStorage.setItem('comics_library', JSON.stringify(next)); } catch (e) {}
+    try { kernelStorage.setItem('comics_library', JSON.stringify(next)); } catch (e) {}
     return next;
   });
 }

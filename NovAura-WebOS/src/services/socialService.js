@@ -7,11 +7,13 @@
  */
 
 import { db, auth, isFirebaseConfigured } from '../config/firebase';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
   addDoc, query, where, orderBy, limit, onSnapshot,
   serverTimestamp, arrayUnion, arrayRemove, increment,
 } from 'firebase/firestore';
+
 
 // ── Helpers ────────────────────────────────────────────────────
 const COLLECTIONS = {
@@ -24,7 +26,7 @@ const COLLECTIONS = {
 
 function currentUserId() {
   if (auth?.currentUser) return auth.currentUser.uid;
-  const stored = localStorage.getItem('user_data');
+  const stored = kernelStorage.getItem('user_data');
   if (stored) {
     try { return JSON.parse(stored).id || JSON.parse(stored).uid || 'local-user'; } catch { /* */ }
   }
@@ -33,7 +35,7 @@ function currentUserId() {
 
 function currentUserName() {
   if (auth?.currentUser) return auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || 'User';
-  const stored = localStorage.getItem('user_data');
+  const stored = kernelStorage.getItem('user_data');
   if (stored) {
     try { return JSON.parse(stored).name || JSON.parse(stored).username || 'User'; } catch { /* */ }
   }
@@ -47,10 +49,10 @@ function currentUserAvatar() {
 
 // ── Local fallback store (when Firestore is unavailable) ──────
 function localGet(key, fallback = []) {
-  try { return JSON.parse(localStorage.getItem(`novaura_social_${key}`)) || fallback; } catch { return fallback; }
+  try { return JSON.parse(kernelStorage.getItem(`novaura_social_${key}`)) || fallback; } catch { return fallback; }
 }
 function localSet(key, data) {
-  localStorage.setItem(`novaura_social_${key}`, JSON.stringify(data));
+  kernelStorage.setItem(`novaura_social_${key}`, JSON.stringify(data));
 }
 
 // ══════════════════════════════════════════════════════════════

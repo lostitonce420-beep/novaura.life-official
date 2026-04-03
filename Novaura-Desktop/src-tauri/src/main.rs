@@ -4,6 +4,9 @@
 use tauri::{Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, CustomMenuItem};
 use std::sync::Mutex;
 
+// Terminal module
+mod terminal;
+
 // Commands module
 mod commands {
     use serde::Serialize;
@@ -147,6 +150,14 @@ fn main() {
             commands::get_app_data_dir,
             commands::show_notification,
             commands::get_system_info,
+            // Terminal control commands
+            terminal::terminal_execute,
+            terminal::project_scan_errors,
+            terminal::project_build,
+            terminal::project_hotfix,
+            terminal::project_install_deps,
+            terminal::project_info,
+            terminal::project_list_files,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

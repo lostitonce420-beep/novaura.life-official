@@ -7,13 +7,17 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { toast } from 'sonner';
 
 import { auth, googleProvider, isFirebaseConfigured } from '../config/firebase';
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-o-s-63232239-3ee79.cloudfunctions.net/api';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   updateProfile,
 } from 'firebase/auth';
+
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-systems.cloudfunctions.net/api').replace(/\/$/, '');
 
 export default function AuthPage({ onAuthComplete }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,14 +38,35 @@ export default function AuthPage({ onAuthComplete }) {
 
   useEffect(() => {
     // Check if already logged in
-    const token = localStorage.getItem('auth_token');
-    const user = localStorage.getItem('user_data');
+    const token = kernelStorage.getItem('auth_token');
+    const user = kernelStorage.getItem('user_data');
     if (token && user) {
       try {
         onAuthComplete(JSON.parse(user));
       } catch (e) {
         console.error('Error parsing user data:', e);
       }
+    }
+
+    // Check for redirect result (Google Sign-In with redirect)
+    if (isFirebaseConfigured && auth) {
+      getRedirectResult(auth)
+        .then((result) => {
+          if (result && result.user) {
+            completeAuth(result.user);
+            toast.success('Welcome!', {
+              description: `Signed in as ${result.user.email}`
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('Redirect auth error:', error);
+          if (error.code === 'auth/unauthorized-domain') {
+            toast.error('Domain not authorized', {
+              description: 'Add this domain to Firebase Auth settings'
+            });
+          }
+        });
     }
   }, []);
 
@@ -56,9 +81,16 @@ export default function AuthPage({ onAuthComplete }) {
       photoURL: firebaseUser.photoURL || null,
       avatar: firebaseUser.photoURL || null,
     };
-    // Store a Firebase ID token (or uid as fallback) so the rest of the app sees an auth_token
-    localStorage.setItem('auth_token', firebaseUser.accessToken || firebaseUser.uid);
-    localStorage.setItem('user_data', JSON.stringify(userData));
+    // Get a real ID token (auto-refreshes; works with backend auth middleware)
+    firebaseUser.getIdToken().then(token => {
+      kernelStorage.setItem('auth_token', token);
+      kernelStorage.setItem('novaura-auth-token', token); // aiService reads this key
+    }).catch(() => {
+      const fallback = firebaseUser.uid;
+      kernelStorage.setItem('auth_token', fallback);
+      kernelStorage.setItem('novaura-auth-token', fallback);
+    });
+    kernelStorage.setItem('user_data', JSON.stringify(userData));
     onAuthComplete(userData);
   };
 
@@ -147,18 +179,43 @@ export default function AuthPage({ onAuthComplete }) {
 
     try {
       if (!isFirebaseConfigured || !auth || !googleProvider) {
-        throw new Error('Firebase/Google auth is not configured.');
+        throw new Error('Firebase/Google auth is not configured. Check VITE_FIREBASE_* env vars.');
       }
-      const result = await signInWithPopup(auth, googleProvider);
-      completeAuth(result.user);
-      toast.success('Welcome!', {
-        description: `Signed in as ${result.user.email}`
-      });
+      
+      console.log('[Auth] Starting Google sign-in...');
+      console.log('[Auth] Firebase project:', auth.app?.options?.projectId);
+      console.log('[Auth] Auth domain:', auth.app?.options?.authDomain);
+      
+      // Try popup first (better UX), fall back to redirect if blocked
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        completeAuth(result.user);
+        toast.success('Welcome!', {
+          description: `Signed in as ${result.user.email}`
+        });
+      } catch (popupError) {
+        console.error('[Auth] Popup error:', popupError.code, popupError.message);
+        if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/cancelled-popup-request') {
+          // Fall back to redirect method
+          console.log('[Auth] Popup blocked, using redirect...');
+          await signInWithRedirect(auth, googleProvider);
+          // Page will reload, auth handled in useEffect
+        } else {
+          throw popupError;
+        }
+      }
     } catch (error) {
       console.error('Google auth error:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      
       if (error.code !== 'auth/popup-closed-by-user') {
         const msg = error.code === 'auth/unauthorized-domain'
-          ? 'This domain is not authorized for Google sign-in. Add it in Firebase Console → Auth → Settings → Authorized domains.'
+          ? 'This domain is not authorized. Add it in Firebase Console → Auth → Settings → Authorized domains.'
+          : error.code === 'auth/configuration-not-found'
+          ? 'Google OAuth not configured. Go to Firebase Console → Auth → Sign-in method → Enable Google.'
+          : error.code === 'auth/internal-error'
+          ? 'OAuth configuration error. Check Google Cloud Console → OAuth consent screen is complete.'
           : error.message || 'Google authentication failed';
         toast.error('Google sign-in failed', { description: msg });
       }
@@ -409,8 +466,8 @@ export default function AuthPage({ onAuthComplete }) {
           <Button
             onClick={() => {
               const devUser = { name: 'Dillan', email: 'dev@novaura.life', id: 'dev-1' };
-              localStorage.setItem('auth_token', 'dev-token');
-              localStorage.setItem('user_data', JSON.stringify(devUser));
+              kernelStorage.setItem('auth_token', 'dev-token');
+              kernelStorage.setItem('user_data', JSON.stringify(devUser));
               onAuthComplete(devUser);
             }}
             variant="ghost"

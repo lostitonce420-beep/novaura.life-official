@@ -16,9 +16,14 @@ import CommandPalette from './components/CommandPalette';
 import AuraChatHistory from './components/AuraChatHistory';
 import { useCommandPalette } from './hooks/useCommandPalette';
 import { toast } from 'sonner';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Shield } from 'lucide-react';
 import { AIOrchestrator } from './utils/AIOrchestrator';
 import { smartChat } from './services/aiService';
+import { auth, isFirebaseConfigured } from './config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { loadUserPrefs, saveUserPref, recordSession } from './services/userService';
+import FloatingChatWidget from './components/FloatingChatWidget';
+import { kernelStorage } from './kernel/kernelStorage.js';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -39,58 +44,78 @@ export default function App() {
   const { isOpen: isCommandPaletteOpen, close: closeCommandPalette } = useCommandPalette();
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    const userData = localStorage.getItem('user_data');
-
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-
-        const savedConfig = localStorage.getItem('llm_config');
-        if (savedConfig) {
-          const config = JSON.parse(savedConfig);
-          setLlmConfig(config);
-          setIsSetupComplete(true);
-        }
-      } catch (e) {
-        console.error('Error loading saved session:', e);
-      }
-    }
-    
     // Load saved theme
-    const savedTheme = localStorage.getItem('novaura-theme');
+    const savedTheme = kernelStorage.getItem('novaura-theme');
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
-    
     // Load Aura history and prompt library
     try {
-      const savedHistory = localStorage.getItem('novaura_aura_history');
+      const savedHistory = kernelStorage.getItem('novaura_aura_history');
       if (savedHistory) setAuraHistory(JSON.parse(savedHistory));
-      
-      const savedLibrary = localStorage.getItem('novaura_prompt_library');
+      const savedLibrary = kernelStorage.getItem('novaura_prompt_library');
       if (savedLibrary) setPromptLibrary(JSON.parse(savedLibrary));
     } catch (e) {
       console.error('Error loading Aura memory:', e);
     }
   }, []);
 
-  // URL deep-link support for specific OS features (if any are left)
+  // Firebase Auth — sole source of truth. No localStorage bypass.
+  useEffect(() => {
+    if (!isFirebaseConfigured || !auth) return;
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Get a fresh token (auto-refreshes when expired)
+        const token = await firebaseUser.getIdToken().catch(() => firebaseUser.uid);
+        kernelStorage.setItem('auth_token', token);
+        kernelStorage.setItem('novaura-auth-token', token);
+
+        const userData = {
+          id: firebaseUser.uid,
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          photoURL: firebaseUser.photoURL || null,
+          avatar: firebaseUser.photoURL || null,
+        };
+        kernelStorage.setItem('user_data', JSON.stringify(userData));
+        setCurrentUser(userData);
+        setIsAuthenticated(true);
+        const savedConfig = kernelStorage.getItem('llm_config');
+        if (savedConfig) { setLlmConfig(JSON.parse(savedConfig)); setIsSetupComplete(true); }
+      } else {
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+        kernelStorage.removeItem('auth_token');
+        kernelStorage.removeItem('novaura-auth-token');
+        kernelStorage.removeItem('user_data');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // URL deep-link support — all nav routes handled here
   const location = useLocation();
   useEffect(() => {
     const path = location.pathname;
-    if (path === '/os') {
+    if (path === '/os' || path === '/system') {
       setShowOS(true);
+    } else if (path === '/login' || path === '/register') {
+      setShowOS(true); // auth wall handles it
+    } else if (path === '/platform' || path.startsWith('/platform/')) {
+      setShowOS(true);
+      setPendingWindow('social');
     }
   }, [location.pathname]);
   
   // Persist Aura history
   useEffect(() => {
     if (auraHistory.length > 0) {
-      localStorage.setItem('novaura_aura_history', JSON.stringify(auraHistory));
+      kernelStorage.setItem('novaura_aura_history', JSON.stringify(auraHistory));
     }
   }, [auraHistory]);
 
@@ -329,6 +354,7 @@ export default function App() {
       'comic-creator': 'Comic Creator',
       'business-card': 'Business Cards',
       'appstore': 'Repo Station',
+      'inventory': 'Inventory',
       'profile': 'Profile',
       'game': 'Game',
       'art-studio': 'Art Studio',
@@ -377,6 +403,28 @@ export default function App() {
       setPendingWindow(windowType);
     }
     setShowOS(true);
+  };
+
+  // Handle login from within OS
+  const handleLogin = () => {
+    // Clear current session and go to auth
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    kernelStorage.removeItem('auth_token');
+    kernelStorage.removeItem('user_data');
+  };
+  
+  const handleLogout = () => {
+    // Clear auth state
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    kernelStorage.removeItem('auth_token');
+    kernelStorage.removeItem('user_data');
+    toast.info('Logged out successfully', {
+      description: 'See you next time!',
+    });
+    // Reload to reset app state
+    window.location.reload();
   };
   
   // Open pending window from landing page deep-link
@@ -439,8 +487,19 @@ export default function App() {
       />
 
       {/* Sidebars */}
-      <LeftSidebar windowCount={windows.length} onOpenWindow={openWindow} />
-      <RightSidebar onOpenWindow={openWindow} onOpenGame={(gameId, title) => openWindow('game', title, { gameId, title })} />
+      <LeftSidebar 
+        windowCount={windows.length} 
+        onOpenWindow={openWindow}
+        onExitToPlatform={() => {
+          toast.info('Returning to NovAura Platform...');
+          window.location.href = 'https://novaura.life';
+        }}
+      />
+      <RightSidebar 
+        onOpenWindow={openWindow} 
+        onOpenGame={(gameId, title) => openWindow('game', title, { gameId, title })}
+        onLogout={handleLogout}
+      />
 
       {/* Avatar Chat Button — bottom right */}
       <div className="fixed bottom-28 right-6 z-[850] pointer-events-auto">
@@ -488,23 +547,29 @@ export default function App() {
             const exists = prev.some(p => p.text === prompt.text);
             if (exists) return prev;
             const updated = [...prev, prompt];
-            localStorage.setItem('novaura_prompt_library', JSON.stringify(updated));
+            kernelStorage.setItem('novaura_prompt_library', JSON.stringify(updated));
             return updated;
           });
         }}
         onDeletePrompt={(promptId) => {
           setPromptLibrary(prev => {
             const updated = prev.filter(p => p.id !== promptId);
-            localStorage.setItem('novaura_prompt_library', JSON.stringify(updated));
+            kernelStorage.setItem('novaura_prompt_library', JSON.stringify(updated));
             return updated;
           });
         }}
       />
       
-      {/* DEPLOYMENT MARKER - Green dot means novaura-systems site */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[1001] px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full text-green-400 text-xs font-mono">
-        ● LIVE DEPLOY
-      </div>
+      {/* Auth/Login Button - Top Right */}
+      {!isAuthenticated && (
+        <button
+          onClick={handleLogin}
+          className="fixed top-4 right-20 z-[1000] flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-black/50 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all backdrop-blur-sm"
+        >
+          <Shield className="w-3.5 h-3.5" />
+          <span className="text-[10px] font-medium">Login</span>
+        </button>
+      )}
 
       {/* Aura Memory Toggle Button - Top Right */}
       <button
@@ -547,15 +612,13 @@ export default function App() {
             windowMap[commandId]();
             toast.success(`Opened ${commandId}`);
           } else if (commandId === 'dark-mode') {
-            const newTheme = theme === 'cosmic' ? 'blueNight' : 'cosmic';
+            const newTheme = theme === 'cosmic' ? 'blue-night' : 'cosmic';
             setTheme(newTheme);
-            localStorage.setItem('novaura-theme', newTheme);
+            kernelStorage.setItem('novaura-theme', newTheme);
             document.documentElement.setAttribute('data-theme', newTheme);
             toast.success(`Theme: ${newTheme}`);
           } else if (commandId === 'logout') {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user_data');
-            window.location.reload();
+            handleLogout();
           }
         }}
       />
@@ -577,6 +640,9 @@ export default function App() {
       {/* Help Button - always visible */}
       <HelpButton />
       
+      {/* Floating Nova Chat — persistent bottom-right messenger */}
+      <FloatingChatWidget />
+
       {/* Tips Widget - rotating helpful hints */}
       <TipsWidget />
     </div>

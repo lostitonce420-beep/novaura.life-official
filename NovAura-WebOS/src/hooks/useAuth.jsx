@@ -1,10 +1,11 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { auth, isFirebaseConfigured } from '../config/firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 
 const AuthContext = createContext({
   user: null,
-  loading: false,
+  loading: true,
   isAuthenticated: false,
 });
 
@@ -16,32 +17,12 @@ export function AuthProvider({ children }) {
   });
 
   useEffect(() => {
-    // Check localStorage first
-    let storedUser = null;
-    try {
-      const stored = localStorage.getItem('user_data');
-      if (stored) {
-        storedUser = JSON.parse(stored);
-      }
-    } catch {
-      // Ignore parse errors
-    }
-
-    if (storedUser) {
-      setState({
-        user: storedUser,
-        loading: false,
-        isAuthenticated: true,
-      });
-    }
-
-    // If Firebase is not configured, stop here
+    // Firebase is the only source of truth — no localStorage auth bypass
     if (!isFirebaseConfigured || !auth) {
-      setState(prev => ({ ...prev, loading: false }));
+      setState({ user: null, loading: false, isAuthenticated: false });
       return;
     }
 
-    // Subscribe to Firebase auth
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         const userData = {
@@ -53,19 +34,12 @@ export function AuthProvider({ children }) {
           photoURL: firebaseUser.photoURL,
           avatar: firebaseUser.photoURL,
         };
-        localStorage.setItem('user_data', JSON.stringify(userData));
-        setState({
-          user: userData,
-          loading: false,
-          isAuthenticated: true,
-        });
+        // Cache for faster re-renders only — never used to bypass auth
+        kernelStorage.setItem('novaura_user_cache', JSON.stringify(userData));
+        setState({ user: userData, loading: false, isAuthenticated: true });
       } else {
-        localStorage.removeItem('user_data');
-        setState({
-          user: null,
-          loading: false,
-          isAuthenticated: false,
-        });
+        kernelStorage.removeItem('novaura_user_cache');
+        setState({ user: null, loading: false, isAuthenticated: false });
       }
     });
 

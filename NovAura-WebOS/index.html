@@ -3,17 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>novaura systems</title>
+    <meta name="theme-color" content="#00d9ff" />
+    <meta name="description" content="NovAura OS - The next-generation AI-powered operating system for the web" />
+    <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NovAura OS" />
+    <title>NovAura.life</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <!-- DEPLOYMENT MARKER - If you see this green bar, novaura-systems site is live -->
-    <div style="position:fixed;top:0;left:0;right:0;background:#22c55e;color:#000;text-align:center;padding:4px;font-size:12px;font-family:monospace;z-index:99999">
-      ● NOVAURA.LIFE LIVE - SITE: novaura-systems
-    </div>
-    <div id="root"></div>
+<div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Register Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('[NovAura] SW registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.log('[NovAura] SW registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

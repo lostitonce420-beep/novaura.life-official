@@ -25,9 +25,9 @@ export default function BusinessCardWindow() {
     name: 'Your Name',
     title: 'Creative Director',
     company: 'NovAura',
-    email: 'you@novaura.com',
+    email: 'you@novaura.life',
     phone: '+1 (555) 000-0000',
-    website: 'novaura.com',
+    website: 'novaura.life',
     tagline: 'Building the future',
   });
   const [templateId, setTemplateId] = useState('modern');

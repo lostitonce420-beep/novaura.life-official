@@ -11,6 +11,7 @@ import AIWritingPanel from './literature/AIWritingPanel';
 import StoryBible from './literature/StoryBible';
 import ProblemsPanel from './literature/ProblemsPanel';
 import StatusBar from './literature/StatusBar';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const STORAGE_FILES = 'novaura_lit_files';
 const STORAGE_BIBLE = 'novaura_lit_bible';
@@ -282,15 +283,15 @@ function SettingsPanel({ settings, onUpdate }) {
 export default function LiteratureIDEWindow() {
   // ── State ────────────────────────────────────────
   const [files, setFiles] = useState(() => {
-    try { const d = localStorage.getItem(STORAGE_FILES); return d ? JSON.parse(d) : defaultFiles(); }
+    try { const d = kernelStorage.getItem(STORAGE_FILES); return d ? JSON.parse(d) : defaultFiles(); }
     catch { return defaultFiles(); }
   });
   const [bible, setBible] = useState(() => {
-    try { const d = localStorage.getItem(STORAGE_BIBLE); return d ? JSON.parse(d) : defaultBible(); }
+    try { const d = kernelStorage.getItem(STORAGE_BIBLE); return d ? JSON.parse(d) : defaultBible(); }
     catch { return defaultBible(); }
   });
   const [settings, setSettings] = useState(() => {
-    try { const d = localStorage.getItem(STORAGE_SETTINGS); return d ? JSON.parse(d) : {}; }
+    try { const d = kernelStorage.getItem(STORAGE_SETTINGS); return d ? JSON.parse(d) : {}; }
     catch { return {}; }
   });
 
@@ -312,9 +313,9 @@ export default function LiteratureIDEWindow() {
   const [speaking, setSpeaking] = useState(false);
 
   // ── Persist ──────────────────────────────────────
-  useEffect(() => { localStorage.setItem(STORAGE_FILES, JSON.stringify(files)); }, [files]);
-  useEffect(() => { localStorage.setItem(STORAGE_BIBLE, JSON.stringify(bible)); }, [bible]);
-  useEffect(() => { localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { kernelStorage.setItem(STORAGE_FILES, JSON.stringify(files)); }, [files]);
+  useEffect(() => { kernelStorage.setItem(STORAGE_BIBLE, JSON.stringify(bible)); }, [bible]);
+  useEffect(() => { kernelStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings)); }, [settings]);
 
   // ── Active file ──────────────────────────────────
   const activeFile = activeTabId ? findFileById(files, activeTabId) : null;

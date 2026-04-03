@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
+import { createOrderFromSession } from './orders';
 
 const router = Router();
 
@@ -195,10 +196,63 @@ router.post('/checkout', async (req: Request, res: Response) => {
 });
 
 /**
- * Stripe Webhook.
+ * Verify a completed checkout session — called by OrdersPage on success redirect.
+ * GET /stripe/session/:sessionId
+ */
+router.get('/session/:sessionId', async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items.data.price.product', 'payment_intent']
+    });
+
+    if (session.payment_status !== 'paid') {
+      return res.status(402).json({ error: 'Payment not completed', status: session.payment_status });
+    }
+
+    const items = session.line_items?.data.map((item: any) => ({
+      assetId: item.price?.product?.metadata?.assetId,
+      assetTitle: item.price?.product?.name,
+      thumbnail: item.price?.product?.images?.[0] || null,
+      amountPaid: item.amount_total,
+    })) || [];
+
+    return res.json({
+      verified: true,
+      sessionId: session.id,
+      userId: session.client_reference_id,
+      amountTotal: session.amount_total,
+      currency: session.currency,
+      customerEmail: session.customer_details?.email,
+      items,
+    });
+  } catch (error: any) {
+    console.error('Session verify error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Stripe Webhook — receives raw body for signature verification.
  */
 router.post('/webhook', async (req: Request, res: Response) => {
-  const event = req.body;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  let event: Stripe.Event;
+
+  if (webhookSecret) {
+    const sig = req.headers['stripe-signature'];
+    try {
+      // req.body is a Buffer here (express.raw middleware applied in app.ts)
+      event = stripe.webhooks.constructEvent(req.body, sig as string, webhookSecret);
+    } catch (err: any) {
+      console.error('[Stripe Webhook] Signature verification failed:', err.message);
+      return res.status(400).json({ error: `Webhook signature invalid: ${err.message}` });
+    }
+  } else {
+    // Dev mode — no signature verification
+    event = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  }
+
   const db = admin.firestore();
 
   try {
@@ -228,22 +282,51 @@ router.post('/webhook', async (req: Request, res: Response) => {
       if (session.mode === 'payment') {
         const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { expand: ['data.price.product'] });
         const purchasedAssetIds: string[] = [];
-        
+
         for (const item of lineItems.data) {
           const product = item.price?.product as Stripe.Product;
           if (product && product.metadata?.assetId) {
-            purchasedAssetIds.push(product.metadata.assetId);
+            const assetId = product.metadata.assetId;
+            purchasedAssetIds.push(assetId);
 
-            const assetDoc = await db.collection('assets').doc(product.metadata.assetId).get();
+            const assetDoc = await db.collection('assets').doc(assetId).get();
             if (!assetDoc.exists) continue;
             const assetData = assetDoc.data();
 
+            // ── Create order record + unlock download ────────────────────────
+            try {
+              await createOrderFromSession(
+                session.id,
+                userId,
+                assetId,
+                item.amount_total || 0,
+                db
+              );
+            } catch (err) {
+              console.error(`[Webhook] createOrderFromSession failed for ${assetId}:`, err);
+            }
+
+            // ── Calculate and execute revenue splits ─────────────────────────
             const splits = await calculateBackendRevenueSplits(assetData, item.amount_total!, db);
-            
+
             for (const split of splits) {
               const recipientDoc = await db.collection('users').doc(split.recipientId).get();
               const recipientStripeId = recipientDoc.data()?.stripeAccountId;
 
+              // Write royalty ledger entry regardless of Stripe Connect status
+              const ledgerRef = await db.collection('royalty_ledger').add({
+                stripeSessionId: session.id,
+                assetId,
+                assetTitle: product.name,
+                recipientId: split.recipientId,
+                amount: split.amountCents,
+                percentage: split.percentageUsed,
+                reason: split.reason,
+                status: 'pending_transfer',
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+              });
+
+              // Execute Stripe transfer if creator has Connect account
               if (recipientStripeId && split.amountCents > 0) {
                 try {
                   const transfer = await stripe.transfers.create({
@@ -253,25 +336,16 @@ router.post('/webhook', async (req: Request, res: Response) => {
                     transfer_group: session.id,
                     description: `NovAura: ${split.reason} | Asset: ${product.name}`,
                   });
-
-                  await db.collection('royalty_ledger').add({
-                    orderId: session.id,
-                    assetId: product.metadata.assetId,
-                    recipientId: split.recipientId,
-                    amount: split.amountCents,
-                    percentage: split.percentageUsed,
-                    reason: split.reason,
-                    stripeTransferId: transfer.id,
-                    createdAt: admin.firestore.FieldValue.serverTimestamp()
-                  });
+                  await ledgerRef.update({ stripeTransferId: transfer.id, status: 'transferred' });
                 } catch (err) {
                   console.error(`Transfer error to ${split.recipientId}:`, err);
+                  await ledgerRef.update({ status: 'transfer_failed' });
                 }
               }
             }
           }
         }
-        
+
         if (purchasedAssetIds.length > 0) {
           await userRef.update({
             purchasedAssetIds: admin.firestore.FieldValue.arrayUnion(...purchasedAssetIds)

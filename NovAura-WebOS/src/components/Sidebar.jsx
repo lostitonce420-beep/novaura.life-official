@@ -11,7 +11,11 @@ import {
   Palette, Eraser, Terminal, CreditCard, Store,
   Dumbbell, BrainCircuit, ChevronDown, ChevronUp, Bot, Heart,
   BellRing, Grid as GridIcon, Shield, Briefcase, Sparkles,
-  CloudSun, Bitcoin, Calculator
+  CloudSun, Bitcoin, Calculator, Package, Smile,
+  // Logout icons
+  LogOut, AlertTriangle, X,
+  // Platform icons
+  ExternalLink, ArrowLeftFromLine
 } from 'lucide-react';
 
 // ─── App Registry ───
@@ -49,6 +53,7 @@ const APP_CATEGORIES = [
       { type: 'script-fusion', label: 'Script Fuse', icon: GitMerge },
       { type: 'workspace', label: 'Workspace', icon: FolderOpen },
       { type: 'dojo', label: 'Dojo', icon: Swords },
+      { type: 'avatar-creator', label: 'Living Avatar', icon: Smile },
     ],
   },
   {
@@ -111,7 +116,7 @@ const APP_CATEGORIES = [
       { type: 'games-arena', label: 'Games', icon: Gamepad2 },
       { type: 'aetherium-tcg', label: 'Aetherium', icon: Swords },
       { type: 'gilded-cage', label: 'Gilded Cage', icon: Crown },
-      { type: 'card-deck-creator', label: 'Deck Builder', icon: Layers },
+      { type: 'inventory', label: 'Inventory', icon: Package },
     ],
   },
 ];
@@ -128,13 +133,111 @@ function SystemWidget({ icon: Icon, label, value }) {
   );
 }
 
+// ─── Pinned apps shown in icon rail when sidebar is collapsed ───
+const PINNED_APPS = [
+  { type: 'chat',          label: 'Chat',         icon: MessageSquare },
+  { type: 'ide',           label: 'Cybeni IDE',   icon: Code2 },
+  { type: 'literature-ide',label: 'Literature',   icon: BookOpen },
+  { type: 'art-studio',    label: 'Art Studio',   icon: Paintbrush },
+  { type: 'games-arena',   label: 'Games',        icon: Gamepad2 },
+  { type: 'terminal',      label: 'Terminal',     icon: Terminal },
+  { type: 'browser',       label: 'Browser',      icon: Globe },
+  { type: 'appstore',      label: 'Repo Station', icon: Store },
+  { type: 'profile',       label: 'Profile',      icon: User },
+];
+
+// Simple rail button (used for expand chevron only)
+function RailButton({ icon: Icon, label, color = 'text-white/40', onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="relative group flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-all"
+    >
+      <Icon className={`w-4 h-4 ${color} group-hover:text-[#39ff14] transition-colors`}
+        style={{ filter: 'none' }}
+        onMouseEnter={e => e.currentTarget.style.filter = 'drop-shadow(0 0 6px #39ff14)'}
+        onMouseLeave={e => e.currentTarget.style.filter = 'none'}
+      />
+      <span className="
+        absolute left-full ml-2.5 z-50
+        px-2.5 py-1 rounded-lg
+        bg-black/90 backdrop-blur-sm
+        border border-white/[0.08]
+        text-[11px] text-white/85 font-medium
+        whitespace-nowrap pointer-events-none
+        opacity-0 -translate-x-1
+        group-hover:opacity-100 group-hover:translate-x-0
+        transition-all duration-150 ease-out
+      ">
+        {label}
+      </span>
+    </button>
+  );
+}
+
+// Rail button with neon glow + click-to-open dropdown
+function RailDropButton({ icon: Icon, label, isOpen, onToggle, onOpen }) {
+  return (
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all"
+        style={{
+          background: isOpen ? 'rgba(57,255,20,0.08)' : 'transparent',
+          boxShadow: isOpen ? '0 0 10px rgba(57,255,20,0.15)' : 'none',
+        }}
+        onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+        onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = 'transparent'; }}
+      >
+        <Icon
+          className="w-4 h-4 transition-all duration-200"
+          style={{
+            color: isOpen ? '#39ff14' : 'rgba(255,255,255,0.4)',
+            filter: isOpen ? 'drop-shadow(0 0 8px #39ff14)' : 'none',
+          }}
+          onMouseEnter={e => { if (!isOpen) { e.currentTarget.style.color = '#39ff14'; e.currentTarget.style.filter = 'drop-shadow(0 0 6px #39ff14)'; }}}
+          onMouseLeave={e => { if (!isOpen) { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.filter = 'none'; }}}
+        />
+      </button>
+      {isOpen && (
+        <div className="absolute left-full ml-2.5 top-0 z-[900] min-w-[160px] overflow-hidden"
+          style={{
+            background: 'rgba(5,5,10,0.96)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(57,255,20,0.2)',
+            borderRadius: '12px',
+            boxShadow: '0 0 20px rgba(57,255,20,0.12), 0 8px 32px rgba(0,0,0,0.6)',
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/[0.06]">
+            <Icon className="w-3.5 h-3.5" style={{ color: '#39ff14', filter: 'drop-shadow(0 0 4px #39ff14)' }} />
+            <span className="text-[12px] text-white/85 font-semibold">{label}</span>
+          </div>
+          {/* Actions */}
+          <div className="p-1.5">
+            <button
+              onClick={onOpen}
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.07] transition-colors text-left group"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-[#39ff14]/60 group-hover:bg-[#39ff14]" style={{ boxShadow: '0 0 4px #39ff14' }} />
+              <span className="text-[11px] text-white/60 group-hover:text-white/90">Open App</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── LEFT SIDEBAR: App Launcher ───
-export function LeftSidebar({ windowCount = 0, onOpenWindow, className = '' }) {
+export function LeftSidebar({ windowCount = 0, onOpenWindow, onExitToPlatform, className = '' }) {
   const [collapsed, setCollapsed] = useState(true);
   const [time, setTime] = useState(new Date());
   const [search, setSearch] = useState('');
   const [expandedCats, setExpandedCats] = useState({ creative: true, writing: true, dev: true, media: true, ai: true, utility: false, admin: false, learn: true });
   const [showSystem, setShowSystem] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   React.useEffect(() => {
     const interval = setInterval(() => setTime(new Date()), 1000);
@@ -157,16 +260,39 @@ export function LeftSidebar({ windowCount = 0, onOpenWindow, className = '' }) {
 
   if (collapsed) {
     return (
-      <div className={`fixed left-0 top-1/2 -translate-y-1/2 z-[800] pointer-events-auto ${className}`}>
-        <button
-          onClick={() => setCollapsed(false)}
-          className="flex flex-col items-center gap-3 py-4 px-1.5 bg-black/60 backdrop-blur-sm border border-white/[0.06] border-l-0 rounded-r-xl hover:bg-white/5 transition-all group"
-        >
-          <ChevronRight className="w-3 h-3 text-white/30 group-hover:text-white/60" />
-          <span className="text-[9px] text-white/40 font-medium [writing-mode:vertical-lr] rotate-180">{timeStr}</span>
-          <Activity className="w-3 h-3 text-primary/40 group-hover:text-primary/70" />
-        </button>
-      </div>
+      <>
+        {/* Click-outside overlay to close dropdown */}
+        {openDropdown && (
+          <div className="fixed inset-0 z-[850]" onClick={() => setOpenDropdown(null)} />
+        )}
+        <div className={`fixed left-0 top-1/2 -translate-y-1/2 z-[900] pointer-events-auto ${className}`}>
+          <div className="flex flex-col items-center gap-1 py-3 px-1.5 bg-black/60 backdrop-blur-sm border border-white/[0.06] border-l-0 rounded-r-xl">
+            {/* Expand button */}
+            <RailButton icon={ChevronRight} label="All Apps" color="text-white/30" onClick={() => setCollapsed(false)} />
+
+            {/* Divider */}
+            <div className="w-5 h-px bg-white/[0.06] my-1" />
+
+            {/* Pinned app icons — scrollable */}
+            <div className="flex flex-col items-center gap-1 overflow-y-auto max-h-[55vh]" style={{ scrollbarWidth: 'none' }}>
+              {PINNED_APPS.map(app => (
+                <RailDropButton
+                  key={app.type}
+                  icon={app.icon}
+                  label={app.label}
+                  isOpen={openDropdown === app.type}
+                  onToggle={() => setOpenDropdown(openDropdown === app.type ? null : app.type)}
+                  onOpen={() => { onOpenWindow?.(app.type, app.label); setOpenDropdown(null); }}
+                />
+              ))}
+            </div>
+
+            {/* Divider + clock */}
+            <div className="w-5 h-px bg-white/[0.06] my-1" />
+            <span className="text-[8px] text-white/25 font-medium [writing-mode:vertical-lr] rotate-180 leading-none py-1">{timeStr}</span>
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -233,6 +359,29 @@ export function LeftSidebar({ windowCount = 0, onOpenWindow, className = '' }) {
             ))}
           </div>
 
+          {/* Exit to Platform */}
+          <div className="shrink-0 border-t border-white/[0.06] px-2 pb-2">
+            <a
+              href="https://novaura.life"
+              onClick={(e) => {
+                if (onExitToPlatform) {
+                  e.preventDefault();
+                  onExitToPlatform();
+                }
+              }}
+              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg bg-gradient-to-r from-neon-cyan/10 to-transparent border border-neon-cyan/20 hover:border-neon-cyan/40 hover:bg-neon-cyan/10 transition-all group"
+            >
+              <div className="w-7 h-7 rounded-lg bg-neon-cyan/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <ExternalLink className="w-4 h-4 text-neon-cyan" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-semibold text-neon-cyan/90 group-hover:text-neon-cyan">Return to Platform</p>
+                <p className="text-[9px] text-white/40">Exit WebOS</p>
+              </div>
+              <ArrowLeftFromLine className="w-3 h-3 text-neon-cyan/50 group-hover:text-neon-cyan opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0" />
+            </a>
+          </div>
+
           {/* System section */}
           <div className="shrink-0 border-t border-white/[0.06]">
             <button
@@ -267,6 +416,13 @@ export function LeftSidebar({ windowCount = 0, onOpenWindow, className = '' }) {
                 <Settings className="w-3 h-3" />
                 <span className="text-[10px]">Settings</span>
               </button>
+              <button
+                onClick={() => onOpenWindow?.('personalization', 'Personalization')}
+                className="w-full flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors text-white/40 hover:text-white/70"
+              >
+                <Palette className="w-3 h-3" />
+                <span className="text-[10px]">Themes</span>
+              </button>
             </div>
           </div>
         </div>
@@ -283,33 +439,126 @@ const GAMES = [
 ];
 
 const SOCIAL = [
-  { id: 'marketplace', title: 'Marketplace', desc: 'NovAura Store', icon: ShoppingBag, windowType: 'appstore', ready: true },
+  { id: 'appstore', title: 'Repo Station', desc: 'Repo Station', icon: ShoppingBag, windowType: 'appstore', ready: true },
   { id: 'community', title: 'Community', desc: 'Connect & Share', icon: Users, windowType: 'social', ready: true },
 ];
 
-export function RightSidebar({ onOpenGame, onOpenWindow, className = '' }) {
+export function RightSidebar({ onOpenGame, onOpenWindow, onLogout, className = '' }) {
   const [collapsed, setCollapsed] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogoutClick = () => setShowLogoutConfirm(true);
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirm(false);
+    if (onLogout) onLogout();
+    else window.location.href = '/login';
+  };
+  const handleCancelLogout = () => setShowLogoutConfirm(false);
 
   if (collapsed) {
     return (
       <div className={`fixed right-0 top-1/2 -translate-y-1/2 z-[800] pointer-events-auto ${className}`}>
-        <button
-          onClick={() => setCollapsed(false)}
-          className="flex flex-col items-center gap-3 py-4 px-1.5 bg-black/60 backdrop-blur-sm border border-white/[0.06] border-r-0 rounded-l-xl hover:bg-white/5 transition-all group"
-        >
-          <ChevronLeft className="w-3 h-3 text-white/30 group-hover:text-white/60" />
-          <span className="text-[9px] text-white/40 font-medium [writing-mode:vertical-lr]">Games</span>
-          <Gamepad2 className="w-3 h-3 text-secondary/40 group-hover:text-secondary/70" />
-        </button>
+        <div className="flex flex-col items-center gap-1 py-3 px-1.5 bg-black/60 backdrop-blur-sm border border-white/[0.06] border-r-0 rounded-l-xl">
+          {/* Expand */}
+          <button
+            onClick={() => setCollapsed(false)}
+            className="relative group flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-all"
+          >
+            <ChevronLeft className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
+            <span className="absolute right-full mr-2.5 z-50 px-2.5 py-1 rounded-lg bg-black/90 backdrop-blur-sm border border-white/[0.08] text-[11px] text-white/85 font-medium whitespace-nowrap pointer-events-none opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 ease-out">
+              Games & More
+            </span>
+          </button>
+
+          <div className="w-5 h-px bg-white/[0.06] my-1" />
+
+          {/* Game icons */}
+          {GAMES.map(game => {
+            const Icon = game.icon;
+            return (
+              <button
+                key={game.id}
+                onClick={() => onOpenWindow?.(game.windowType, game.title)}
+                className="relative group flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-all"
+              >
+                <Icon className="w-4 h-4 text-secondary/50 group-hover:text-secondary/90 transition-colors" />
+                <span className="absolute right-full mr-2.5 z-50 px-2.5 py-1 rounded-lg bg-black/90 backdrop-blur-sm border border-white/[0.08] text-[11px] text-white/85 font-medium whitespace-nowrap pointer-events-none opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 ease-out">
+                  {game.title}
+                </span>
+              </button>
+            );
+          })}
+
+          <div className="w-5 h-px bg-white/[0.06] my-1" />
+
+          {/* Logout */}
+          <button
+            onClick={handleLogoutClick}
+            className="relative group flex items-center justify-center w-8 h-8 rounded-lg hover:bg-neon-red/10 transition-all"
+          >
+            <LogOut className="w-4 h-4 text-neon-red/50 group-hover:text-neon-red transition-colors" />
+            <span className="absolute right-full mr-2.5 z-50 px-2.5 py-1 rounded-lg bg-black/90 backdrop-blur-sm border border-neon-red/20 text-[11px] text-neon-red/90 font-medium whitespace-nowrap pointer-events-none opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 ease-out">
+              Logout
+            </span>
+          </button>
+        </div>
       </div>
     );
   }
+
 
   return (
     <div className={`fixed right-0 top-1/2 -translate-y-1/2 z-[800] pointer-events-auto ${className}`}>
       <div className="rgb-border rgb-border-subtle rounded-l-2xl">
         <div className="rgb-flow-layer" />
         <div className="relative z-10 bg-black rounded-l-2xl w-52 py-3 px-2 space-y-3">
+          {/* Logout Confirmation Dialog */}
+          {showLogoutConfirm && (
+            <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="bg-void-light border border-neon-red/30 rounded-2xl p-5 w-72 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-neon-red/10 rounded-full">
+                    <AlertTriangle className="w-5 h-5 text-neon-red" />
+                  </div>
+                  <h3 className="font-heading font-bold text-white">Logout?</h3>
+                </div>
+                <p className="text-sm text-white/60 mb-5">
+                  Are you sure you want to logout? Any unsaved work may be lost.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCancelLogout}
+                    className="flex-1 px-4 py-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmLogout}
+                    className="flex-1 px-4 py-2 rounded-lg bg-neon-red/20 text-neon-red hover:bg-neon-red/30 border border-neon-red/30 transition-colors text-sm font-medium"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Logout Toggle - At the very top */}
+          <div className="px-1 pb-2 border-b border-white/[0.06]">
+            <button
+              onClick={handleLogoutClick}
+              className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-neon-red/5 border border-neon-red/20 hover:bg-neon-red/10 hover:border-neon-red/30 transition-all group text-left"
+            >
+              <div className="w-8 h-8 rounded-lg bg-neon-red/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <LogOut className="w-4 h-4 text-neon-red" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-neon-red/90 group-hover:text-neon-red">Logout</p>
+                <p className="text-[10px] text-white/30">Switch account or exit</p>
+              </div>
+            </button>
+          </div>
+
           {/* Header */}
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1.5">

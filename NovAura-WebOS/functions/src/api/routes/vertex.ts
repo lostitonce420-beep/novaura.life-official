@@ -8,12 +8,14 @@ import * as admin from 'firebase-admin';
 
 const router = Router();
 
-// Get access token - use VERTEX_AI_KEY if available, else Firebase Admin
+// Get access token - use VERTEX_API_KEY if available, else Firebase Admin
 async function getAccessToken(): Promise<string | null> {
-  if (process.env.VERTEX_AI_KEY) {
-    return process.env.VERTEX_AI_KEY;
+  // Try environment variable first
+  if (process.env.VERTEX_API_KEY) {
+    return process.env.VERTEX_API_KEY;
   }
   
+  // Fallback to Firebase Admin service account
   try {
     const client = await admin.credential.applicationDefault().getAccessToken();
     return client.access_token;

@@ -7,6 +7,7 @@ import {
   Sparkles, UserCircle, Users, Bot, Radio, PenTool, Library,
   CreditCard, FileText, Bell, Trophy, PieChart, Layers, Shield
 } from 'lucide-react';
+import { kernelStorage } from '../kernel/kernelStorage.js';
 
 // Master registry of all toolbar-capable apps — keyed by window type (same IDs as PersonalizationWindow)
 const APP_REGISTRY = {
@@ -81,7 +82,7 @@ export default function Toolbar({ onOpenWindow }) {
   const [activeApps, setActiveApps] = useState(DEFAULT_APPS);
 
   useEffect(() => {
-    const saved = localStorage.getItem('novaura-taskbar-apps');
+    const saved = kernelStorage.getItem('novaura-taskbar-apps');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);

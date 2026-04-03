@@ -2385,6 +2385,7 @@ dependencies = [
  "notify",
  "notify-rust",
  "open 5.3.3",
+ "regex",
  "reqwest",
  "rusqlite",
  "serde",

@@ -4,6 +4,7 @@ import {
   DollarSign, BarChart3, ArrowUpRight, ArrowDownRight,
   Loader2, Clock, Coins, Activity,
 } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
@@ -78,7 +79,7 @@ export default function CryptoWindow() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('novaura_crypto_favs') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('novaura_crypto_favs') || '[]'); } catch { return []; }
   });
   const [tab, setTab] = useState('market');
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -112,7 +113,7 @@ export default function CryptoWindow() {
   const toggleFavorite = (id) => {
     setFavorites(prev => {
       const next = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id];
-      localStorage.setItem('novaura_crypto_favs', JSON.stringify(next));
+      kernelStorage.setItem('novaura_crypto_favs', JSON.stringify(next));
       return next;
     });
   };

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Paintbrush, Eraser, Square, Circle, Minus, Download, Trash2, Palette, Undo2, Redo2, Pipette, Move, Save } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const COLORS = ['#00d9ff','#a855f7','#ff00ff','#00ffaa','#ff6b6b','#fbbf24','#f472b6','#34d399','#60a5fa','#ffffff','#94a3b8','#000000'];
 const BRUSH_SIZES = [2, 4, 8, 14, 24, 40];
@@ -185,9 +186,9 @@ export default function ArtStudioWindow() {
 
   const saveToGallery = () => {
     const dataUrl = canvasRef.current.toDataURL('image/png');
-    const gallery = JSON.parse(localStorage.getItem('art_gallery_custom') || '[]');
+    const gallery = JSON.parse(kernelStorage.getItem('art_gallery_custom') || '[]');
     gallery.push({ id: `art-${Date.now()}`, title: `Artwork ${gallery.length + 1}`, dataUrl, createdAt: new Date().toISOString() });
-    localStorage.setItem('art_gallery_custom', JSON.stringify(gallery));
+    kernelStorage.setItem('art_gallery_custom', JSON.stringify(gallery));
   };
 
   const tools = [

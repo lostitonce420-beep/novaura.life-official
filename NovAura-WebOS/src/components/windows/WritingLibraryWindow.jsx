@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { BookOpen, Search, Plus, Download, Trash2, FileText, Clock, SortAsc, ArrowLeft, Edit3, Save, Copy } from 'lucide-react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 export default function WritingLibraryWindow() {
   const [docs, setDocs] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('writing_library') || '[]'); } catch { return []; }
+    try { return JSON.parse(kernelStorage.getItem('writing_library') || '[]'); } catch { return []; }
   });
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('recent');
@@ -11,7 +12,7 @@ export default function WritingLibraryWindow() {
   const [editContent, setEditContent] = useState('');
   const [editTitle, setEditTitle] = useState('');
 
-  const saveDocs = (updated) => { setDocs(updated); localStorage.setItem('writing_library', JSON.stringify(updated)); };
+  const saveDocs = (updated) => { setDocs(updated); kernelStorage.setItem('writing_library', JSON.stringify(updated)); };
 
   const createDoc = () => {
     const doc = { id: `doc-${Date.now()}`, title: 'Untitled', content: '', format: 'text', wordCount: 0, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };

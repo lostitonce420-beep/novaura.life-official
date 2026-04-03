@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { kernelStorage } from '../../kernel/kernelStorage.js';
 import {
   Bell, BellOff, Check, CheckCheck, Trash2, Settings, X,
   MessageSquare, Heart, UserPlus, Star, Coins, ShoppingBag,
   Award, Gamepad2, AlertCircle, Info, Moon
 } from 'lucide-react';
+
 
 const TYPE_CONFIG = {
   message:  { icon: MessageSquare, color: 'bg-blue-500/20 text-blue-400' },
@@ -53,17 +55,17 @@ function isToday(ts) {
 
 export default function NotificationsWindow() {
   const [notifications, setNotifications] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('nova_notifications')) || INITIAL_NOTIFICATIONS; } catch { return INITIAL_NOTIFICATIONS; }
+    try { return JSON.parse(kernelStorage.getItem('nova_notifications')) || INITIAL_NOTIFICATIONS; } catch { return INITIAL_NOTIFICATIONS; }
   });
   const [settings, setSettings] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('nova_notification_settings')) || DEFAULT_SETTINGS; } catch { return DEFAULT_SETTINGS; }
+    try { return JSON.parse(kernelStorage.getItem('nova_notification_settings')) || DEFAULT_SETTINGS; } catch { return DEFAULT_SETTINGS; }
   });
   const [filter, setFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [showSettings, setShowSettings] = useState(false);
 
-  const save = (updated) => { setNotifications(updated); localStorage.setItem('nova_notifications', JSON.stringify(updated)); };
-  const saveSettings = (updated) => { setSettings(updated); localStorage.setItem('nova_notification_settings', JSON.stringify(updated)); };
+  const save = (updated) => { setNotifications(updated); kernelStorage.setItem('nova_notifications', JSON.stringify(updated)); };
+  const saveSettings = (updated) => { setSettings(updated); kernelStorage.setItem('nova_notification_settings', JSON.stringify(updated)); };
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const markRead = (id) => save(notifications.map(n => n.id === id ? { ...n, read: true } : n));
