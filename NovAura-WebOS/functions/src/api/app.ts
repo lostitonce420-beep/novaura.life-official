@@ -38,10 +38,11 @@ app.use(cors({
 // ─── Stripe webhook MUST receive raw body for signature verification ──────────
 // Register BEFORE express.json() so the raw buffer is preserved
 app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
 // All other routes use JSON body parsing
 app.use((req, res, next) => {
-  if (req.path === '/stripe/webhook') return next();
+  if (req.path === '/stripe/webhook' || req.path === '/api/stripe/webhook') return next();
   express.json()(req, res, next);
 });
 
@@ -51,30 +52,38 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/ai', aiRoutes);
-app.use('/domains', domainsRoutes);
-app.use('/generation', generationRoutes);
-app.use('/vertex', vertexRoutes);
-app.use('/drive', driveRoutes);
-app.use('/music', musicRoutes);
-app.use('/search', searchRoutes);
-app.use('/stripe', stripeRoutes);
-app.use('/sync', syncRoutes);
-app.use('/assets', assetsRoutes);
-app.use('/orders', ordersRoutes);
-app.use('/royalties', royaltiesRoutes);
+// Routes - support both /api/* and /* paths for Firebase Functions
+const mountRoute = (path: string, router: express.Router) => {
+  app.use(path, router);
+  app.use(`/api${path}`, router);
+};
+
+mountRoute('/auth', authRoutes);
+mountRoute('/ai', aiRoutes);
+mountRoute('/domains', domainsRoutes);
+mountRoute('/generation', generationRoutes);
+mountRoute('/vertex', vertexRoutes);
+mountRoute('/drive', driveRoutes);
+mountRoute('/music', musicRoutes);
+mountRoute('/search', searchRoutes);
+mountRoute('/stripe', stripeRoutes);
+mountRoute('/sync', syncRoutes);
+mountRoute('/assets', assetsRoutes);
+mountRoute('/orders', ordersRoutes);
+mountRoute('/royalties', royaltiesRoutes);
 
 // Health check
-app.get('/health', (req, res) => {
+const healthHandler = (req: express.Request, res: express.Response) => {
   res.json({
     status: 'ok',
     service: 'novaura-api',
     timestamp: new Date().toISOString(),
     version: '2.0.0'
   });
-});
+};
+
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 // 404
 app.use((req, res) => {

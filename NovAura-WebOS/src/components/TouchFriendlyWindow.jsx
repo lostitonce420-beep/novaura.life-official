@@ -1,7 +1,29 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Rnd } from 'react-rnd';
 import { X, Minus, Maximize2, Minimize2, GripHorizontal } from 'lucide-react';
 import { Button } from './ui/button';
+
+// Full spectrum RGB border styles - each window gets a random one
+const RGB_BORDER_STYLES = [
+  'rgb-border-rainbow',
+  'rgb-border-hot', 
+  'rgb-border-cool',
+  'rgb-border-sunset',
+  'rgb-border-neon',
+  'rgb-border-gold',
+  'rgb-border-ocean',
+  'rgb-border-forest',
+  'rgb-border-candy',
+  'rgb-border-chaos',
+  'rgb-border-plasma',
+];
+
+const RGB_GLOW_STYLES = [
+  'rgb-glow-rainbow',
+  'rgb-glow-hot',
+  'rgb-glow-cool',
+  'rgb-glow-gold',
+];
 
 export default function TouchFriendlyWindow({
   id,
@@ -10,12 +32,24 @@ export default function TouchFriendlyWindow({
   zIndex,
   defaultSize = { width: 600, height: 400 },
   onClose,
-  onFocus
+  onFocus,
+  borderStyle = null // Allow explicit border style, or random if null
 }) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [previousBounds, setPreviousBounds] = useState(null);
   const windowRef = useRef(null);
+
+  // Pick a random border style for this window instance (stable across renders)
+  const randomBorderStyle = useMemo(() => {
+    if (borderStyle) return borderStyle;
+    const borderIndex = Math.floor(Math.random() * RGB_BORDER_STYLES.length);
+    const glowIndex = Math.floor(Math.random() * RGB_GLOW_STYLES.length);
+    return {
+      border: RGB_BORDER_STYLES[borderIndex],
+      glow: RGB_GLOW_STYLES[glowIndex]
+    };
+  }, [id, borderStyle]); // Only re-randomize if id changes
 
   const handleMaximize = () => {
     if (!isMaximized) {
@@ -62,10 +96,10 @@ export default function TouchFriendlyWindow({
       enableUserSelectHack={false}
       cancel=".no-drag"
     >
-      {/* RGB border wrapper with liquid light effect */}
-      <div className="h-full w-full rgb-border rgb-border-subtle rounded-2xl">
+      {/* RGB border wrapper with FULL SPECTRUM rainbow effect */}
+      <div className={`h-full w-full ${randomBorderStyle.border || 'rgb-border-rainbow'} rounded-2xl`}>
         <div className="rgb-flow-layer" />
-        <div className="flex flex-col h-full w-full bg-black/85 backdrop-blur-xl rounded-2xl overflow-hidden relative z-10 rgb-glow" style={{ animationDuration: '4s' }}>
+        <div className={`flex flex-col h-full w-full bg-black/85 backdrop-blur-xl rounded-2xl overflow-hidden relative z-10 ${randomBorderStyle.glow || 'rgb-glow-rainbow'}`} style={{ animationDuration: '4s' }}>
           {/* Window Header */}
           <div className="window-drag-handle flex items-center justify-between px-4 py-2.5 bg-black/60 border-b border-white/[0.06] cursor-move no-select touch-manipulation active:cursor-grabbing">
             <div className="flex items-center gap-3">

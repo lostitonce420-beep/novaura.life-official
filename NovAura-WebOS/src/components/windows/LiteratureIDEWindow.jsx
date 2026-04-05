@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   PanelRight, PanelBottomOpen, PanelBottomClose,
   BookOpen, Volume2, VolumeX, Search, FolderOpen,
   GitBranch, Settings as SettingsIcon, Map, FileText,
-  ChevronRight, Target, Palette,
+  ChevronRight, Target, Palette, Type, CheckCircle,
+  Sparkles, Brain, RotateCcw, Clock, Zap
 } from 'lucide-react';
 import FileTree from './literature/FileTree';
 import RichEditor from './literature/RichEditor';
@@ -11,11 +12,20 @@ import AIWritingPanel from './literature/AIWritingPanel';
 import StoryBible from './literature/StoryBible';
 import ProblemsPanel from './literature/ProblemsPanel';
 import StatusBar from './literature/StatusBar';
+import GrammarPanel from './literature/GrammarPanel';
+import FactCheckPanel from './literature/FactCheckPanel';
+import TimelinePanel from './literature/TimelinePanel';
+import AIFocusPanel from './literature/AIFocusPanel';
+import RemasterPanel from './literature/RemasterPanel';
+import { StoryTimeline } from './literature/StoryTimeline';
+import { AIFocusManager } from './literature/AIFocusManager';
 import { kernelStorage } from '../../kernel/kernelStorage.js';
 
 const STORAGE_FILES = 'novaura_lit_files';
 const STORAGE_BIBLE = 'novaura_lit_bible';
 const STORAGE_SETTINGS = 'novaura_lit_settings';
+const STORAGE_TIMELINE = 'novaura_lit_timeline';
+const STORAGE_WORKFLOW = 'novaura_lit_workflow';
 
 function defaultFiles() {
   return {
@@ -43,7 +53,16 @@ function defaultFiles() {
 }
 
 function defaultBible() {
-  return { characters: [], settings: [], rules: [], plotThreads: [] };
+  return { 
+    characters: [], 
+    settings: [], 
+    rules: [], 
+    plotThreads: [],
+    timeline: [],
+    relationships: {},
+    entries: [],
+    lastConsistencyCheck: null
+  };
 }
 
 function findFileById(tree, id) {
@@ -79,8 +98,11 @@ const ACTIVITY_ITEMS = [
   { id: 'explorer', icon: FolderOpen, label: 'Explorer', position: 'top' },
   { id: 'search', icon: Search, label: 'Search', position: 'top' },
   { id: 'bible', icon: BookOpen, label: 'Story Bible', position: 'top' },
+  { id: 'timeline', icon: Clock, label: 'Timeline', position: 'top' },
   { id: 'outline', icon: GitBranch, label: 'Outline', position: 'top' },
-  { id: 'map', icon: Map, label: 'Story Map', position: 'top' },
+  { id: 'grammar', icon: Type, label: 'Grammar', position: 'top' },
+  { id: 'facts', icon: CheckCircle, label: 'Fact Check', position: 'top' },
+  { id: 'remaster', icon: Sparkles, label: 'Remaster', position: 'top' },
   { id: 'settings', icon: SettingsIcon, label: 'Settings', position: 'bottom' },
 ];
 
@@ -200,7 +222,7 @@ function StoryMapPanel() {
         <Map className="w-10 h-10 mb-3 opacity-20" />
         <p className="text-[11px] text-center mb-1">Visual Story Graph</p>
         <p className="text-[10px] text-center text-gray-700">
-          Plot threads, character arcs, and timeline visualization — coming soon
+          Timeline visualization is now in the Timeline panel
         </p>
       </div>
     </div>
@@ -268,6 +290,26 @@ function SettingsPanel({ settings, onUpdate }) {
             <option value="sepia">Sepia</option>
           </select>
         </div>
+        {/* Genre */}
+        <div>
+          <label className="text-[10px] text-gray-500 block mb-1">Story Genre</label>
+          <select
+            value={settings.genre || 'general'}
+            onChange={(e) => onUpdate({ ...settings, genre: e.target.value })}
+            className="w-full bg-[#2a2a4a] text-white text-[11px] rounded px-2 py-1 border border-gray-700 outline-none"
+          >
+            <option value="general">General Fiction</option>
+            <option value="fantasy">Fantasy</option>
+            <option value="scifi">Science Fiction</option>
+            <option value="horror">Horror</option>
+            <option value="romance">Romance</option>
+            <option value="thriller">Thriller</option>
+            <option value="mystery">Mystery</option>
+            <option value="literary">Literary Fiction</option>
+            <option value="historical">Historical Fiction</option>
+            <option value="ya">Young Adult</option>
+          </select>
+        </div>
         {/* Auto-save */}
         <div className="flex items-center justify-between">
           <label className="text-[10px] text-gray-500">Auto-save to browser</label>
@@ -294,6 +336,10 @@ export default function LiteratureIDEWindow() {
     try { const d = kernelStorage.getItem(STORAGE_SETTINGS); return d ? JSON.parse(d) : {}; }
     catch { return {}; }
   });
+  const [workflowState, setWorkflowState] = useState(() => {
+    try { const d = kernelStorage.getItem(STORAGE_WORKFLOW); return d ? JSON.parse(d) : {}; }
+    catch { return {}; }
+  });
 
   const [openTabs, setOpenTabs] = useState([]);
   const [activeTabId, setActiveTabId] = useState(null);
@@ -307,15 +353,27 @@ export default function LiteratureIDEWindow() {
   const [focusMode, setFocusMode] = useState(false);
 
   const [leftWidth, setLeftWidth] = useState(220);
-  const [rightWidth, setRightWidth] = useState(280);
+  const [rightWidth, setRightWidth] = useState(320);
   const [bottomHeight, setBottomHeight] = useState(180);
 
   const [speaking, setSpeaking] = useState(false);
+  const [entryCount, setEntryCount] = useState(0);
+
+  // Refs for managers
+  const timelineManagerRef = useRef(null);
+  const focusManagerRef = useRef(null);
+
+  // Initialize managers
+  useEffect(() => {
+    timelineManagerRef.current = new StoryTimeline(bible);
+    focusManagerRef.current = new AIFocusManager(bible, workflowState);
+  }, []);
 
   // ── Persist ──────────────────────────────────────
   useEffect(() => { kernelStorage.setItem(STORAGE_FILES, JSON.stringify(files)); }, [files]);
   useEffect(() => { kernelStorage.setItem(STORAGE_BIBLE, JSON.stringify(bible)); }, [bible]);
   useEffect(() => { kernelStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { kernelStorage.setItem(STORAGE_WORKFLOW, JSON.stringify(workflowState)); }, [workflowState]);
 
   // ── Active file ──────────────────────────────────
   const activeFile = activeTabId ? findFileById(files, activeTabId) : null;
@@ -373,6 +431,73 @@ export default function LiteratureIDEWindow() {
     }
   };
 
+  // ── AI Focus Management ───────────────────────────
+  const handleResetContext = async () => {
+    if (focusManagerRef.current) {
+      const result = await focusManagerRef.current.resetContext();
+      setWorkflowState(focusManagerRef.current.exportState());
+      return result;
+    }
+  };
+
+  const handleProcessEntry = async () => {
+    if (focusManagerRef.current && activeFile?.content) {
+      const result = await focusManagerRef.current.processEntry(activeFile.content, {
+        chapter: activeFile.name,
+        wordCount
+      });
+      
+      setEntryCount(result.entryNumber);
+      setWorkflowState(focusManagerRef.current.exportState());
+      
+      // If events detected, add to bible
+      if (result.analysis?.major_events?.length > 0) {
+        const updatedBible = { ...bible };
+        result.analysis.major_events.forEach(evt => {
+          if (!updatedBible.timeline) updatedBible.timeline = [];
+          updatedBible.timeline.push({
+            id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            type: evt.type,
+            description: evt.description,
+            charactersInvolved: evt.characters_involved || [],
+            date: evt.date_reference || `Entry ${result.entryNumber}`,
+            significance: evt.significance || 'medium',
+            impact: evt.impact,
+            chapterId: activeFile.id,
+            createdAt: Date.now()
+          });
+        });
+        setBible(updatedBible);
+      }
+      
+      return result;
+    }
+  };
+
+  const handleRunFullAudit = async () => {
+    if (focusManagerRef.current) {
+      const allContent = flattenFiles(files)
+        .filter(f => f.content)
+        .map(f => f.content)
+        .join('\n\n');
+      
+      const result = await focusManagerRef.current.performFullAudit(allContent);
+      setWorkflowState(focusManagerRef.current.exportState());
+      return result;
+    }
+  };
+
+  // ── Bible updates ─────────────────────────────────
+  const handleUpdateBible = (newBible) => {
+    setBible(newBible);
+    if (timelineManagerRef.current) {
+      timelineManagerRef.current.import(newBible);
+    }
+    if (focusManagerRef.current) {
+      focusManagerRef.current.storyBible = newBible;
+    }
+  };
+
   // ── Resize handlers ──────────────────────────────
   const handleResize = (setter, direction, min, max) => (e) => {
     e.preventDefault();
@@ -394,7 +519,7 @@ export default function LiteratureIDEWindow() {
   // ── Activity bar click ───────────────────────────
   const handleActivityClick = (id) => {
     if (activeView === id && leftOpen) {
-      setLeftOpen(false); // toggle off if clicking same icon
+      setLeftOpen(false);
     } else {
       setActiveView(id);
       setLeftOpen(true);
@@ -414,11 +539,19 @@ export default function LiteratureIDEWindow() {
       case 'search':
         return <SearchPanel files={files} onOpenFile={handleFileSelect} />;
       case 'bible':
-        return <StoryBible bible={bible} onUpdate={setBible} />;
+        return <StoryBible bible={bible} onUpdate={handleUpdateBible} />;
+      case 'timeline':
+        return <TimelinePanel storyBible={bible} onUpdateBible={handleUpdateBible} />;
       case 'outline':
         return <OutlinePanel content={activeFile?.content || ''} />;
       case 'map':
         return <StoryMapPanel />;
+      case 'grammar':
+        return <GrammarPanel content={activeFile?.content} storyBible={bible} />;
+      case 'facts':
+        return <FactCheckPanel content={activeFile?.content} storyBible={bible} />;
+      case 'remaster':
+        return <RemasterPanel storyBible={bible} content={activeFile?.content} fileName={activeFile?.name} />;
       case 'settings':
         return <SettingsPanel settings={settings} onUpdate={setSettings} />;
       default:
@@ -439,8 +572,20 @@ export default function LiteratureIDEWindow() {
               <span className="text-[11px] text-gray-400">{activeFile.name}</span>
             </>
           )}
+          {entryCount > 0 && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary ml-2">
+              Entry #{entryCount}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={handleResetContext}
+            className="p-1 rounded hover:bg-white/10 text-gray-500"
+            title="Reset AI Context"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
           <button
             onClick={toggleReadAloud}
             className={`p-1 rounded hover:bg-white/10 ${speaking ? 'text-primary' : 'text-gray-500'}`}
@@ -575,19 +720,34 @@ export default function LiteratureIDEWindow() {
           )}
         </div>
 
-        {/* ── Right sidebar (AI only) ────────────────── */}
+        {/* ── Right sidebar (AI + Focus) ─────────────── */}
         {effectiveRightOpen && (
           <>
             <div
               className="w-1 bg-[#2a2a4a] hover:bg-primary/40 cursor-col-resize flex-shrink-0 transition-colors"
               onMouseDown={handleResize(setRightWidth, 'x-right', 220, 450)}
             />
-            <div style={{ width: rightWidth }} className="flex-shrink-0 overflow-hidden">
-              <AIWritingPanel
-                selectedText={selectedText}
-                storyBible={bible}
-                onInsertText={handleInsertText}
-              />
+            <div style={{ width: rightWidth }} className="flex-shrink-0 overflow-hidden flex flex-col">
+              {/* AI Focus Panel (collapsible) */}
+              <div className="h-1/3 border-b border-[#2a2a4a]">
+                <AIFocusPanel
+                  storyBible={bible}
+                  content={activeFile?.content}
+                  entryCount={entryCount}
+                  onResetContext={handleResetContext}
+                  onProcessEntry={handleProcessEntry}
+                  onRunFullAudit={handleRunFullAudit}
+                  workflowState={workflowState}
+                />
+              </div>
+              {/* AI Writing Panel */}
+              <div className="flex-1">
+                <AIWritingPanel
+                  selectedText={selectedText}
+                  storyBible={bible}
+                  onInsertText={handleInsertText}
+                />
+              </div>
             </div>
           </>
         )}

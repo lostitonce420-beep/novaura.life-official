@@ -18,13 +18,8 @@
  *   - Warmup cache pre-fetches common query patterns
  */
 
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  collection,
-  getDocs,
-} from 'firebase/firestore';
+import { db } from '../../config/firebase.js';
+import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
 
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ||
@@ -137,12 +132,10 @@ class AISubsystem {
     // Phase 1: hash build cache (raw sig -> hash, avoids re-hashing same sig)
     this._hashMemo = new Map();
 
-    this._db = null;
   }
 
   init(kernel) {
     this._kernel = kernel;
-    this._db     = getFirestore();
 
     PROVIDER_CHAIN.forEach((name, i) => {
       this._providers.set(name, {
@@ -167,7 +160,7 @@ class AISubsystem {
 
   _defaultModel(provider) {
     return {
-      gemini:   'gemini-2.0-flash',
+      gemini:   'gemini-2.5-flash',
       qwen:     'qwen-plus',
       claude:   'claude-sonnet-4-6',
       openai:   'gpt-4o-mini',
@@ -214,9 +207,9 @@ class AISubsystem {
   /** Load top-N cache entries from Firestore on boot */
   async loadCacheFromFirestore() {
     const uid = this._kernel?.auth?.uid;
-    if (!uid || !this._db) return;
+    if (!uid || !db) return;
     try {
-      const cacheCol = collection(this._db, 'users', uid, 'kernel', 'ai_cache', 'entries');
+      const cacheCol = collection(db, 'users', uid, 'kernel', 'ai_cache', 'entries');
       const snap = await getDocs(cacheCol);
       snap.forEach(d => {
         const data = d.data();
@@ -238,7 +231,7 @@ class AISubsystem {
   /** Persist top-N most-hit cache entries to Firestore */
   async _persistCache() {
     const uid = this._kernel?.auth?.uid;
-    if (!uid || !this._db) return;
+    if (!uid || !db) return;
     try {
       const entries = Array.from(this._cache.entries())
         .sort((a, b) => (b[1].hits || 0) - (a[1].hits || 0))
@@ -246,7 +239,7 @@ class AISubsystem {
 
       await Promise.all(entries.map(([hash, entry]) =>
         setDoc(
-          doc(this._db, 'users', uid, 'kernel', 'ai_cache', 'entries', hash),
+          doc(db, 'users', uid, 'kernel', 'ai_cache', 'entries', hash),
           { hash, ...entry }
         )
       ));
@@ -597,6 +590,161 @@ class AISubsystem {
       maxSize: MAX_CACHE_ENTRIES,
       ttlMs: CACHE_TTL_MS,
     };
+  }
+
+  // ─── Semantics Engine Integration ──────────────────────────────────────────
+
+  /**
+   * Execute a request with function calling support
+   * Allows AI to control the OS through the SemanticsEngine
+   * @param {string} prompt - User prompt
+   * @param {object} options - Request options
+   * @param {boolean} options.enableFunctions - Enable function calling
+   */
+  async requestWithFunctions(prompt, options = {}) {
+    const { enableFunctions = true, maxFunctionCalls = 5 } = options;
+    
+    if (!enableFunctions || !this._kernel?.semantics) {
+      return this.request(prompt, options);
+    }
+
+    const semantics = this._kernel.semantics;
+    const functionDefinitions = semantics.getFunctionDefinitions();
+    const systemState = semantics.getSystemState();
+    const availableApps = semantics.getAvailableApps();
+
+    // Build enhanced prompt with function context
+    const enhancedPrompt = this._buildFunctionCallingPrompt(prompt, {
+      systemState,
+      availableApps,
+      functionCount: functionDefinitions.length
+    });
+
+    // Get AI response
+    const result = await this.request(enhancedPrompt, {
+      ...options,
+      systemInstruction: this._getFunctionCallingSystemPrompt()
+    });
+
+    // Parse and execute function calls from response
+    const functionCalls = this._parseFunctionCalls(result.response);
+    
+    if (functionCalls.length === 0) {
+      return { ...result, functionCalls: [], functionResults: [] };
+    }
+
+    // Execute function calls
+    const functionResults = [];
+    for (const call of functionCalls.slice(0, maxFunctionCalls)) {
+      try {
+        const execResult = await semantics.executeFunction(
+          call.domain,
+          call.action,
+          call.parameters
+        );
+        functionResults.push({
+          call,
+          result: execResult,
+          success: execResult.success
+        });
+      } catch (error) {
+        functionResults.push({
+          call,
+          error: error.message,
+          success: false
+        });
+      }
+    }
+
+    return {
+      ...result,
+      functionCalls,
+      functionResults,
+      executed: functionResults.filter(r => r.success).length
+    };
+  }
+
+  /**
+   * Process an intent through the SemanticsEngine
+   * Direct interface for AI to control the OS
+   * @param {string} intent - Natural language intent
+   * @param {object} context - Execution context
+   */
+  async processIntent(intent, context = {}) {
+    if (!this._kernel?.semantics) {
+      throw new Error('Semantics engine not initialized');
+    }
+    return this._kernel.semantics.processIntent(intent, context);
+  }
+
+  /**
+   * Get available OS functions for AI context
+   */
+  getAvailableFunctions() {
+    if (!this._kernel?.semantics) return [];
+    return this._kernel.semantics.getFunctionDefinitions();
+  }
+
+  /**
+   * Get current system state for AI context
+   */
+  getSystemState() {
+    if (!this._kernel?.semantics) return null;
+    return this._kernel.semantics.getSystemState();
+  }
+
+  _buildFunctionCallingPrompt(prompt, context) {
+    const { systemState, availableApps, functionCount } = context;
+    
+    return `User request: "${prompt}"
+
+Current system state:
+- Open windows: ${systemState.openWindows.length > 0 
+  ? systemState.openWindows.map(w => `${w.title} (${w.type})`).join(', ')
+  : 'None'}
+
+Available apps: ${availableApps.slice(0, 10).map(a => a.name).join(', ')}${availableApps.length > 10 ? '...' : ''}
+
+You can control the OS using function calls. If the user wants to open an app, generate an image, or perform any OS action, include a function call in your response.
+
+Format: [[FUNCTION:domain.action({"param": "value"})]]
+
+Examples:
+- Open IDE: [[FUNCTION:window_open({"type": "ide"})]]
+- Generate image: [[FUNCTION:vertex_generateImage({"prompt": "a cat"})]]
+- Focus window: [[FUNCTION:window_focus({"windowId": "win_123"})]]`;
+  }
+
+  _getFunctionCallingSystemPrompt() {
+    return `You are Aura/Nova, the AI assistant for NovAura OS. You can control the operating system through function calls.
+
+When the user wants to:
+- Open/close/focus windows → Use window_* functions
+- Generate images/video → Use vertex_* functions  
+- Navigate to apps → Use navigate_* functions
+- Change settings → Use system_* functions
+- Get help/guidance → Use guide_* functions
+
+Always respond naturally, but include function calls when actions are needed.
+Function calls should be in the format: [[FUNCTION:domain_action({"param": "value"})]]`;
+  }
+
+  _parseFunctionCalls(response) {
+    const calls = [];
+    const regex = /\[\[FUNCTION:([a-zA-Z_]+)\.([a-zA-Z_]+)\((.*?)\)\]\]/g;
+    let match;
+
+    while ((match = regex.exec(response)) !== null) {
+      try {
+        const [, domain, action, paramsStr] = match;
+        const parameters = paramsStr ? JSON.parse(paramsStr) : {};
+        calls.push({ domain, action, parameters, raw: match[0] });
+      } catch (e) {
+        console.warn('[AISubsystem] Failed to parse function call:', match[0]);
+      }
+    }
+
+    return calls;
   }
 }
 

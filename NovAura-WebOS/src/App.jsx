@@ -7,6 +7,8 @@ import WindowManager from './components/WindowManager';
 import SetupPage from './pages/SetupPage';
 import AuthPage from './pages/AuthPage';
 import LandingPage from './pages/LandingPage';
+import CinematicIntro from './components/CinematicIntro';
+import ParticleTextAnimation from './components/ParticleTextAnimation';
 import { Toaster } from './components/ui/sonner';
 import { LeftSidebar, RightSidebar } from './components/Sidebar';
 import AvatarButton from './components/AvatarButton';
@@ -40,6 +42,15 @@ export default function App() {
   const [showAuraHistory, setShowAuraHistory] = useState(false);
   const [auraHistory, setAuraHistory] = useState([]);
   const [promptLibrary, setPromptLibrary] = useState([]);
+  const [introComplete, setIntroComplete] = useState(() => {
+    // Only show intro once per session
+    return sessionStorage.getItem('novaura-intro-shown') === 'true';
+  });
+  const [showParticleWelcome, setShowParticleWelcome] = useState(() => {
+    // Only show particle welcome once per session
+    return sessionStorage.getItem('novaura-particles-shown') === 'true';
+  });
+  const [userTier, setUserTier] = useState('free');
   const orchestratorRef = useRef(null);
   const { isOpen: isCommandPaletteOpen, close: closeCommandPalette } = useCommandPalette();
 
@@ -84,6 +95,16 @@ export default function App() {
         kernelStorage.setItem('user_data', JSON.stringify(userData));
         setCurrentUser(userData);
         setIsAuthenticated(true);
+        
+        // Load user's membership tier
+        try {
+          const { getUserTier } = await import('./services/creditService');
+          const tier = await getUserTier(firebaseUser.uid);
+          setUserTier(tier);
+        } catch (e) {
+          console.log('Could not load user tier:', e);
+        }
+        
         const savedConfig = kernelStorage.getItem('llm_config');
         if (savedConfig) { setLlmConfig(JSON.parse(savedConfig)); setIsSetupComplete(true); }
       } else {
@@ -374,7 +395,7 @@ export default function App() {
       'challenges': 'Challenges',
       'psychometrics': 'Psychometrics',
       'notifications': 'Notifications',
-      'ai-companion': 'Nova AI',
+      'ai-companion': 'Aura AI',
       'avatar-gallery': 'Avatar Gallery',
       'outfit-manager': 'Outfit Manager',
       'card-deck-creator': 'Deck Creator',
@@ -387,9 +408,10 @@ export default function App() {
       'billing': 'Billing & Plans',
       'git': 'Git',
       'files': 'Files',
+      'imagen': 'Imagen',
       'pixai': 'PixAI Art',
       'business-operator': 'Business Operator',
-      'nova-concierge': 'Nova Concierge',
+      'nova-concierge': 'Concierge',
       'weather': 'Weather',
       'crypto': 'Crypto Markets',
       'calculator': 'Calculator',
@@ -436,6 +458,18 @@ export default function App() {
     }
   }, [isSetupComplete, pendingWindow]);
 
+  // Show cinematic intro on first load
+  if (!introComplete) {
+    return (
+      <CinematicIntro 
+        onComplete={() => {
+          sessionStorage.setItem('novaura-intro-shown', 'true');
+          setIntroComplete(true);
+        }} 
+      />
+    );
+  }
+
   // Landing page (search engine) - entry point for all users
   if (!showOS) {
     return (
@@ -469,6 +503,21 @@ export default function App() {
     );
   }
 
+  // Particle welcome animation
+  if (!showParticleWelcome) {
+    return (
+      <>
+        <ParticleTextAnimation 
+          userTier={userTier}
+          onComplete={() => {
+            sessionStorage.setItem('novaura-particles-shown', 'true');
+            setShowParticleWelcome(true);
+          }}
+        />
+        <Toaster position="top-right" />
+      </>
+    );
+  }
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-background">

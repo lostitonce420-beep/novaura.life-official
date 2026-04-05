@@ -11,11 +11,12 @@ import { ai, isFirebaseConfigured } from '../config/firebase';
 
 // Available models
 export const GENERATIVE_MODELS = {
-  FLASH: 'gemini-2.0-flash',
-  FLASH_LITE: 'gemini-2.0-flash-lite',
+  FLASH: 'gemini-2.5-flash',           // Default: fast, free for conversation
+  FLASH_LITE: 'gemini-2.5-flash-lite', // Ultra-fast, lowest latency
   FLASH_EXP: 'gemini-2.0-flash-exp',
   FLASH_25: 'gemini-2.5-flash',
-  PRO: 'gemini-2.0-pro',
+  PRO: 'gemini-2.5-pro',               // Most capable
+  PRO_EXP: 'gemini-2.0-pro-exp',
 };
 
 export const IMAGEN_MODELS = {

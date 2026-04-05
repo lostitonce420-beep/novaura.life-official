@@ -1,0 +1,1 @@
+[     816ms] [ERROR] Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec. @ https://novaura-life.web.app/platform/assets/index-CPp4m3SZ.js:0

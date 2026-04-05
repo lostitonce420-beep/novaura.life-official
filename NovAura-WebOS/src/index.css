@@ -894,3 +894,420 @@
     background-size: 200% 100%;
     animation: cybeni-flow-h 3s ease-in-out infinite;
 }
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FULL SPECTRUM RGB BORDER SYSTEM
+   Reds, Oranges, Yellows, Greens, Cyans, Blues, Purples, Pinks
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* --- Rainbow Border - Full spectrum flowing --- */
+.rgb-border-rainbow {
+    position: relative;
+}
+
+.rgb-border-rainbow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: conic-gradient(
+        from 0deg,
+        #ff0000 0deg,
+        #ff4500 15deg,
+        #ff8c00 30deg,
+        #ffa500 45deg,
+        #ffd700 60deg,
+        #ffff00 75deg,
+        #adff2f 90deg,
+        #7fff00 105deg,
+        #00ff00 120deg,
+        #00fa9a 135deg,
+        #00ffff 150deg,
+        #00bfff 165deg,
+        #0080ff 180deg,
+        #0000ff 195deg,
+        #4b0082 210deg,
+        #8b00ff 225deg,
+        #9400d3 240deg,
+        #ff00ff 255deg,
+        #ff1493 270deg,
+        #ff0066 285deg,
+        #ff3366 300deg,
+        #ff6347 315deg,
+        #ff4500 330deg,
+        #ff0000 345deg
+    );
+    animation: rainbow-spin 4s linear infinite;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+@keyframes rainbow-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* --- Hot RGB - Reds, Oranges, Hot Pinks --- */
+.rgb-border-hot {
+    position: relative;
+}
+
+.rgb-border-hot::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #ff0000 0%,
+        #ff4500 15%,
+        #ff8c00 30%,
+        #ff1493 45%,
+        #ff0066 60%,
+        #ff3366 75%,
+        #ff6347 90%,
+        #ff0000 100%
+    );
+    background-size: 300% 100%;
+    animation: border-flow 3s ease-in-out infinite;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+/* --- Cool RGB - Cyans, Blues, Purples, Greens --- */
+.rgb-border-cool {
+    position: relative;
+}
+
+.rgb-border-cool::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #00ffff 0%,
+        #0080ff 15%,
+        #0000ff 30%,
+        #8b00ff 45%,
+        #9400d3 60%,
+        #00ff88 75%,
+        #00fa9a 90%,
+        #00ffff 100%
+    );
+    background-size: 300% 100%;
+    animation: border-flow 3.5s ease-in-out infinite;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+/* --- Sunset RGB - Oranges, Pinks, Purples, Reds --- */
+.rgb-border-sunset {
+    position: relative;
+}
+
+.rgb-border-sunset::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #ff4500 0%,
+        #ff6347 15%,
+        #ff1493 30%,
+        #ff0066 45%,
+        #9400d3 60%,
+        #4b0082 75%,
+        #ff8c00 90%,
+        #ff4500 100%
+    );
+    background-size: 300% 100%;
+    animation: border-flow 4s ease-in-out infinite;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+/* --- Neon RGB - Electric brights --- */
+.rgb-border-neon {
+    position: relative;
+}
+
+.rgb-border-neon::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #ff00ff 0%,
+        #00ffff 25%,
+        #ffff00 50%,
+        #ff00ff 75%,
+        #00ff00 90%,
+        #ff00ff 100%
+    );
+    background-size: 400% 100%;
+    animation: border-flow 2s ease-in-out infinite;
+    z-index: -1;
+    filter: blur(0.5px) brightness(1.2);
+}
+
+/* --- Gold/Amber RGB - Warm yellows and oranges --- */
+.rgb-border-gold {
+    position: relative;
+}
+
+.rgb-border-gold::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #ffd700 0%,
+        #ffa500 20%,
+        #ff8c00 40%,
+        #ffd700 60%,
+        #ff6347 80%,
+        #ffd700 100%
+    );
+    background-size: 300% 100%;
+    animation: border-flow 5s ease-in-out infinite;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+/* --- Ocean RGB - Blues and teals --- */
+.rgb-border-ocean {
+    position: relative;
+}
+
+.rgb-border-ocean::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #006994 0%,
+        #0080ff 20%,
+        #00bfff 40%,
+        #00ffff 60%,
+        #20b2aa 80%,
+        #006994 100%
+    );
+    background-size: 300% 100%;
+    animation: border-flow 4.5s ease-in-out infinite;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+/* --- Forest RGB - Greens --- */
+.rgb-border-forest {
+    position: relative;
+}
+
+.rgb-border-forest::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #228b22 0%,
+        #32cd32 20%,
+        #00ff00 40%,
+        #7fff00 60%,
+        #adff2f 80%,
+        #228b22 100%
+    );
+    background-size: 300% 100%;
+    animation: border-flow 4s ease-in-out infinite;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+/* --- Candy RGB - Pinks and cyans --- */
+.rgb-border-candy {
+    position: relative;
+}
+
+.rgb-border-candy::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #ff69b4 0%,
+        #ff1493 20%,
+        #00ffff 40%,
+        #ff69b4 60%,
+        #ff0066 80%,
+        #ff69b4 100%
+    );
+    background-size: 300% 100%;
+    animation: border-flow 3s ease-in-out infinite;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+/* --- RGB Glow Effects for each theme --- */
+.rgb-glow-rainbow {
+    animation: rainbow-glow 3s ease-in-out infinite;
+}
+
+@keyframes rainbow-glow {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.4),
+                    0 0 20px rgba(0, 255, 0, 0.2),
+                    0 0 30px rgba(0, 0, 255, 0.1);
+    }
+    33% {
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.4),
+                    0 0 20px rgba(0, 0, 255, 0.2),
+                    0 0 30px rgba(255, 0, 0, 0.1);
+    }
+    66% {
+        box-shadow: 0 0 10px rgba(0, 0, 255, 0.4),
+                    0 0 20px rgba(255, 0, 0, 0.2),
+                    0 0 30px rgba(0, 255, 0, 0.1);
+    }
+}
+
+.rgb-glow-hot {
+    animation: hot-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes hot-glow {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 69, 0, 0.5), 0 0 30px rgba(255, 0, 0, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 20, 147, 0.5), 0 0 30px rgba(255, 0, 102, 0.3); }
+}
+
+.rgb-glow-cool {
+    animation: cool-glow 3s ease-in-out infinite;
+}
+
+@keyframes cool-glow {
+    0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), 0 0 30px rgba(0, 0, 255, 0.2); }
+    50% { box-shadow: 0 0 15px rgba(0, 128, 255, 0.4), 0 0 30px rgba(0, 255, 136, 0.2); }
+}
+
+.rgb-glow-gold {
+    animation: gold-glow 4s ease-in-out infinite;
+}
+
+@keyframes gold-glow {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), 0 0 30px rgba(255, 140, 0, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(255, 165, 0, 0.6), 0 0 40px rgba(255, 99, 71, 0.4); }
+}
+
+/* --- App-specific colorful borders --- */
+.rgb-border-app-ide { --border-accent: hsl(170 100% 50%); }
+.rgb-border-app-browser { --border-accent: hsl(310 100% 50%); }
+.rgb-border-app-terminal { --border-accent: hsl(80 100% 50%); }
+.rgb-border-app-media { --border-accent: hsl(195 100% 50%); }
+.rgb-border-app-chat { --border-accent: hsl(48 100% 50%); }
+.rgb-border-app-store { --border-accent: hsl(280 100% 50%); }
+.rgb-border-app-vertex { --border-accent: hsl(150 100% 50%); }
+.rgb-border-app-voice { --border-accent: hsl(200 100% 60%); }
+
+/* --- Random color cycling border --- */
+.rgb-border-chaos {
+    position: relative;
+}
+
+.rgb-border-chaos::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: conic-gradient(
+        from var(--chaos-angle, 0deg),
+        #ff0000 0%,
+        #ff7f00 10%,
+        #ffff00 20%,
+        #00ff00 30%,
+        #0000ff 40%,
+        #4b0082 50%,
+        #9400d3 60%,
+        #ff00ff 70%,
+        #ff1493 80%,
+        #00ffff 90%,
+        #ff0000 100%
+    );
+    animation: chaos-spin 3s linear infinite;
+    z-index: -1;
+    filter: blur(1px) saturate(1.5);
+}
+
+@keyframes chaos-spin {
+    from { --chaos-angle: 0deg; }
+    to { --chaos-angle: 360deg; }
+}
+
+@property --chaos-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+/* --- Plasma RGB Effect --- */
+.rgb-border-plasma {
+    position: relative;
+}
+
+.rgb-border-plasma::before,
+.rgb-border-plasma::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.rgb-border-plasma::before {
+    background: radial-gradient(
+        ellipse at 30% 30%,
+        rgba(255, 0, 128, 0.8) 0%,
+        rgba(255, 128, 0, 0.6) 25%,
+        rgba(255, 255, 0, 0.4) 50%,
+        rgba(0, 255, 128, 0.6) 75%,
+        rgba(0, 128, 255, 0.8) 100%
+    );
+    animation: plasma-shift 5s ease-in-out infinite;
+    filter: blur(2px);
+}
+
+.rgb-border-plasma::after {
+    background: radial-gradient(
+        ellipse at 70% 70%,
+        rgba(128, 0, 255, 0.8) 0%,
+        rgba(255, 0, 255, 0.6) 25%,
+        rgba(255, 0, 128, 0.4) 50%,
+        rgba(255, 128, 0, 0.6) 75%,
+        rgba(128, 255, 0, 0.8) 100%
+    );
+    animation: plasma-shift 5s ease-in-out infinite reverse;
+    filter: blur(2px);
+    mix-blend-mode: screen;
+}
+
+@keyframes plasma-shift {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.8;
+    }
+    25% {
+        transform: translate(5%, -5%) scale(1.1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(0, 5%) scale(1);
+        opacity: 0.8;
+    }
+    75% {
+        transform: translate(-5%, -5%) scale(1.1);
+        opacity: 1;
+    }
+}

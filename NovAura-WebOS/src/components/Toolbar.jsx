@@ -5,7 +5,8 @@ import {
   BookOpen, Paintbrush, Zap, Gamepad2, Music2, Settings,
   Wand2, Blocks, Shuffle, Briefcase, Swords, Image, Shirt,
   Sparkles, UserCircle, Users, Bot, Radio, PenTool, Library,
-  CreditCard, FileText, Bell, Trophy, PieChart, Layers, Shield
+  CreditCard, FileText, Bell, Trophy, PieChart, Layers, Shield,
+  Mic, Guitar
 } from 'lucide-react';
 import { kernelStorage } from '../kernel/kernelStorage.js';
 
@@ -37,6 +38,9 @@ const APP_REGISTRY = {
   'writing-library':   { icon: Library,       label: 'Writings',  color: 'var(--app-files)' },
   // Media
   'music-composer':    { icon: Music2,        label: 'Music',     color: 'var(--app-media)' },
+  'voice-studio':      { icon: Mic,           label: 'Voice',     color: '#00ff88' },
+  'music-studio':      { icon: Music,         label: 'Studio',    color: '#7000ff' },
+  'practice-tools':    { icon: Guitar,        label: 'Practice',  color: '#ffaa00' },
   'live-broadcast':    { icon: Radio,         label: 'Live',      color: 'var(--app-media)' },
   'media':             { icon: Music,         label: 'Media',     color: 'var(--app-media)' },
   'media-library':     { icon: FolderOpen,    label: 'Files',     color: 'var(--app-files)' },
@@ -76,6 +80,7 @@ const DEFAULT_APPS = [
   'media', 'media-library', 'chat', 'voice', 'terminal',
   'ai-assistant', 'literature-ide', 'art-studio', 'music-composer',
   'vibe-coding', 'games-arena', 'appstore', 'profile', 'personalization',
+  'voice-studio', 'music-studio', 'practice-tools',
 ];
 
 export default function Toolbar({ onOpenWindow }) {

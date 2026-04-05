@@ -28,19 +28,6 @@ function CodeBlock({ code, filename, language, onApply }) {
           <FileCode className="w-3 h-3" />
           {filename || language || 'code'}
         </span>
-
-        <div className="flex items-center gap-2 text-xs">
-          <label className="text-gray-400">Library</label>
-          <select
-            value={activeCodeLibraryId || ''}
-            onChange={(e) => setActiveCodeLibrary(e.target.value)}
-            className="bg-black/20 border border-white/10 text-[10px] text-gray-200 px-2 py-1 rounded"
-          >
-            {codeLibraries.map((lib) => (
-              <option key={lib.id} value={lib.id}>{lib.name}</option>
-            ))}
-          </select>
-        </div>
         <div className="flex items-center gap-1">
           {filename && (
             <button onClick={() => onApply(filename, code)} className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors">
@@ -412,6 +399,44 @@ export default function AIPanel() {
   const currentMode = MODES.find(m => m.id === (aiConfig?.mode || 'coder'));
   const restrictionInfo = RESTRICTION_LABELS[aiConfig?.restrictionLevel || 'moderate'];
 
+  const normalizeFilePath = (value) => {
+    return value
+      .replace(/\\/g, '/')
+      .replace(/^\.\//, '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '')
+      .trim();
+  };
+
+  const ensureFileNode = (rawPath) => {
+    const normalizedPath = normalizeFilePath(rawPath);
+    if (!normalizedPath) return null;
+
+    const store = useBuilderStore.getState();
+    const existing = store.flattenFiles().find((f) => (
+      f.path?.endsWith(`/${normalizedPath}`) || (!normalizedPath.includes('/') && f.name === normalizedPath)
+    ));
+    if (existing) return existing.id;
+
+    const segments = normalizedPath.split('/').filter(Boolean);
+    const fileName = segments.pop();
+    if (!fileName) return null;
+
+    let parentId = 'root';
+
+    for (const folderName of segments) {
+      const parentNode = store.findNode(parentId);
+      const folder = parentNode?.children?.find((child) => child.type === 'folder' && child.name === folderName);
+      parentId = folder ? folder.id : store.createFile(parentId, folderName, 'folder');
+    }
+
+    const parentNode = store.findNode(parentId);
+    const fileNode = parentNode?.children?.find((child) => child.type === 'file' && child.name === fileName);
+    if (fileNode) return fileNode.id;
+
+    return store.createFile(parentId, fileName, 'file');
+  };
+
   // Build conversation array for the API
   const buildConversation = () => {
     return chatHistory.map((msg) => ({
@@ -422,25 +447,12 @@ export default function AIPanel() {
 
   // Apply a single code block to the project
   const handleApplyCode = (filename, code) => {
-    const files = flattenFiles();
-    const existing = files.find((f) => f.name === filename || f.path?.endsWith(filename));
-    if (existing) {
-      updateFileContent(existing.id, code);
-      saveFile(existing.id);
-      openFile(existing.id);
-    } else {
-      // Create the file and fill it
-      const { createFile, tree } = useBuilderStore.getState();
-      createFile('root', filename, 'file');
-      // Grab the newly created file
-      const updated = useBuilderStore.getState().flattenFiles();
-      const newFile = updated.find((f) => f.name === filename);
-      if (newFile) {
-        updateFileContent(newFile.id, code);
-        saveFile(newFile.id);
-        openFile(newFile.id);
-      }
-    }
+    const fileId = ensureFileNode(filename);
+    if (!fileId) return;
+
+    updateFileContent(fileId, code);
+    saveFile(fileId);
+    openFile(fileId);
   };
 
   const handleSend = async () => {

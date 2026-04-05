@@ -4,7 +4,7 @@ import {
   Search, Image, Sparkles, LayoutGrid, Monitor,
   ShoppingBag, Globe, Shield, Loader2, X, Zap, Database
 } from 'lucide-react';
-import HeroCinematic from '../components/landing/HeroCinematic.jsx';
+import FlipbookHero from '../components/landing/FlipbookHero.jsx';
 import { toast } from 'sonner';
 
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-systems.cloudfunctions.net/api').replace(/\/$/, '');
@@ -394,7 +394,7 @@ export default function LandingPage({ onLaunchOS }) {
           transition={{ delay: 0.2 }}
           className="hidden lg:block w-[420px] xl:w-[480px] h-[320px] xl:h-[360px] flex-shrink-0"
         >
-          <HeroCinematic className="w-full h-full" />
+          <FlipbookHero className="w-full h-full" />
         </motion.div>
       </main>
 

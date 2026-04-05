@@ -99,7 +99,7 @@ const APP_CATEGORIES = [
     id: 'business', label: 'Business', color: 'text-orange-400',
     apps: [
       { type: 'business-operator', label: 'Operator', icon: Briefcase },
-      { type: 'nova-concierge', label: 'Concierge', icon: Sparkles },
+      { type: 'nova-concierge', label: 'Nova Biz', icon: Sparkles },
     ],
   },
   {
@@ -116,6 +116,7 @@ const APP_CATEGORIES = [
       { type: 'games-arena', label: 'Games', icon: Gamepad2 },
       { type: 'aetherium-tcg', label: 'Aetherium', icon: Swords },
       { type: 'gilded-cage', label: 'Gilded Cage', icon: Crown },
+      { type: 'glb-game', label: '3D Games', icon: Rocket },
       { type: 'inventory', label: 'Inventory', icon: Package },
     ],
   },

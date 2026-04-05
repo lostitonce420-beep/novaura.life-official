@@ -94,19 +94,12 @@ function BootScreen({ state }) {
       overflow: 'hidden',
       position: 'relative',
     }}>
-      {/* Boot animation video background */}
-      <video
-        autoPlay loop muted playsInline
-        style={{
-          position: 'absolute', inset: 0,
-          width: '100%', height: '100%',
-          objectFit: 'cover',
-          opacity: 0.35,
-          pointerEvents: 'none',
-        }}
-      >
-        <source src="/boot-animation.webm" type="video/webm" />
-      </video>
+      {/* Background glow effect */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 50%)',
+        pointerEvents: 'none',
+      }} />
 
       <div style={{
         position: 'relative', zIndex: 1,
@@ -114,20 +107,22 @@ function BootScreen({ state }) {
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', gap: 24,
       }}>
-        {/* Glow orb */}
+        {/* Logo */}
         <div style={{
-          width: 80, height: 80, borderRadius: '50%',
-          background: 'radial-gradient(circle, #00f0ff33 0%, transparent 70%)',
-          border: '1px solid #00f0ff22',
+          width: 120, height: 120,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           animation: 'novaura-pulse 2s ease-in-out infinite',
-          boxShadow: '0 0 40px #00f0ff22',
         }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: '50%',
-            background: 'radial-gradient(circle, #00f0ff 0%, #7c3aed 100%)',
-            opacity: 0.8,
-          }} />
+          <img 
+            src="/logo.png" 
+            alt="NovAura"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 0 30px rgba(0, 240, 255, 0.5))',
+            }}
+          />
         </div>
 
         {/* Brand */}

@@ -1,11 +1,11 @@
 import { db } from '../../config/firebase.js';
-import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
 
 /**
  * NovAura OS — MemoryMap
  * Cross-session persistent key-value store backed by Firestore.
  * Remembers: open windows, workspace state, user patterns, session context.
- * Path: users/{uid}/kernel/memory/{key}
+ * Path: users/{uid}/memory/{key}
  */
 
 const MAX_CACHE = 500;
@@ -143,8 +143,9 @@ class MemoryMap {
   }
 
   _docPath(key) {
-    const safe = key.replace(/[^a-zA-Z0-9_-]/g, '_');
-    return 'users/' + this._uid + '/kernel/memory/' + safe;
+    // 4 segments = valid Firestore document path (even = doc, odd = collection)
+    const safe = String(key || 'empty').replace(/[^a-zA-Z0-9_-]/g, '_') || 'empty';
+    return 'users/' + this._uid + '/memory/' + safe;
   }
 
   _scheduleWrite(key, entry) {
@@ -173,7 +174,7 @@ class MemoryMap {
   async _warmCache() {
     if (!this._uid || !db) return;
     try {
-      const colRef = collection(db, 'users/' + this._uid + '/kernel/memory');
+      const colRef = collection(db, 'users', this._uid, 'memory');
       const snap = await getDocs(colRef);
       const now = Date.now();
       snap.docs.forEach(d => {

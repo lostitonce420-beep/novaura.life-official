@@ -19,7 +19,7 @@ import {
 export default function AICompanionWindow() {
   const [mood, setMood] = useState('happy');
   const [messages, setMessages] = useState([
-    { id: 1, text: "Hi there! I'm Nova, your AI companion! 💕", sender: 'ai' },
+    { id: 1, text: "Hi there! I'm Aura, your AI companion! 💕", sender: 'ai' },
     { id: 2, text: "How can I help you today?", sender: 'ai' }
   ]);
   const [inputText, setInputText] = useState('');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'novaura-os-v2';
+const CACHE_NAME = 'novaura-os-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -6,6 +6,15 @@ const STATIC_ASSETS = [
   '/favicon.ico',
   '/favicon.png'
 ];
+
+function isHtmlResponse(response) {
+  const contentType = (response.headers.get('content-type') || '').toLowerCase();
+  return contentType.includes('text/html');
+}
+
+function isVersionedAsset(pathname) {
+  return pathname.startsWith('/assets/');
+}
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -56,6 +65,40 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Always prefer network for hashed build assets.
+  // Prevent caching HTML fallbacks under JS/CSS chunk URLs.
+  if (isVersionedAsset(url.pathname)) {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' })
+        .then((response) => {
+          if (!response.ok) return response;
+
+          if (isHtmlResponse(response)) {
+            return new Response('Stale asset reference. Refresh required.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain' },
+            });
+          }
+
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, clone);
+          });
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then((cached) => {
+            if (cached) return cached;
+            return new Response('Asset unavailable', {
+              status: 504,
+              headers: { 'Content-Type': 'text/plain' },
+            });
+          })
+        )
+    );
+    return;
+  }
+
   // Network-first strategy for navigation requests
   if (request.mode === 'navigate') {
     event.respondWith(
@@ -84,7 +127,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then((cached) => {
       const fetchPromise = fetch(request)
         .then((networkResponse) => {
-          if (networkResponse.ok) {
+          if (networkResponse.ok && !isHtmlResponse(networkResponse)) {
             const clone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, clone);
@@ -92,7 +135,13 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => cached);
+        .catch(() => {
+          if (cached) return cached;
+          return new Response('Offline and not cached', {
+            status: 504,
+            headers: { 'Content-Type': 'text/plain' },
+          });
+        });
 
       return cached || fetchPromise;
     })

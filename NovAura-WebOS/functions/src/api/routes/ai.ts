@@ -21,7 +21,7 @@ const PROVIDERS: Record<string, any> = {
     parseResponse: (data: any) => data.choices?.[0]?.message?.content || ''
   },
   gemini: {
-    url: (key: string) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+    url: (key: string) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
     headers: { 'Content-Type': 'application/json' },
     formatBody: (prompt: string, maxTokens: number, temp: number) => ({
       contents: [{ parts: [{ text: prompt }] }],

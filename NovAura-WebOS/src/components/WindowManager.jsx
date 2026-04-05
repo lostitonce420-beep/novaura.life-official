@@ -56,19 +56,19 @@ const LivingAvatarCreator = lazy(() => import('./windows/LivingAvatarCreator'));
     const FilesWindow = lazy(() => import('./windows/FilesWindow'));
     const PixAIWindow = lazy(() => import('./windows/PixAIWindow'));
     const BusinessOperatorWindow = lazy(() => import('./windows/BusinessOperatorWindow'));
-/*
     const NovaConciergeWindow = lazy(() => import('./windows/NovaConciergeWindow'));
-*/
     const GraphicsSettingsWindow = lazy(() => import('./windows/GraphicsSettingsWindow'));
     const SocialNetworkWindow = lazy(() => import('./windows/SocialNetworkWindow'));
-/*
     const ImagenWindow = lazy(() => import('./windows/ImagenWindow'));
-*/
     const LiveAIWindow = lazy(() => import('./windows/LiveAIWindow'));
     const WeatherWindow = lazy(() => import('./windows/WeatherWindow'));
     const GildedCageGame = lazy(() => import('./games/GildedCageGame'));
     const CryptoWindow = lazy(() => import('./windows/CryptoWindow'));
     const CalculatorWindow = lazy(() => import('./windows/CalculatorWindow'));
+const VoiceStudioWindow = lazy(() => import('./windows/VoiceStudioWindow'));
+const MusicStudioWindow = lazy(() => import('./windows/MusicStudioWindow'));
+const PracticeToolsWindow = lazy(() => import('./windows/PracticeToolsWindow'));
+const GLBGameWindow = lazy(() => import('./windows/GLBGameWindow'));
 
 const windowComponents = {
   ide: IDEWindow,
@@ -124,19 +124,19 @@ const windowComponents = {
     'files': FilesWindow,
     'pixai': PixAIWindow,
     'business-operator': BusinessOperatorWindow,
-/*
     'nova-concierge': NovaConciergeWindow,
-*/
     'graphics-settings': GraphicsSettingsWindow,
     'social': SocialNetworkWindow,
-/*
     'imagen': ImagenWindow,
-*/
     'live-ai': LiveAIWindow,
     'weather': WeatherWindow,
     'crypto': CryptoWindow,
     'calculator': CalculatorWindow,
     'gilded-cage': GildedCageGame,
+  'voice-studio': VoiceStudioWindow,
+  'music-studio': MusicStudioWindow,
+  'practice-tools': PracticeToolsWindow,
+  'glb-game': GLBGameWindow,
 };
 
 const defaultSizes = {
@@ -198,9 +198,13 @@ const defaultSizes = {
   'imagen': { width: 900, height: 700 },
   'live-ai': { width: 600, height: 700 },
   'weather': { width: 480, height: 620 },
+  'voice-studio': { width: 1200, height: 800 },
+  'music-studio': { width: 1400, height: 900 },
+  'practice-tools': { width: 600, height: 800 },
   'crypto': { width: 720, height: 600 },
   'calculator': { width: 360, height: 520 },
   'gilded-cage': { width: 720, height: 580 },
+  'glb-game': { width: 900, height: 700 },
 };
 
 // Get responsive size based on screen width

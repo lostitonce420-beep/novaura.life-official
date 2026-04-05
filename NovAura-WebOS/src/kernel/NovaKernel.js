@@ -11,10 +11,11 @@ import MemoryMap from './subsystems/MemoryMap.js';
 import PluginRegistry from './subsystems/PluginRegistry.js';
 import Scheduler from './subsystems/Scheduler.js';
 import CrashHandler from './subsystems/CrashHandler.js';
+import { getSemanticsEngine } from './SemanticsEngine.js';
 
 /**
  * NovAura OS — Nova Kernel v2
- * Orchestrates all 12 subsystems. Single boot sequence. Singleton instance.
+ * Orchestrates all 13 subsystems. Single boot sequence. Singleton instance.
  *
  * Boot phases:
  *   0  KERNEL_INIT   — subsystems instantiated
@@ -24,10 +25,11 @@ import CrashHandler from './subsystems/CrashHandler.js';
  *   4  PREFS         — user preferences loaded
  *   5  MEMORY        — memory map online, workspace snapshot loaded
  *   6  AI_CONNECT    — AI provider availability probed (Phase 1/2/3 engine warm)
- *   7  PLUGINS       — plugin registry online
- *   8  SCHEDULER     — task scheduler starts, system tasks registered
- *   9  CRASH_GUARD   — global error handlers installed
- *  10  DESKTOP       — kernel ready, emit system:ready
+ *   7  SEMANTICS     — semantics engine online (AI controllable OS)
+ *   8  PLUGINS       — plugin registry online
+ *   9  SCHEDULER     — task scheduler starts, system tasks registered
+ *   10 CRASH_GUARD   — global error handlers installed
+ *   11 DESKTOP       — kernel ready, emit system:ready
  */
 
 const BOOT_PHASES = [
@@ -38,10 +40,11 @@ const BOOT_PHASES = [
   { id: 4,  name: 'PREFS',        label: 'Loading preferences...' },
   { id: 5,  name: 'MEMORY',       label: 'Restoring memory map...' },
   { id: 6,  name: 'AI_CONNECT',   label: 'Probing AI providers...' },
-  { id: 7,  name: 'PLUGINS',      label: 'Loading plugin registry...' },
-  { id: 8,  name: 'SCHEDULER',    label: 'Starting task scheduler...' },
-  { id: 9,  name: 'CRASH_GUARD',  label: 'Installing crash guard...' },
-  { id: 10, name: 'DESKTOP',      label: 'Launching desktop...' },
+  { id: 7,  name: 'SEMANTICS',    label: 'Initializing semantics engine...' },
+  { id: 8,  name: 'PLUGINS',      label: 'Loading plugin registry...' },
+  { id: 9,  name: 'SCHEDULER',    label: 'Starting task scheduler...' },
+  { id: 10, name: 'CRASH_GUARD',  label: 'Installing crash guard...' },
+  { id: 11, name: 'DESKTOP',      label: 'Launching desktop...' },
 ];
 
 class NovaKernel {
@@ -60,6 +63,7 @@ class NovaKernel {
     this.plugins       = null;
     this.scheduler     = null;
     this.crash         = null;
+    this.semantics     = null;
 
     this.bootPhase = 'idle';
     this.bootLog   = [];
@@ -143,14 +147,21 @@ class NovaKernel {
         this._log(6, 'AI engine online. Hash cache loaded. Provider probe dispatched.');
       });
 
-      // Phase 7 — Plugin registry
+      // Phase 7 — Semantics Engine (makes OS AI-controllable)
       await this._phase(7, () => {
-        this.plugins.init(this);
-        this._log(7, 'Plugin registry online.');
+        this.semantics = getSemanticsEngine();
+        this.semantics.init(this);
+        this._log(7, `Semantics engine online. ${this.semantics.getAvailableApps().length} apps registered.`);
       });
 
-      // Phase 8 — Scheduler
+      // Phase 8 — Plugin registry
       await this._phase(8, () => {
+        this.plugins.init(this);
+        this._log(8, 'Plugin registry online.');
+      });
+
+      // Phase 9 — Scheduler
+      await this._phase(9, () => {
         this.scheduler.init(this);
         // System tasks (heartbeat, autosave, prefs:sync, ai:probe) are
         // registered inside Scheduler.init() → _registerSystemTasks()
@@ -159,22 +170,22 @@ class NovaKernel {
           this.ai.warmupCache?.();
         }, { interval: 1_800_000, tags: ['system', 'ai'] });
 
-        this._log(8, 'Scheduler online. ' + this.scheduler.getAll().length + ' system tasks registered.');
+        this._log(9, 'Scheduler online. ' + this.scheduler.getAll().length + ' system tasks registered.');
       });
 
-      // Phase 9 — Crash guard
-      await this._phase(9, () => {
-        this.crash.init(this);
-        this._log(9, 'Crash guard installed. Auto-repair via Gemini active.');
-      });
-
-      // Phase 10 — Remaining subsystems + Desktop ready
+      // Phase 10 — Crash guard
       await this._phase(10, () => {
+        this.crash.init(this);
+        this._log(10, 'Crash guard installed. Auto-repair via Gemini active.');
+      });
+
+      // Phase 11 — Remaining subsystems + Desktop ready
+      await this._phase(11, () => {
         this.fs.init(this);
         this.notifications.init(this);
         this.processes.init(this);
         this.processes.boot();
-        this._log(10, 'Desktop ready. Boot took ' + (Date.now() - this._bootStart) + 'ms.');
+        this._log(11, 'Desktop ready. Boot took ' + (Date.now() - this._bootStart) + 'ms.');
       });
 
       this.bootPhase = 'ready';

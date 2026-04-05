@@ -45,25 +45,53 @@ export default function PipelinePanel() {
   const addLog = (msg) => setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), msg }]);
   const updatePhase = (id, status) => setPhases(prev => prev.map(p => p.id === id ? { ...p, status } : p));
 
+  const normalizeFilePath = (value) => {
+    return value
+      .replace(/\\/g, '/')
+      .replace(/^\.\//, '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '')
+      .trim();
+  };
+
+  const ensureFileNode = (rawPath) => {
+    const normalizedPath = normalizeFilePath(rawPath);
+    if (!normalizedPath) return null;
+
+    const store = useBuilderStore.getState();
+    const existing = store.flattenFiles().find((f) => (
+      f.path?.endsWith(`/${normalizedPath}`) || (!normalizedPath.includes('/') && f.name === normalizedPath)
+    ));
+    if (existing) return existing.id;
+
+    const segments = normalizedPath.split('/').filter(Boolean);
+    const fileName = segments.pop();
+    if (!fileName) return null;
+
+    let parentId = 'root';
+
+    for (const folderName of segments) {
+      const parentNode = store.findNode(parentId);
+      const folder = parentNode?.children?.find((child) => child.type === 'folder' && child.name === folderName);
+      parentId = folder ? folder.id : store.createFile(parentId, folderName, 'folder');
+    }
+
+    const parentNode = store.findNode(parentId);
+    const fileNode = parentNode?.children?.find((child) => child.type === 'file' && child.name === fileName);
+    if (fileNode) return fileNode.id;
+
+    return store.createFile(parentId, fileName, 'file');
+  };
+
   // ── Apply generated code to project ──────────────────────
 
   const applyToProject = (blocks) => {
     const store = useBuilderStore.getState();
     Object.entries(blocks).forEach(([filename, code]) => {
-      const files = store.flattenFiles();
-      const existing = files.find(f => f.name === filename || f.path?.endsWith(filename));
-      if (existing) {
-        store.updateFileContent(existing.id, code);
-        store.saveFile(existing.id);
-      } else {
-        store.createFile('root', filename, 'file');
-        const updated = store.flattenFiles();
-        const newFile = updated.find(f => f.name === filename);
-        if (newFile) {
-          store.updateFileContent(newFile.id, code);
-          store.saveFile(newFile.id);
-        }
-      }
+      const fileId = ensureFileNode(filename);
+      if (!fileId) return;
+      store.updateFileContent(fileId, code);
+      store.saveFile(fileId);
     });
   };
 
@@ -132,6 +160,7 @@ export default function PipelinePanel() {
 
   const doneCount = phases.filter(p => p.status === 'done').length;
   const currentPhase = phases.find(p => p.status === 'running');
+  const progressPercent = phases.length > 0 ? Math.round((doneCount / phases.length) * 100) : 0;
 
   return (
     <div className="flex flex-col h-full bg-[#12121e] text-gray-300">
@@ -139,7 +168,7 @@ export default function PipelinePanel() {
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-400" />
-          <span className="text-xs font-semibold">Cascading Pipeline</span>
+          <span className={`text-xs font-semibold ${running ? 'text-amber-300 animate-pulse' : ''}`}>Cascading Pipeline</span>
           {running && (
             <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">
               {doneCount}/{phases.length}
@@ -153,6 +182,17 @@ export default function PipelinePanel() {
           <Settings className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      {running && (
+        <div className="px-3 pt-2">
+          <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-400 via-primary to-green-400 transition-all duration-500 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Config panel */}
       {showConfig && (
@@ -305,9 +345,9 @@ export default function PipelinePanel() {
           <div
             key={phase.id}
             className={`flex items-center gap-2 px-2 py-1.5 rounded text-[11px] transition-colors ${
-              phase.status === 'running' ? 'bg-primary/10 text-gray-200' :
-              phase.status === 'done' ? 'text-gray-400' :
-              phase.status === 'error' ? 'text-red-400 bg-red-500/5' :
+              phase.status === 'running' ? 'bg-primary/10 text-gray-200 border border-primary/20 shadow-[0_0_14px_rgba(0,240,255,0.12)] animate-pulse' :
+              phase.status === 'done' ? 'text-gray-400 border border-green-500/10 bg-green-500/[0.03]' :
+              phase.status === 'error' ? 'text-red-400 bg-red-500/5 border border-red-500/20' :
               'text-gray-500'
             }`}
           >

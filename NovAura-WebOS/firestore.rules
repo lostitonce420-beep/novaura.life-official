@@ -17,6 +17,19 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // USER WORKSPACE / KERNEL DATA
+    // Covers users/{uid}/prefs/settings, users/{uid}/memory/*,
+    // users/{uid}/kernel/** and other per-user workspace subcollections.
+    // ═══════════════════════════════════════════════════════════════
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+
+      match /{document=**} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // SOCIAL PROFILES
     // ═══════════════════════════════════════════════════════════════
     match /social_profiles/{userId} {
