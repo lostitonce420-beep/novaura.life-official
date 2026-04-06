@@ -18,6 +18,13 @@ export default defineConfig(({ mode }) => ({
       input: mode === 'landing' 
         ? path.resolve(__dirname, 'src/landing-main.jsx')
         : path.resolve(__dirname, 'index.html'),
+      external: [
+        'isomorphic-git', 
+        'isomorphic-git/http/web', 
+        /^isomorphic-git/,
+        '@isomorphic-git/lightning-fs',
+        /^@isomorphic-git/
+      ],
     },
   },
 }));

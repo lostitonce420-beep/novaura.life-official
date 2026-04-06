@@ -14,8 +14,6 @@ const RGB_BORDER_STYLES = [
   'rgb-border-ocean',
   'rgb-border-forest',
   'rgb-border-candy',
-  'rgb-border-chaos',
-  'rgb-border-plasma',
 ];
 
 const RGB_GLOW_STYLES = [

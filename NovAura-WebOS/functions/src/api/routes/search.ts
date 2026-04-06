@@ -1,12 +1,11 @@
 /**
  * Search API Routes
- * Aggregates results from multiple sources
+ * Uses DuckDuckGo for web and image search (free, no API key needed)
  */
 
 import { Router } from 'express';
 import * as admin from 'firebase-admin';
-
-import { secretService } from '../../services/secretService';
+import { search, SafeSearchType } from 'duck-duck-scrape';
 
 const router = Router();
 
@@ -16,15 +15,15 @@ function webFallbackResponse(query: string, reason = 'Search provider unavailabl
     results: [
       {
         title: `NovAura is more than search — explore the platform`,
-        url: 'https://novaura.life/platform/feed',
+        url: '/feed',
         snippet: 'Search is temporarily degraded. Jump into the platform feed, creation tools, and app ecosystem while services recover.',
         displayUrl: 'novaura.life'
       },
       {
         title: `Search query captured: "${query}"`,
-        url: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
-        snippet: 'External search fallback. Open this query directly while we revalidate provider keys.',
-        displayUrl: 'google.com'
+        url: `https://duckduckgo.com/?q=${encodeURIComponent(query)}`,
+        snippet: 'External search fallback. Open this query directly on DuckDuckGo.',
+        displayUrl: 'duckduckgo.com'
       }
     ],
     fallback: true,
@@ -38,64 +37,41 @@ function imageFallbackResponse(query: string, reason = 'Image search provider un
     images: [],
     fallback: true,
     message: reason,
-    externalSearchUrl: `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`,
+    externalSearchUrl: `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`,
   };
 }
 
 /**
- * Helper to get search credentials from Secret Manager or environment
- */
-async function getSearchCredentials() {
-  const apiKey = await secretService.getSecret('GOOGLE_SEARCH_API_KEY');
-  const cx = await secretService.getSecret('GOOGLE_SEARCH_CX');
-  return { apiKey, cx };
-}
-
-/**
- * Web Search
+ * Web Search using DuckDuckGo
  * GET /search?q=query
  */
 router.get('/', async (req, res) => {
   try {
-    const { q, page = 1 } = req.query;
+    const { q } = req.query;
     
     if (!q || typeof q !== 'string') {
       res.status(400).json({ error: 'Query required' });
       return;
     }
 
-    const { apiKey, cx } = await getSearchCredentials();
+    // Use DuckDuckGo search (no API key needed)
+    const searchResults = await search(q, {
+      safeSearch: SafeSearchType.OFF,
+    });
 
-    if (apiKey && cx) {
-      const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(q)}&start=${(Number(page) - 1) * 10 + 1}`
-      );
+    res.json({
+      query: q,
+      results: searchResults.results.map((item: any) => ({
+        title: item.title,
+        url: item.url,
+        snippet: item.description,
+        displayUrl: item.hostname || new URL(item.url).hostname.replace('www.', '')
+      })),
+      totalResults: searchResults.results.length,
+      searchTime: 0
+    });
+    return;
 
-      if (!response.ok) {
-        const detail = await response.text().catch(() => '');
-        console.warn(`[Search] Google API degraded (${response.status}): ${detail}`);
-        res.json(webFallbackResponse(q, `Search degraded (${response.status}) — fallback active`));
-        return;
-      }
-
-      const data = await response.json();
-
-      res.json({
-        query: q,
-        results: data.items?.map((item: any) => ({
-          title: item.title,
-          url: item.link,
-          snippet: item.snippet,
-          displayUrl: item.displayLink
-        })) || [],
-        totalResults: data.searchInformation?.totalResults || 0,
-        searchTime: data.searchInformation?.searchTime || 0
-      });
-      return;
-    } else {
-      res.json(webFallbackResponse(q, 'Search credentials missing — fallback active'));
-      return;
-    }
   } catch (err: any) {
     console.error('Search error:', err);
     const query = typeof req.query.q === 'string' ? req.query.q : '';
@@ -104,7 +80,7 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * Image Search
+ * Image Search using DuckDuckGo
  * GET /search/images?q=query
  */
 router.get('/images', async (req, res) => {
@@ -116,38 +92,17 @@ router.get('/images', async (req, res) => {
       return;
     }
 
-    const { apiKey, cx } = await getSearchCredentials();
+    // DuckDuckGo doesn't have a direct image API, so we return a fallback
+    // that redirects to DDG image search
+    res.json({
+      query: q,
+      images: [],
+      fallback: true,
+      message: 'Image search via DuckDuckGo - click below to view',
+      externalSearchUrl: `https://duckduckgo.com/?q=${encodeURIComponent(q)}&iax=images&ia=images`,
+    });
+    return;
 
-    if (apiKey && cx) {
-      const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(q)}&searchType=image&num=10`
-      );
-
-      if (!response.ok) {
-        const detail = await response.text().catch(() => '');
-        console.warn(`[Search] Google image API degraded (${response.status}): ${detail}`);
-        res.json(imageFallbackResponse(q, `Image search degraded (${response.status}) — fallback active`));
-        return;
-      }
-
-      const data = await response.json();
-
-      res.json({
-        query: q,
-        images: data.items?.map((item: any) => ({
-          title: item.title,
-          thumbnail: item.image?.thumbnailLink,
-          source: item.link,
-          context: item.image?.contextLink,
-          width: item.image?.width,
-          height: item.image?.height
-        })) || []
-      });
-      return;
-    } else {
-      res.json(imageFallbackResponse(q, 'Image search credentials missing — fallback active'));
-      return;
-    }
   } catch (err: any) {
     console.error('Image search error:', err);
     const query = typeof req.query.q === 'string' ? req.query.q : '';

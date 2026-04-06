@@ -2,21 +2,8 @@ import React, { useState } from 'react';
 import { Image, Search, Filter, Grid, List, Star, Download, Eye, Heart, ArrowLeft } from 'lucide-react';
 import { kernelStorage } from '../../kernel/kernelStorage.js';
 
-// Demo gallery pieces — in production these come from backend/user uploads
-const DEMO_PIECES = [
-  { id: 1, title: 'Neon Cityscape', type: 'background', tags: ['cyberpunk','city','neon'], author: 'System', featured: true, likes: 42, art: '🌆', color: 'from-cyan-900/40 to-slate-900' },
-  { id: 2, title: 'Mech Warrior Sprite', type: 'sprite', tags: ['mech','character','animation'], author: 'System', featured: true, likes: 38, art: '🤖', color: 'from-purple-900/40 to-slate-900' },
-  { id: 3, title: 'Forest Background', type: 'background', tags: ['nature','forest','green'], author: 'System', featured: false, likes: 15, art: '🌲', color: 'from-green-900/40 to-slate-900' },
-  { id: 4, title: 'Crystal Avatar', type: 'avatar', tags: ['crystal','magic','fantasy'], author: 'System', featured: true, likes: 67, art: '💎', color: 'from-blue-900/40 to-slate-900' },
-  { id: 5, title: 'Steampunk Gears', type: 'procedural', tags: ['steampunk','gears','animation'], author: 'System', featured: false, likes: 22, art: '⚙️', color: 'from-amber-900/40 to-slate-900' },
-  { id: 6, title: 'Void Portal', type: 'animation', tags: ['portal','void','effect'], author: 'System', featured: true, likes: 55, art: '🌀', color: 'from-indigo-900/40 to-slate-900' },
-  { id: 7, title: 'Pixel Knight', type: 'sprite', tags: ['knight','pixel','character'], author: 'System', featured: false, likes: 31, art: '⚔️', color: 'from-red-900/40 to-slate-900' },
-  { id: 8, title: 'Sakura Dress', type: 'clothing', tags: ['dress','sakura','elegant'], author: 'System', featured: false, likes: 19, art: '👗', color: 'from-pink-900/40 to-slate-900' },
-  { id: 9, title: 'Space Nebula', type: 'background', tags: ['space','nebula','stars'], author: 'System', featured: true, likes: 73, art: '🌌', color: 'from-violet-900/40 to-slate-900' },
-  { id: 10, title: 'Fire Elemental', type: 'animation', tags: ['fire','elemental','effect'], author: 'System', featured: false, likes: 28, art: '🔥', color: 'from-orange-900/40 to-slate-900' },
-  { id: 11, title: 'Circuit Pattern', type: 'procedural', tags: ['circuit','tech','pattern'], author: 'System', featured: false, likes: 14, art: '🔌', color: 'from-teal-900/40 to-slate-900' },
-  { id: 12, title: 'Dragon Sketch', type: 'hand-drawn', tags: ['dragon','sketch','fantasy'], author: 'System', featured: true, likes: 89, art: '🐉', color: 'from-red-900/40 to-slate-900' },
-];
+// Art Gallery - Loads from backend API or local storage
+// No demo data - only real uploaded assets
 
 const ART_TYPES = ['all', 'featured', 'background', 'sprite', 'animation', 'procedural', 'clothing', 'avatar', 'hand-drawn'];
 
@@ -28,12 +15,34 @@ export default function ArtGalleryWindow() {
   const [selected, setSelected] = useState(null);
   const [liked, setLiked] = useState(new Set());
   const [tab, setTab] = useState('community'); // community | mine
+  const [communityPieces, setCommunityPieces] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load community pieces from backend
+  useEffect(() => {
+    const loadAssets = async () => {
+      try {
+        setIsLoading(true);
+        const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'https://us-central1-novaura-systems.cloudfunctions.net/api').replace(/\/$/, '');
+        const response = await fetch(`${BACKEND_URL}/assets`);
+        if (response.ok) {
+          const data = await response.json();
+          setCommunityPieces(data.assets || []);
+        }
+      } catch (err) {
+        console.error('Failed to load assets:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadAssets();
+  }, []);
 
   const customArt = (() => { try { return JSON.parse(kernelStorage.getItem('art_gallery_custom') || '[]'); } catch { return []; } })();
 
   const allPieces = tab === 'mine'
     ? customArt.map(a => ({ id: a.id, title: a.title, type: 'hand-drawn', tags: ['custom'], author: 'You', featured: false, likes: 0, art: '🎨', color: 'from-cyan-900/40 to-slate-900', dataUrl: a.dataUrl }))
-    : DEMO_PIECES;
+    : communityPieces;
 
   const filtered = allPieces.filter(p => {
     if (filter === 'featured') return p.featured;
@@ -135,7 +144,20 @@ export default function ArtGalleryWindow() {
 
       {/* Gallery */}
       <div className="flex-1 overflow-y-auto p-3">
-        {viewMode === 'grid' ? (
+        {isLoading && tab === 'community' && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-slate-500 text-xs">Loading assets...</div>
+          </div>
+        )}
+        
+        {!isLoading && filtered.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+            <Image className="w-10 h-10 mb-3 opacity-30" />
+            <div className="text-xs">{tab === 'mine' ? 'No custom art yet' : 'No assets in gallery'}</div>
+          </div>
+        )}
+
+        {!isLoading && filtered.length > 0 && viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {filtered.map(piece => (
               <button key={piece.id} onClick={() => setSelected(piece)}

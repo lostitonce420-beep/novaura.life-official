@@ -30,26 +30,16 @@ const TABS = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-// Mock data for when backend isn't connected
-const MOCK_USERS = [
-  { id: '1', username: 'Dillan', email: 'the.lost.catalyst@gmail.com', role: 'admin', membership_tier: 'catalyst', status: 'active', created_at: '2025-12-01', consciousness_coins: 99999 },
-  { id: '2', username: 'NeonRider', email: 'neon@example.com', role: 'creator', membership_tier: 'pro', status: 'active', created_at: '2026-01-15', consciousness_coins: 2400 },
-  { id: '3', username: 'PixelMaster', email: 'pixel@example.com', role: 'buyer', membership_tier: 'free', status: 'active', created_at: '2026-02-20', consciousness_coins: 150 },
-  { id: '4', username: 'ShadowArt', email: 'shadow@example.com', role: 'buyer', membership_tier: 'free', status: 'suspended', created_at: '2026-03-01', consciousness_coins: 0 },
-  { id: '5', username: 'CodeBreaker', email: 'code@example.com', role: 'moderator', membership_tier: 'pro', status: 'active', created_at: '2026-01-30', consciousness_coins: 5200 },
-];
-
-const MOCK_REPORTS = [
-  { id: 'r1', type: 'content', reporter: 'PixelMaster', target: 'Inappropriate image in gallery', status: 'pending', date: '2026-03-20' },
-  { id: 'r2', type: 'user', reporter: 'NeonRider', target: 'ShadowArt — spam messages', status: 'resolved', date: '2026-03-18' },
-  { id: 'r3', type: 'content', reporter: 'CodeBreaker', target: 'Copyrighted asset uploaded', status: 'pending', date: '2026-03-21' },
-];
+// AdminPanel - Real-time data from Firestore only
+// No mock data - all data comes from backend
 
 export default function AdminPanelWindow() {
   const [tab, setTab] = useState('overview');
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataError, setDataError] = useState(null);
   const [userSearch, setUserSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);

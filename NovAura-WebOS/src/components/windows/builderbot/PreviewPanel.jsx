@@ -9,7 +9,7 @@ const VIEWPORTS = [
 ];
 
 export default function PreviewPanel() {
-  const { flattenFiles, tree, runKey } = useBuilderStore();
+  const { flattenFiles, tree, runKey, pushIframeError, clearIframeErrors } = useBuilderStore();
   const [viewport, setViewport] = useState('desktop');
   const [localKey, setLocalKey] = useState(0);
   const iframeRef = useRef(null);
@@ -18,6 +18,23 @@ export default function PreviewPanel() {
   const key = localKey + runKey;
 
   const files = useMemo(() => flattenFiles(), [tree]);
+
+  // Capture console errors from the live preview iframe and feed them to the agent loop
+  useEffect(() => {
+    const handler = (e) => {
+      if (!e.data || e.data.type !== 'cybeni-console') return;
+      if (e.data.level === 'error' || e.data.level === 'warn') {
+        pushIframeError({ level: e.data.level, text: e.data.text, ts: Date.now() });
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [pushIframeError]);
+
+  // Clear errors every time the preview reloads so stale errors don't confuse the agent
+  useEffect(() => {
+    clearIframeErrors();
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Build the preview document from project files
   const srcdoc = useMemo(() => {

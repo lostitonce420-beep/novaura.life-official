@@ -33,6 +33,7 @@ function GameSelector({ onSelect }) {
   const games = [
     { id: 'nova-strike', name: 'Nova Strike', icon: Rocket, color: 'cyan', desc: 'Galactica space shooter — 3 ships, talent tree, boss waves' },
     { id: 'gilded-cage', name: 'The Gilded Cage', icon: Sword, color: 'gold', desc: 'Steampunk RPG adventure — heist the Governor\'s tower' },
+    { id: 'atomic-steamworld', name: 'Atomic Steamworld', icon: Sword, color: 'orange', desc: 'Run, survive and kill monsters' },
     { id: 'chess', name: 'Chess', icon: Crown, color: 'emerald', desc: 'Full chess with castling, en passant & promotion' },
     { id: 'checkers', name: 'Checkers', icon: Gamepad2, color: 'amber', desc: 'Classic checkers with forced jumps & kings' },
     { id: 'tictactoe', name: 'Tic Tac Toe', icon: Brain, color: 'purple', desc: 'Minimax AI with 4 difficulty levels' },
@@ -40,6 +41,7 @@ function GameSelector({ onSelect }) {
   const colorMap = {
     cyan: 'from-cyan-600 to-blue-600',
     gold: 'from-yellow-600 to-amber-700',
+    orange: 'from-orange-600 to-red-700',
     emerald: 'from-emerald-600 to-teal-600',
     amber: 'from-amber-600 to-orange-600',
     purple: 'from-purple-600 to-pink-600',
@@ -636,6 +638,7 @@ export default function GamesArenaWindow() {
   const [game, setGame] = useState(null);
 
   if (game === 'nova-strike') return <IframeGame src="/games/nova-strike.html" title="Nova Strike" onBack={() => setGame(null)} />;
+  if (game === 'atomic-steamworld') return <IframeGame src="https://atomic-steamworld.replit.app" title="Atomic Steamworld" onBack={() => setGame(null)} />;
   if (game === 'gilded-cage') return (
     <div className="h-full flex flex-col bg-slate-900">
       <div className="flex items-center gap-2 px-3 py-2 bg-slate-900 border-b border-slate-700 shrink-0">

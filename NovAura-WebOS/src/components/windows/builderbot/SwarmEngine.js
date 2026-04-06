@@ -269,6 +269,9 @@ export class OrchestratorAgent {
     this.completedTasks = [];
     this.failedTasks = [];
     this.projectContext = {};
+    this.failed = false;
+    this.failReason = null;
+    this.isPlanning = false;
   }
 
   async createProject(prompt, options = {}) {
@@ -279,24 +282,33 @@ export class OrchestratorAgent {
       createdAt: Date.now()
     };
 
-    // Step 1: Plan the project
-    const plan = await this.createPlan(prompt);
-    
-    // Step 2: Create tasks from plan
-    this.taskQueue = this.createTasks(plan);
-    
-    // Step 3: Execute in batches
-    await this.executeBatches();
-    
-    // Step 4: QA Review
-    await self.qaReview();
-    
-    return {
-      success: true,
-      files: this.vfs.export(),
-      tasksCompleted: this.completedTasks.length,
-      tasksFailed: this.failedTasks.length
-    };
+    try {
+      // Step 1: Plan the project
+      this.isPlanning = true;
+      const plan = await this.createPlan(prompt);
+      this.isPlanning = false;
+
+      // Step 2: Create tasks from plan
+      this.taskQueue = this.createTasks(plan);
+
+      // Step 3: Execute in batches
+      await this.executeBatches();
+
+      // Step 4: QA Review
+      await this.qaReview();
+
+      return {
+        success: true,
+        files: this.vfs.export(),
+        tasksCompleted: this.completedTasks.length,
+        tasksFailed: this.failedTasks.length
+      };
+    } catch (err) {
+      this.isPlanning = false;
+      this.failed = true;
+      this.failReason = err.message || 'Unknown error';
+      throw err;
+    }
   }
 
   async createPlan(prompt) {
@@ -553,11 +565,14 @@ Write complete, working code.`;
     return {
       totalTasks: this.taskQueue.length,
       completed: this.completedTasks.length,
-      failed: this.failedTasks.length,
+      failedTasks: this.failedTasks.length,
       pending: this.taskQueue.filter(t => t.status === 'pending').length,
       working: this.taskQueue.filter(t => t.status === 'working').length,
       agents: this.agents.size,
-      files: this.vfs.files.size
+      files: this.vfs.files.size,
+      isPlanning: this.isPlanning,
+      failed: this.failed,
+      failReason: this.failReason
     };
   }
 }
@@ -575,13 +590,14 @@ export class SwarmEngine {
     const orchestrator = new OrchestratorAgent();
     this.activeProjects.set(projectId, orchestrator);
 
-    // Start building
-    const result = await orchestrator.createProject(prompt, options);
-    
-    return {
-      projectId,
-      ...result
-    };
+    // Fire-and-forget — return projectId immediately so the UI can poll progress
+    orchestrator.createProject(prompt, options).catch(err => {
+      orchestrator.failed = true;
+      orchestrator.failReason = err.message || 'Build failed';
+      console.error('[SwarmEngine] Project failed:', err);
+    });
+
+    return { projectId };
   }
 
   getProjectStatus(projectId) {

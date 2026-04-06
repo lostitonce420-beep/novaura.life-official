@@ -61,6 +61,26 @@ export default function App() {
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
+    // Restore last session windows (type + title + safe props only)
+    try {
+      const savedSession = kernelStorage.getItem('novaura_session_windows');
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const restored = parsed.map((w, i) => ({
+            id: `window-restored-${Date.now()}-${i}`,
+            type: w.type,
+            title: w.title,
+            zIndex: 1000 + i,
+            props: w.props || {},
+          }));
+          setWindows(restored);
+          setNextZIndex(1000 + restored.length);
+        }
+      }
+    } catch (e) {
+      console.error('Error restoring session windows:', e);
+    }
     // Load Aura history and prompt library
     try {
       const savedHistory = kernelStorage.getItem('novaura_aura_history');
@@ -71,6 +91,14 @@ export default function App() {
       console.error('Error loading Aura memory:', e);
     }
   }, []);
+
+  // Auto-save open windows to session storage whenever they change
+  useEffect(() => {
+    try {
+      const saveable = windows.map(w => ({ type: w.type, title: w.title, props: w.props || {} }));
+      kernelStorage.setItem('novaura_session_windows', JSON.stringify(saveable));
+    } catch (e) { /* ignore */ }
+  }, [windows]);
 
   // Firebase Auth — sole source of truth. No localStorage bypass.
   useEffect(() => {
@@ -532,7 +560,11 @@ export default function App() {
         onOpenWindow={openWindow}
         onAIChat={chatWithAI}
         theme={theme}
-        onThemeChange={setTheme}
+        onThemeChange={(newTheme) => {
+          setTheme(newTheme);
+          kernelStorage.setItem('novaura-theme', newTheme);
+          document.documentElement.setAttribute('data-theme', newTheme);
+        }}
       />
 
       {/* Sidebars */}

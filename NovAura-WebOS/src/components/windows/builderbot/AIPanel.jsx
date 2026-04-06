@@ -10,6 +10,7 @@ import { chatCloud, chatLocal, generateCode, resolveProvider, probeOllama, getPr
 import PipelinePanel from './PipelinePanel';
 import AIAdjusters from './AIAdjusters';
 import { kernelStorage } from '../../../kernel/kernelStorage.js';
+import { runAgentLoop } from './AgentLoop';
 
 // ── Code block renderer with copy + apply ───────────────────
 function CodeBlock({ code, filename, language, onApply }) {
@@ -380,9 +381,12 @@ export default function AIPanel() {
     aiConfig, buildSystemPrompt, parseCodeBlocks, applyCodeBlocks,
     flattenFiles, findNode, updateFileContent, saveFile, openFile,
     codeLibraries, activeCodeLibraryId, setActiveCodeLibrary, getActiveCodeLibrary,
+    iframeErrors, clearIframeErrors, agentRunning, setAgentRunning,
+    runProject,
   } = useBuilderStore();
 
-  const [mode, setMode] = useState('chat'); // 'chat' | 'pipeline'
+  const [mode, setMode] = useState('chat'); // 'chat' | 'pipeline' | 'agent'
+  const [agentStatus, setAgentStatus] = useState('');
   const [input, setInput] = useState('');
   const [showAdjusters, setShowAdjusters] = useState(false);
   const [showRules, setShowRules] = useState(false);
@@ -543,7 +547,81 @@ export default function AIPanel() {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      mode === 'agent' ? handleAgentSend() : handleSend();
+    }
+  };
+
+  // Build a resolved AI caller for the agent loop
+  const buildAgentCaller = () => {
+    return async (messages) => {
+      let resolved;
+      if (selectedProvider.type === 'auto') {
+        const llmConfig = JSON.parse(kernelStorage.getItem('llm_config') || '{}');
+        resolved = resolveProvider('coding', llmConfig);
+      } else if (selectedProvider.type === 'cloud') {
+        resolved = { type: 'cloud', provider: selectedProvider.provider, model: selectedProvider.model };
+      } else {
+        resolved = { type: 'local', localType: selectedProvider.provider, url: selectedProvider.url, model: selectedProvider.model };
+      }
+
+      // Strip system message — we pass it as a separate argument for cloud, keep for local
+      const sysMsg = messages.find((m) => m.role === 'system');
+      const convo = messages.filter((m) => m.role !== 'system');
+
+      let result;
+      if (resolved.type === 'local') {
+        result = await chatLocal(convo[convo.length - 1]?.content || '', {
+          url: resolved.url, type: resolved.localType, model: resolved.model,
+          systemPrompt: sysMsg?.content || '',
+          conversation: convo.slice(0, -1),
+          temperature: aiConfig?.temperature ?? 0.5, maxTokens: 8192,
+        });
+      } else {
+        result = await chatCloud(convo[convo.length - 1]?.content || '', {
+          provider: resolved.provider, model: resolved.model,
+          maxTokens: 8192, temperature: aiConfig?.temperature ?? 0.5,
+          conversation: [
+            ...(sysMsg ? [{ role: 'system', content: sysMsg.content }] : []),
+            ...convo.slice(0, -1),
+          ],
+        });
+      }
+      return result.response || result.code || '';
+    };
+  };
+
+  const handleAgentSend = async () => {
+    const prompt = input.trim();
+    if (!prompt || agentRunning) return;
+    setInput('');
+    setAgentRunning(true);
+    setAiLoading(true);
+    addChatMessage({ role: 'user', text: prompt, timestamp: Date.now() });
+
+    // Make sure preview is open so user can watch the iframe
+    useBuilderStore.getState().showPreview || useBuilderStore.getState().togglePreview();
+
+    try {
+      await runAgentLoop({
+        prompt,
+        callAI: buildAgentCaller(),
+        applyBlocks: (blocks) => applyCodeBlocks(blocks),
+        triggerRun: () => runProject(),
+        getErrors: () => useBuilderStore.getState().iframeErrors,
+        clearErrors: () => clearIframeErrors(),
+        getFlatFiles: () => flattenFiles(),
+        parseBlocks: (text) => parseCodeBlocks(text),
+        onStatus: (msg) => setAgentStatus(msg),
+        onMessage: (role, text) => addChatMessage({ role, text, timestamp: Date.now(), source: 'Agent Loop' }),
+        maxRetries: 5,
+        errorWaitMs: 3500,
+      });
+    } catch (err) {
+      addChatMessage({ role: 'assistant', text: `Agent loop error: ${err.message}`, timestamp: Date.now(), error: true });
+    } finally {
+      setAgentRunning(false);
+      setAiLoading(false);
+      setAgentStatus('');
     }
   };
 
@@ -553,15 +631,120 @@ export default function AIPanel() {
       <div className="flex flex-col h-full bg-[#12121e]">
         {/* Mode tabs */}
         <div className="flex items-center border-b border-white/10">
-          <button onClick={() => setMode('chat')} className="flex-1 text-[10px] py-1.5 text-gray-500 hover:text-gray-300 transition-colors border-b-2 border-transparent">
-            Chat
-          </button>
-          <button onClick={() => setMode('pipeline')} className="flex-1 text-[10px] py-1.5 text-amber-400 font-medium border-b-2 border-amber-400">
-            Pipeline
-          </button>
+          <button onClick={() => setMode('chat')} className="flex-1 text-[10px] py-1.5 text-gray-500 hover:text-gray-300 transition-colors border-b-2 border-transparent">Chat</button>
+          <button onClick={() => setMode('agent')} className="flex-1 text-[10px] py-1.5 text-gray-500 hover:text-gray-300 transition-colors border-b-2 border-transparent">⚡ Agent</button>
+          <button onClick={() => setMode('pipeline')} className="flex-1 text-[10px] py-1.5 text-amber-400 font-medium border-b-2 border-amber-400">Pipeline</button>
         </div>
         <div className="flex-1 overflow-hidden">
           <PipelinePanel />
+        </div>
+      </div>
+    );
+  }
+
+  // Agent mode UI
+  if (mode === 'agent') {
+    return (
+      <div className="flex flex-col h-full bg-[#0d0d1a]">
+        {/* Mode tabs */}
+        <div className="flex items-center border-b border-white/10">
+          <button onClick={() => setMode('chat')} className="flex-1 text-[10px] py-1.5 text-gray-500 hover:text-gray-300 transition-colors border-b-2 border-transparent">Chat</button>
+          <button className="flex-1 text-[10px] py-1.5 text-green-400 font-medium border-b-2 border-green-400">⚡ Agent</button>
+          <button onClick={() => setMode('pipeline')} className="flex-1 text-[10px] py-1.5 text-gray-500 hover:text-gray-300 transition-colors border-b-2 border-transparent">Pipeline</button>
+        </div>
+
+        {/* Agent header */}
+        <div className="px-3 py-2 border-b border-white/10 bg-green-500/5">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-green-400" />
+            <span className="text-xs font-semibold text-green-400">Agent Build Mode</span>
+          </div>
+          <p className="text-[10px] text-gray-500 mt-1">
+            Describe what to build. Cybeni generates real code, runs it in the preview, reads errors, and auto-fixes in a loop until it works.
+          </p>
+        </div>
+
+        {/* Messages */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-3 scrollbar-thin">
+          {chatHistory.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-8">
+              <Zap className="w-8 h-8 text-green-400/40" />
+              <p className="text-xs text-gray-400">Tell Cybeni what to build.</p>
+              <p className="text-[10px] text-gray-500">
+                She'll write the code, open the preview, watch for errors, and keep fixing until it runs clean.
+              </p>
+              <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+                {['Build a to-do list app', 'Build a weather dashboard UI', 'Build a pixel art canvas', 'Build a countdown timer'].map((q) => (
+                  <button key={q} onClick={() => setInput(q)} className="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-400 hover:text-green-400 hover:bg-green-400/10 border border-white/10 transition-colors">
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {chatHistory.map((msg, i) => (
+            <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+              {msg.role !== 'user' && (
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                  msg.role === 'system' ? 'bg-green-500/20' : 'bg-primary/20'
+                }`}>
+                  {msg.role === 'system' ? <Zap className="w-3.5 h-3.5 text-green-400" /> : <Bot className="w-3.5 h-3.5 text-primary" />}
+                </div>
+              )}
+              <div className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                msg.role === 'user' ? 'bg-primary/15 text-gray-200' :
+                msg.role === 'system' ? 'bg-green-500/10 border border-green-500/20 text-green-300 text-[11px]' :
+                msg.error ? 'bg-red-500/10 border border-red-500/20 text-red-300' :
+                'bg-white/5 text-gray-300'
+              }`}>
+                <MessageContent text={msg.text} onApplyCode={handleApplyCode} />
+              </div>
+              {msg.role === 'user' && (
+                <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <User className="w-3.5 h-3.5 text-gray-400" />
+                </div>
+              )}
+            </div>
+          ))}
+          {agentRunning && (
+            <div className="flex gap-2">
+              <div className="w-6 h-6 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
+                <Zap className="w-3.5 h-3.5 text-green-400 animate-pulse" />
+              </div>
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2 flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 text-green-400 animate-spin" />
+                <span className="text-[11px] text-green-300">{agentStatus || 'Working...'}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <div className="p-2 border-t border-white/10">
+          <div className="flex items-end gap-2 bg-white/5 rounded-lg border border-green-500/20 focus-within:border-green-500/40 transition-colors">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={agentRunning}
+              placeholder={agentRunning ? agentStatus : 'Describe what to build... (no mock data, real code only)'}
+              rows={1}
+              className="flex-1 bg-transparent text-xs text-gray-200 placeholder-gray-500 px-3 py-2.5 outline-none resize-none max-h-[120px] scrollbar-thin disabled:opacity-50"
+              style={{ minHeight: '36px' }}
+              onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }}
+            />
+            <button
+              onClick={handleAgentSend}
+              disabled={!input.trim() || agentRunning}
+              className="p-2 text-green-400 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+            >
+              {agentRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+            </button>
+          </div>
+          {!agentRunning && (
+            <button onClick={clearChat} className="text-[9px] text-gray-600 hover:text-gray-400 mt-1 ml-1">Clear history</button>
+          )}
         </div>
       </div>
     );
@@ -573,6 +756,9 @@ export default function AIPanel() {
       <div className="flex items-center border-b border-white/10">
         <button onClick={() => setMode('chat')} className="flex-1 text-[10px] py-1.5 text-primary font-medium border-b-2 border-primary">
           Chat
+        </button>
+        <button onClick={() => setMode('agent')} className="flex-1 text-[10px] py-1.5 text-gray-500 hover:text-green-400 transition-colors border-b-2 border-transparent">
+          ⚡ Agent
         </button>
         <button onClick={() => setMode('pipeline')} className="flex-1 text-[10px] py-1.5 text-gray-500 hover:text-gray-300 transition-colors border-b-2 border-transparent">
           Pipeline

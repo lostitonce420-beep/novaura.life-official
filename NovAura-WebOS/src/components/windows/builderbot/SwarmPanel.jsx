@@ -25,7 +25,25 @@ export default function SwarmPanel({ onFilesGenerated }) {
       const currentStatus = swarm.getProjectStatus(currentProject.projectId);
       setStatus(currentStatus);
 
-      if (currentStatus && currentStatus.working === 0 && currentStatus.pending === 0) {
+      // Detect hard failure
+      if (currentStatus?.failed) {
+        addLog(`❌ Swarm failed: ${currentStatus.failReason}`, 'error');
+        setIsRunning(false);
+        return;
+      }
+
+      // Show planning state
+      if (currentStatus?.isPlanning) {
+        addLog('🧠 Orchestrator planning project...', 'info');
+      }
+
+      // Completion: totalTasks > 0 guards against false-positive before plan is made
+      if (
+        currentStatus &&
+        currentStatus.totalTasks > 0 &&
+        currentStatus.working === 0 &&
+        currentStatus.pending === 0
+      ) {
         // Project complete
         const files = swarm.getProjectFiles(currentProject.projectId);
         setGeneratedFiles(Object.entries(files).map(([path, content]) => ({
@@ -34,6 +52,7 @@ export default function SwarmPanel({ onFilesGenerated }) {
           size: content.length
         })));
         setIsRunning(false);
+        addLog(`✅ Swarm complete! ${Object.keys(files).length} files generated.`, 'success');
         
         if (onFilesGenerated) {
           onFilesGenerated(files);
@@ -121,7 +140,12 @@ export default function SwarmPanel({ onFilesGenerated }) {
         </div>
         
         {status && (
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {status.isPlanning && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-400">
+                planning...
+              </span>
+            )}
             <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-400/20 text-purple-400">
               {status.agents} agents
             </span>
@@ -131,6 +155,11 @@ export default function SwarmPanel({ onFilesGenerated }) {
             {status.working > 0 && (
               <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-400">
                 {status.working} working
+              </span>
+            )}
+            {status.failedTasks > 0 && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-400/20 text-red-400">
+                {status.failedTasks} failed
               </span>
             )}
           </div>

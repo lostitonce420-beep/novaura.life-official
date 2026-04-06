@@ -5,11 +5,14 @@ import { createOrderFromSession } from './orders';
 
 const router = Router();
 
-// Initialize Stripe (uses an environment variable in production)
-const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key';
-const stripe = new Stripe(stripeKey, {
+// Initialize Stripe (requires environment variable)
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeKey) {
+  console.error('[Stripe] STRIPE_SECRET_KEY not set. Stripe features will be disabled.');
+}
+const stripe = stripeKey ? new Stripe(stripeKey, {
   apiVersion: '2026-03-25.dahlia' as any,
-});
+}) : null;
 
 const PLATFORM_URL = process.env.VITE_APP_URL || 'http://localhost:5173';
 
@@ -110,11 +113,21 @@ const calculateBackendRevenueSplits = async (
   return splits;
 };
 
+// Helper to check if Stripe is configured
+const checkStripe = (res: Response): boolean => {
+  if (!stripe) {
+    res.status(503).json({ error: 'Stripe not configured', message: 'Payment processing is currently unavailable' });
+    return false;
+  }
+  return true;
+};
+
 /**
  * Creates or retrieves a Stripe Connect Express account for a Creator.
  */
 router.post('/connect', async (req: Request, res: Response) => {
   try {
+    if (!checkStripe(res)) return;
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ error: 'Missing userId' });
 
@@ -127,7 +140,7 @@ router.post('/connect', async (req: Request, res: Response) => {
     let stripeAccountId = userData?.stripeAccountId;
 
     if (!stripeAccountId) {
-      const account = await stripe.accounts.create({
+      const account = await stripe!.accounts.create({
         type: 'express',
         country: 'US',
         email: userData?.email,
@@ -138,7 +151,7 @@ router.post('/connect', async (req: Request, res: Response) => {
       await userRef.update({ stripeAccountId, stripeConnectStatus: 'pending' });
     }
 
-    const accountLink = await stripe.accountLinks.create({
+    const accountLink = await stripe!.accountLinks.create({
       account: stripeAccountId,
       refresh_url: `${PLATFORM_URL}/creator/settings?tab=payouts&refresh=true`,
       return_url: `${PLATFORM_URL}/creator/settings?tab=payouts&success=true`,
@@ -157,6 +170,7 @@ router.post('/connect', async (req: Request, res: Response) => {
  */
 router.post('/checkout', async (req: Request, res: Response) => {
   try {
+    if (!checkStripe(res)) return;
     const { userId, items } = req.body;
     if (!userId || !items || items.length === 0) {
       return res.status(400).json({ error: 'Missing userId or items' });
@@ -178,7 +192,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
       };
     });
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe!.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: items[0].asset?.type === 'subscription' ? 'subscription' : 'payment',
       line_items,
@@ -201,8 +215,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
  */
 router.get('/session/:sessionId', async (req: Request, res: Response) => {
   try {
+    if (!checkStripe(res)) return;
     const { sessionId } = req.params;
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    const session = await stripe!.checkout.sessions.retrieve(sessionId, {
       expand: ['line_items.data.price.product', 'payment_intent']
     });
 
@@ -243,7 +258,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
     const sig = req.headers['stripe-signature'];
     try {
       // req.body is a Buffer here (express.raw middleware applied in app.ts)
-      event = stripe.webhooks.constructEvent(req.body, sig as string, webhookSecret);
+      event = stripe!.webhooks.constructEvent(req.body, sig as string, webhookSecret);
     } catch (err: any) {
       console.error('[Stripe Webhook] Signature verification failed:', err.message);
       return res.status(400).json({ error: `Webhook signature invalid: ${err.message}` });
@@ -280,7 +295,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
       }
 
       if (session.mode === 'payment') {
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { expand: ['data.price.product'] });
+        const lineItems = await stripe!.checkout.sessions.listLineItems(session.id, { expand: ['data.price.product'] });
         const purchasedAssetIds: string[] = [];
 
         for (const item of lineItems.data) {
@@ -329,7 +344,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
               // Execute Stripe transfer if creator has Connect account
               if (recipientStripeId && split.amountCents > 0) {
                 try {
-                  const transfer = await stripe.transfers.create({
+                  const transfer = await stripe!.transfers.create({
                     amount: split.amountCents,
                     currency: 'usd',
                     destination: recipientStripeId,

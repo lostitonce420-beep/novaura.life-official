@@ -8,73 +8,21 @@ import {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // GIT UI PANEL - Visual Git Client
-// Branch management, commits, diffs, and history
+// NOTE: This is a UI prototype. Real git operations require backend integration.
 // ═══════════════════════════════════════════════════════════════════════════════
-
-const MOCK_BRANCHES = [
-  { name: 'main', current: true, ahead: 0, behind: 0, lastCommit: 'Initial commit' },
-  { name: 'feature/auth', current: false, ahead: 3, behind: 0, lastCommit: 'Add login form' },
-  { name: 'hotfix/bug-123', current: false, ahead: 1, behind: 2, lastCommit: 'Fix navigation' },
-];
-
-const MOCK_COMMITS = [
-  { hash: 'abc1234', message: 'Add user authentication', author: 'You', date: '2 hours ago', files: 5 },
-  { hash: 'def5678', message: 'Update styling', author: 'You', date: '5 hours ago', files: 12 },
-  { hash: 'ghi9012', message: 'Initial commit', author: 'You', date: '1 day ago', files: 20 },
-];
-
-const MOCK_STATUS = {
-  staged: [
-    { path: 'src/components/Login.jsx', change: 'modified' },
-    { path: 'src/styles/auth.css', change: 'modified' },
-  ],
-  unstaged: [
-    { path: 'src/App.jsx', change: 'modified' },
-    { path: 'README.md', change: 'modified' },
-    { path: 'package.json', change: 'modified' },
-  ],
-  untracked: [
-    { path: '.env.local', change: 'untracked' },
-    { path: 'notes.txt', change: 'untracked' },
-  ],
-};
-
-const DIFF_MOCK = `diff --git a/src/components/Login.jsx b/src/components/Login.jsx
-index 1234567..abcdefg 100644
---- a/src/components/Login.jsx
-+++ b/src/components/Login.jsx
-@@ -1,5 +1,8 @@
- import React, { useState } from 'react';
- import { Button } from './ui/button';
-+import { auth } from '../utils/auth';
-+
-+// Add authentication hook
- 
- export default function Login() {
-   const [email, setEmail] = useState('');
-@@ -10,7 +13,10 @@ export default function Login() {
-   const handleSubmit = async (e) => {
-     e.preventDefault();
-     setLoading(true);
--    // TODO: Implement login
-+    const result = await auth.signIn(email, password);
-+    if (result.success) {
-+      window.location.href = '/dashboard';
-+    }
-     setLoading(false);
-   };`;
 
 export default function GitWindow() {
   const [activeTab, setActiveTab] = useState('changes'); // changes | history | branches
   const [selectedFile, setSelectedFile] = useState(null);
   const [commitMessage, setCommitMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [branches, setBranches] = useState(MOCK_BRANCHES);
-  const [commits, setCommits] = useState(MOCK_COMMITS);
-  const [status, setStatus] = useState(MOCK_STATUS);
+  const [branches, setBranches] = useState([]);
+  const [commits, setCommits] = useState([]);
+  const [status, setStatus] = useState({ staged: [], unstaged: [], untracked: [] });
   const [showNewBranch, setShowNewBranch] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
-  const [diff, setDiff] = useState(DIFF_MOCK);
+  const [diff, setDiff] = useState('');
+  const [isGitRepo, setIsGitRepo] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // ── Actions ─────────────────────────────────────────────────────────────────
@@ -283,7 +231,14 @@ export default function GitWindow() {
       <div className="flex-1 flex overflow-hidden">
         {/* Main Panel */}
         <div className="flex-1 overflow-auto p-4">
-          {activeTab === 'changes' && (
+          {!isGitRepo && (
+            <div className="flex flex-col items-center justify-center h-full text-slate-500">
+              <GitBranch className="w-12 h-12 mb-4 opacity-30" />
+              <p className="text-sm mb-2">No Git Repository Connected</p>
+              <p className="text-xs opacity-60">Open a project with Git to see changes</p>
+            </div>
+          )}
+          {isGitRepo && activeTab === 'changes' && (
             <div className="max-w-2xl">
               {/* Staged */}
               {selectedFiles.length > 0 && (

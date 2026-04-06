@@ -33,21 +33,13 @@ const MARKERS = {
   reference: { icon: '⚪', label: 'Reference', description: 'Sources' },
 };
 
-// Mock engrams for demo
-const MOCK_ENGRAMS = [
-  { id: '1', content: 'User prefers dark mode', marker: 'preference', emotion: 'contentment', intensity: 0.8, timestamp: '2024-03-20T10:00:00Z', accessCount: 5 },
-  { id: '2', content: 'TypeScript is favorite language', marker: 'preference', emotion: 'joy', intensity: 0.9, timestamp: '2024-03-19T15:00:00Z', accessCount: 12 },
-  { id: '3', content: 'Frustrated with CSS bugs', marker: 'emotion', emotion: 'rage', intensity: 0.7, timestamp: '2024-03-18T09:00:00Z', accessCount: 2 },
-  { id: '4', content: 'Met deadline yesterday', marker: 'event', emotion: 'ecstasy', intensity: 0.95, timestamp: '2024-03-17T16:00:00Z', accessCount: 8 },
-  { id: '5', content: 'Learning Rust slowly', marker: 'goal', emotion: 'contentment', intensity: 0.5, timestamp: '2024-03-16T11:00:00Z', accessCount: 3 },
-  { id: '6', content: 'Works with Sarah on frontend', marker: 'relationship', emotion: 'serenity', intensity: 0.6, timestamp: '2024-03-15T14:00:00Z', accessCount: 4 },
-  { id: '7', content: 'React 19 features', marker: 'fact', emotion: 'neutral', intensity: 0.4, timestamp: '2024-03-14T10:00:00Z', accessCount: 1 },
-  { id: '8', content: 'Worried about performance', marker: 'emotion', emotion: 'anxiety', intensity: 0.6, timestamp: '2024-03-13T08:00:00Z', accessCount: 2 },
-  { id: '9', content: 'Refactoring legacy code', marker: 'skill', emotion: 'melancholy', intensity: 0.5, timestamp: '2024-03-12T13:00:00Z', accessCount: 3 },
-];
+// Engrams are loaded from Firestore or kernel storage
+// No mock data - only real user memories
 
 export default function EngramVisualizer() {
-  const [engrams, setEngrams] = useState(MOCK_ENGRAMS);
+  const [engrams, setEngrams] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [emotionFilter, setEmotionFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid'); // grid | emotion-wheel | timeline
@@ -161,7 +153,30 @@ export default function EngramVisualizer() {
 
       {/* Content */}
       <div className="p-6">
-        {viewMode === 'grid' && (
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-white/50">Loading memories...</div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-red-400">{error}</div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !error && filteredEngrams.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-white/40">
+            <div className="text-4xl mb-4">🧠</div>
+            <div className="text-lg mb-2">No memories yet</div>
+            <div className="text-sm">Interact with AI to build your memory map</div>
+          </div>
+        )}
+
+        {viewMode === 'grid' && !isLoading && !error && filteredEngrams.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             <AnimatePresence>
               {filteredEngrams.map((engram) => {

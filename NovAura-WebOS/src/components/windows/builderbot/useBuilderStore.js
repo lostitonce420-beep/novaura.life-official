@@ -260,10 +260,25 @@ const useBuilderStore = create((set, get) => {
     // ── Run / compile state ──
     runKey: 0,
 
+    // ── Agentic loop state ──
+    iframeErrors: [],       // errors captured from live preview iframe
+    agentRunning: false,    // true while the agent build loop is active
+
     // ── UI state ──
     sidebarPanel: 'explorer', // explorer | search | ai | collab | settings
     showPreview: false,
     showTerminal: false,
+
+    // ── Agentic loop actions ──
+    pushIframeError(err) {
+      set((s) => ({ iframeErrors: [...s.iframeErrors, err] }));
+    },
+    clearIframeErrors() {
+      set({ iframeErrors: [] });
+    },
+    setAgentRunning(val) {
+      set({ agentRunning: val });
+    },
 
     // ── Persist helper ──
     _persist() {

@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { KernelContext } from './KernelProvider.jsx';
 import { kernel as kernelSingleton } from './NovaKernel.js';
+import { kernelStorage } from './kernelStorage.js';
 
 /**
  * NovAura OS — Kernel Hooks
@@ -234,4 +235,160 @@ export function useCrash() {
   }, [kernel]);
 
   return { crashes, circuitOpen, repairStatus };
+}
+
+/**
+ * Persistent window memory — drop-in replacement for useState that automatically
+ * saves to kernelStorage (→ MemoryMap → Firestore) and restores on mount.
+ *
+ * Works for authenticated users (Firestore-backed) and guests (localStorage fallback).
+ * Writes are debounced 600ms so keystrokes don't hammer the database.
+ *
+ * Usage:
+ *   const [draft, setDraft] = useWindowMemory('art-studio', 'lastPrompt', '');
+ *   const [settings, setSettings] = useWindowMemory('music-composer', 'config', defaultConfig);
+ *
+ * @param {string} windowType   The window's type id (e.g. 'art-studio', 'ide')
+ * @param {string} key          Sub-key within that window's namespace
+ * @param {any}    initialValue Fallback when no saved value exists
+ * @returns {[any, Function]}   [value, setter] — same interface as useState
+ */
+export function useWindowMemory(windowType, key, initialValue = null) {
+  const storageKey = `win_mem:${windowType}:${key}`;
+
+  const [state, setStateRaw] = useState(() => {
+    try {
+      const saved = kernelStorage.getItem(storageKey);
+      if (saved === null || saved === undefined) return initialValue;
+      try { return JSON.parse(saved); } catch { return saved; }
+    } catch {
+      return initialValue;
+    }
+  });
+
+  const debounceRef = useRef(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const setState = useCallback((valueOrUpdater) => {
+    setStateRaw(prev => {
+      const next = typeof valueOrUpdater === 'function' ? valueOrUpdater(prev) : valueOrUpdater;
+      // Debounce the write so rapid updates (typing) don't spam the DB
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        try {
+          kernelStorage.setItem(storageKey, typeof next === 'string' ? next : JSON.stringify(next));
+        } catch { /* non-critical */ }
+      }, 600);
+      return next;
+    });
+  }, [storageKey]);
+
+  // Flush immediately on unmount so no data is lost when the window closes
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        try {
+          kernelStorage.setItem(
+            storageKey,
+            typeof stateRef.current === 'string' ? stateRef.current : JSON.stringify(stateRef.current)
+          );
+        } catch { /* non-critical */ }
+      }
+    };
+  }, [storageKey]);
+
+  return [state, setState];
+}
+
+/**
+ * Clears all persisted memory for a specific window type.
+ * Useful for "reset" buttons in windows.
+ *
+ * @param {string} windowType
+ * @param {string[]} keys   Array of keys that were saved via useWindowMemory
+ */
+export function clearWindowMemory(windowType, keys) {
+  keys.forEach(key => {
+    try { kernelStorage.removeItem(`win_mem:${windowType}:${key}`); } catch { /* non-critical */ }
+  });
+}
+
+/**
+ * Persistent window memory — drop-in replacement for useState that automatically
+ * saves to kernelStorage (→ MemoryMap → Firestore) and restores on mount.
+ *
+ * Works for authenticated users (Firestore-backed) and guests (localStorage fallback).
+ * Writes are debounced 600ms so keystrokes don't hammer the database.
+ *
+ * Usage:
+ *   const [draft, setDraft] = useWindowMemory('art-studio', 'lastPrompt', '');
+ *   const [settings, setSettings] = useWindowMemory('music-composer', 'config', defaultConfig);
+ *
+ * @param {string} windowType   The window's type id (e.g. 'art-studio', 'ide')
+ * @param {string} key          Sub-key within that window's namespace
+ * @param {any}    initialValue Fallback when no saved value exists
+ * @returns {[any, Function]}   [value, setter] — same interface as useState
+ */
+export function useWindowMemory(windowType, key, initialValue = null) {
+  const storageKey = `win_mem:${windowType}:${key}`;
+
+  const [state, setStateRaw] = useState(() => {
+    try {
+      const saved = kernelStorage.getItem(storageKey);
+      if (saved === null || saved === undefined) return initialValue;
+      try { return JSON.parse(saved); } catch { return saved; }
+    } catch {
+      return initialValue;
+    }
+  });
+
+  const debounceRef = useRef(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const setState = useCallback((valueOrUpdater) => {
+    setStateRaw(prev => {
+      const next = typeof valueOrUpdater === 'function' ? valueOrUpdater(prev) : valueOrUpdater;
+      // Debounce the write so rapid updates (typing) don't spam the DB
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        try {
+          kernelStorage.setItem(storageKey, typeof next === 'string' ? next : JSON.stringify(next));
+        } catch { /* non-critical */ }
+      }, 600);
+      return next;
+    });
+  }, [storageKey]);
+
+  // Flush immediately on unmount so no data is lost when the window closes
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        try {
+          kernelStorage.setItem(
+            storageKey,
+            typeof stateRef.current === 'string' ? stateRef.current : JSON.stringify(stateRef.current)
+          );
+        } catch { /* non-critical */ }
+      }
+    };
+  }, [storageKey]);
+
+  return [state, setState];
+}
+
+/**
+ * Clears all persisted memory for a specific window type.
+ * Useful for "reset" buttons in windows.
+ *
+ * @param {string} windowType
+ * @param {string[]} keys   Array of keys that were saved via useWindowMemory
+ */
+export function clearWindowMemory(windowType, keys) {
+  keys.forEach(key => {
+    try { kernelStorage.removeItem(`win_mem:${windowType}:${key}`); } catch { /* non-critical */ }
+  });
 }

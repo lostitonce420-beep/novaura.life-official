@@ -1472,5 +1472,5 @@ export function getSemanticsEngine() {
   return _instance;
 }
 
-export { SemanticsEngine, SEMANTIC_REGISTRY, WINDOW_TYPES };
+export { SemanticsEngine, SEMANTIC_REGISTRY };
 export default getSemanticsEngine();
