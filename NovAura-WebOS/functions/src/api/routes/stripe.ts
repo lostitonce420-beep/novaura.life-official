@@ -167,6 +167,7 @@ router.post('/connect', async (req: Request, res: Response) => {
 
 /**
  * Creates a Stripe Checkout Session.
+ * Handles both one-time payments (assets) and subscriptions (membership plans).
  */
 router.post('/checkout', async (req: Request, res: Response) => {
   try {
@@ -176,6 +177,59 @@ router.post('/checkout', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing userId or items' });
     }
 
+    const isSubscription = items[0].asset?.type === 'subscription';
+
+    // For subscriptions, we need to create/get a recurring price
+    if (isSubscription) {
+      const item = items[0];
+      const planId = item.asset.id.replace('membership-', '');
+      const unitAmount = item.asset.price; // Already in cents from frontend
+
+      // Create or retrieve a product for this membership tier
+      const productName = item.asset.title;
+      const productDescription = item.asset.shortDescription;
+
+      // Create a new price for this subscription (Stripe requires recurring prices for subscriptions)
+      const price = await stripe!.prices.create({
+        unit_amount: unitAmount,
+        currency: 'usd',
+        recurring: { interval: 'month' },
+        product_data: {
+          name: productName,
+          description: productDescription,
+          metadata: { 
+            planId: planId,
+            type: 'membership'
+          }
+        },
+      });
+
+      const session = await stripe!.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'subscription',
+        line_items: [{ price: price.id, quantity: 1 }],
+        client_reference_id: userId,
+        success_url: `${PLATFORM_URL}/billing?success=true&session_id={CHECKOUT_SESSION_ID}&plan=${planId}`,
+        cancel_url: `${PLATFORM_URL}/pricing?canceled=true`,
+        metadata: { 
+          userId, 
+          type: 'subscription',
+          planId: planId,
+          tier: planId
+        },
+        subscription_data: {
+          metadata: {
+            userId,
+            planId,
+            tier: planId
+          }
+        }
+      });
+
+      return res.json({ url: session.url });
+    }
+
+    // One-time payment (asset purchase)
     const line_items = items.map((item: any) => {
       const unitAmount = item.customPrice || item.asset.price;
       return {
@@ -194,12 +248,12 @@ router.post('/checkout', async (req: Request, res: Response) => {
 
     const session = await stripe!.checkout.sessions.create({
       payment_method_types: ['card'],
-      mode: items[0].asset?.type === 'subscription' ? 'subscription' : 'payment',
+      mode: 'payment',
       line_items,
       client_reference_id: userId,
       success_url: `${PLATFORM_URL}/orders?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${PLATFORM_URL}/checkout?canceled=true`,
-      metadata: { userId, type: items[0].asset?.type === 'subscription' ? 'subscription' : 'asset_purchase' }
+      metadata: { userId, type: 'asset_purchase' }
     });
 
     return res.json({ url: session.url });
@@ -287,11 +341,14 @@ router.post('/webhook', async (req: Request, res: Response) => {
       const userRef = db.collection('users').doc(userId);
 
       if (session.mode === 'subscription') {
+        const planId = session.metadata?.planId || session.metadata?.tier || 'spark';
         await userRef.update({
           stripeSubscriptionId: session.subscription as string,
-          membershipTier: session.metadata?.tier || 'pro',
-          subscriptionStatus: 'active'
+          membershipTier: planId,
+          subscriptionStatus: 'active',
+          subscriptionStartedAt: admin.firestore.FieldValue.serverTimestamp()
         });
+        console.log(`[Stripe Webhook] Subscription activated for user ${userId}, tier: ${planId}`);
       }
 
       if (session.mode === 'payment') {

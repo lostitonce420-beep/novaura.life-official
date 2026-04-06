@@ -1,10 +1,14 @@
 /**
  * Billing Window - Payments & Subscription Management
+ * WIRED UP TO STRIPE ✓
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Check, Zap, Sparkles, Flame, Star, Users, Loader2 } from 'lucide-react';
+import { CreditCard, Check, Zap, Sparkles, Flame, Star, Users, Loader2, AlertCircle } from 'lucide-react';
+import { auth } from '../../config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { createSubscriptionCheckout, getSubscriptionStatus } from '../../services/stripeService';
 
 // NovAura Membership Tiers - Authentic progression path
 const PLANS = [
@@ -80,11 +84,47 @@ const PLANS = [
 export default function BillingWindow() {
   const [currentPlan, setCurrentPlan] = useState('free');
   const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Load current user and subscription status
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        try {
+          const status = await getSubscriptionStatus(currentUser.uid);
+          setCurrentPlan(status.tier || 'free');
+        } catch (err) {
+          console.error('Failed to load subscription status:', err);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSubscribe = async (planId) => {
     if (planId === 'free') return;
-    // TODO: Stripe integration
-    console.log('Subscribe to:', planId);
+    
+    if (!user) {
+      setError('Please sign in to subscribe');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { url } = await createSubscriptionCheckout(user.uid, planId);
+      // Redirect to Stripe checkout
+      window.location.href = url;
+    } catch (err) {
+      console.error('Checkout error:', err);
+      setError(err.message || 'Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -96,6 +136,13 @@ export default function BillingWindow() {
         </div>
         <p className="text-white/50">Choose your path</p>
       </div>
+
+      {error && (
+        <div className="mx-6 mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400" />
+          <span className="text-red-400">{error}</span>
+        </div>
+      )}
 
       <div className="p-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-3 gap-4">
